@@ -82,6 +82,8 @@
         .modal { background: white; width: 100%; max-width: 480px; border-radius: var(--radius-xl); padding: 30px; box-shadow: var(--shadow-lg); overflow: hidden; }
         #station-call-alert { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: var(--warning); color: var(--dark); padding: 15px 30px; border-radius: 99px; font-weight: 900; font-size: 1.1rem; box-shadow: var(--shadow-lg); z-index: 20000; display: none; }
 
+        .pin-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+
         /* PRINTING */
         #receipt-area { display: none; }
         @media print {
@@ -102,14 +104,14 @@
 
     <div id="station-call-alert">⚠️ CALL: <span id="call-msg"></span> <button onclick="clearCall()" style="margin-left: 15px; padding: 8px 18px; border-radius: 30px; background: rgba(0,0,0,0.1); font-weight:900;">OK</button></div>
 
-    <!-- Modals -->
-    <div id="overlay-alert" class="overlay"><div class="modal" style="text-align:center;"><div id="alert-title" class="modal-header" style="font-size:1.8rem; font-weight:900; margin-bottom:15px;">Notice</div><p id="alert-body" style="font-size:1.2rem; color:var(--text-gray); margin-bottom: 25px;"></p><button class="pay-btn" style="margin:0;" onclick="closeAlert()">Continue</button></div></div>
-    <div id="overlay-confirm" class="overlay"><div class="modal" style="text-align:center;"><div id="confirm-title" class="modal-header" style="font-size:1.8rem; font-weight:900; margin-bottom:15px;">Confirm?</div><p id="confirm-body" style="font-size:1.2rem; color:var(--text-gray); margin-bottom: 25px;"></p><div style="display:flex; gap:15px;"><button class="pay-btn" style="background:#f1f5f9; color:var(--dark); margin:0;" onclick="closeConfirm(false)">Back</button><button class="pay-btn" style="margin:0;" onclick="closeConfirm(true)">Confirm</button></div></div></div>
+    <!-- UI Overlays -->
+    <div id="overlay-alert" class="overlay"><div class="modal" style="text-align:center;"><div id="alert-title" style="font-size:1.8rem; font-weight:900; margin-bottom:15px;">Notice</div><p id="alert-body" style="font-size:1.2rem; color:var(--text-gray); margin-bottom: 25px;"></p><button class="pay-btn" style="margin:0;" onclick="closeAlert()">Continue</button></div></div>
+    <div id="overlay-confirm" class="overlay"><div class="modal" style="text-align:center;"><div id="confirm-title" style="font-size:1.8rem; font-weight:900; margin-bottom:15px;">Confirm?</div><p id="confirm-body" style="font-size:1.2rem; color:var(--text-gray); margin-bottom: 25px;"></p><div style="display:flex; gap:15px;"><button class="pay-btn" style="background:#f1f5f9; color:var(--dark); margin:0;" onclick="closeConfirm(false)">Back</button><button class="pay-btn" style="margin:0;" onclick="closeConfirm(true)">Confirm</button></div></div></div>
 
-    <!-- LOYALTY -->
+    <!-- LOYALTY & CHECKOUT -->
     <div id="overlay-loyalty" class="overlay">
         <div class="modal">
-            <div id="loyalty-header" class="modal-header" style="font-size:1.8rem; font-weight:900; margin-bottom:20px; text-align:center;">Rewards</div>
+            <div style="font-size:1.8rem; font-weight:900; margin-bottom:20px; text-align:center;">Rewards</div>
             <div id="loyalty-init" style="display:grid; grid-template-columns: 1fr; gap:10px;">
                 <button class="pay-btn" style="margin:0;" onclick="loyS('search')">Find Member</button>
                 <button class="pay-btn" style="margin:0; background:var(--success);" onclick="loyS('create')">Register Member</button>
@@ -128,24 +130,19 @@
         </div>
     </div>
 
-    <!-- REDEMPTION POPUP -->
     <div id="overlay-redeem" class="overlay">
         <div class="modal" style="text-align:center;">
-            <div class="modal-header" style="font-size:1.8rem; font-weight:900; margin-bottom:15px;">Redeem Points?</div>
+            <div style="font-size:1.8rem; font-weight:900; margin-bottom:15px;">Redeem Points?</div>
             <p style="font-size:1.3rem; margin-bottom:10px;">Balance: <span id="r-bal" style="font-weight:900; color:var(--success);">0</span> Points</p>
-            <p style="color:var(--text-gray); font-size:1.1rem; margin-bottom:25px;">You can redeem <span id="r-max">0</span> points for a $<span id="r-disc">0.00</span> discount.</p>
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px;">
-                <button class="pay-btn" style="margin:0; background:#f1f5f9; color:var(--dark);" onclick="redeemPoints(false)">No, Save 'Em</button>
-                <button class="pay-btn" style="margin:0;" onclick="redeemPoints(true)">Yes, Redeem!</button>
-            </div>
+            <p style="color:var(--text-gray); font-size:1.1rem; margin-bottom:25px;">Redeem <span id="r-max">0</span> points for a $<span id="r-disc">0.00</span> discount.</p>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px;"><button class="pay-btn" style="margin:0; background:#f1f5f9; color:var(--dark);" onclick="redeemPoints(false)">No</button><button class="pay-btn" style="margin:0;" onclick="redeemPoints(true)">Yes</button></div>
         </div>
     </div>
 
-    <!-- ASSIGNMENT GRID (EXPANDED) -->
     <div id="overlay-table" class="overlay">
         <div class="modal" style="max-width:550px;">
-            <div class="modal-header" style="font-size:1.8rem; font-weight:900; margin-bottom:20px; text-align:center;">Dispatch Ticket</div>
-            <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:10px;" id="assign-grid">
+            <div style="font-size:1.8rem; font-weight:900; margin-bottom:20px; text-align:center;">Dispatch Ticket</div>
+            <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:10px;">
                 <button class="pay-btn" style="margin:0; font-size:0.9rem;" onclick="finishOrder('Takeout')">🥡 TAKEOUT</button>
                 <button class="pay-btn" style="margin:0; font-size:0.9rem; background:var(--dark);" onclick="finishOrder('Table 1')">🪑 T-1</button>
                 <button class="pay-btn" style="margin:0; font-size:0.9rem; background:var(--dark);" onclick="finishOrder('Table 2')">🪑 T-2</button>
@@ -154,7 +151,30 @@
                 <button class="pay-btn" style="margin:0; font-size:0.9rem; background:var(--dark);" onclick="finishOrder('Table 5')">🪑 T-5</button>
                 <button class="pay-btn" style="margin:0; font-size:0.9rem; background:var(--accent);" onclick="finishOrder('Bar')">🍷 BAR</button>
             </div>
-            <button class="pay-btn" style="width:100%; background:#f1f5f9; color:var(--dark); margin-top:20px;" onclick="document.getElementById('overlay-table').style.display='none'">Back to Cart</button>
+            <button class="pay-btn" style="width:100%; background:#f1f5f9; color:var(--dark); margin-top:20px;" onclick="document.getElementById('overlay-table').style.display='none'">Cancel</button>
+        </div>
+    </div>
+
+    <!-- Manager PIN Pad -->
+    <div id="pin-overlay" class="overlay">
+        <div class="modal" style="max-width:340px;">
+            <h1 style="text-align:center; font-size:1.5rem; margin-bottom:20px; font-weight:900;">Manager PIN Required</h1>
+            <div id="master-pin-dot" style="font-size:2rem; height:60px; background:#f8fafc; border-radius:10px; display:flex; align-items:center; justify-content:center; font-weight:900; margin-bottom:20px; color:var(--primary);"></div>
+            <div class="pin-grid">
+                <button class="pay-btn" style="background:#f1f5f9; color:var(--dark); margin:0;" onclick="mP('1')">1</button>
+                <button class="pay-btn" style="background:#f1f5f9; color:var(--dark); margin:0;" onclick="mP('2')">2</button>
+                <button class="pay-btn" style="background:#f1f5f9; color:var(--dark); margin:0;" onclick="mP('3')">3</button>
+                <button class="pay-btn" style="background:#f1f5f9; color:var(--dark); margin:0;" onclick="mP('4')">4</button>
+                <button class="pay-btn" style="background:#f1f5f9; color:var(--dark); margin:0;" onclick="mP('5')">5</button>
+                <button class="pay-btn" style="background:#f1f5f9; color:var(--dark); margin:0;" onclick="mP('6')">6</button>
+                <button class="pay-btn" style="background:#f1f5f9; color:var(--dark); margin:0;" onclick="mP('7')">7</button>
+                <button class="pay-btn" style="background:#f1f5f9; color:var(--dark); margin:0;" onclick="mP('8')">8</button>
+                <button class="pay-btn" style="background:#f1f5f9; color:var(--dark); margin:0;" onclick="mP('9')">9</button>
+                <button class="pay-btn" style="background:#fee2e2; color:#ef4444; margin:0;" onclick="mC()">CLR</button>
+                <button class="pay-btn" style="background:#f1f5f9; color:var(--dark); margin:0;" onclick="mP('0')">0</button>
+                <button class="pay-btn" style="background:#dcfce7; color:#16a34a; margin:0;" onclick="mV()">OK</button>
+            </div>
+            <button onclick="clsPin()" style="width:100%; margin-top:15px; background:none; color:var(--text-gray); font-weight:800;">Cancel</button>
         </div>
     </div>
 
@@ -171,37 +191,39 @@
     </nav>
     <div class="fab-nav" id="fab-nav" onclick="toggleSidebar()">◀</div>
 
-    <!-- POS -->
+    <!-- POS VIEW -->
     <main id="pos-view" class="view-container active">
         <div class="pos-main">
-            <div style="display:flex; justify-content: space-between; align-items:center; margin-bottom: 25px;">
-                <h1 style="font-size: 2.2rem; font-weight: 900; letter-spacing:-1px;">Crazy Burgers Terminal</h1>
-                <button onclick="sendStationCall()" style="background:var(--warning); color:#111827; padding: 12px 25px; border-radius: 12px; font-weight:900;">🔔 CALL MGR</button>
-            </div>
-            <div class="cat-tabs" id="pos-cats"><button class="cat-tab active">All Items</button></div>
+            <h1 style="font-size: 2.2rem; font-weight: 900; margin-bottom:20px;">Crazy Burgers Terminal</h1>
             <div class="menu-grid" id="pos-grid"></div>
         </div>
         <aside class="order-panel">
-            <div class="op-header" style="padding:20px; border-bottom:1px solid #f1f5f9;"><div style="font-size:1.4rem; font-weight:900; display:flex; justify-content:space-between;">Ticket <button onclick="clearCart()" style="font-size:0.9rem; color:var(--primary); background:none;">Wipe</button></div></div>
+            <div style="padding:20px; font-weight:900; border-bottom:1px solid #eee;">Order Details</div>
             <div class="op-items" id="op-items"></div>
             <div class="op-footer">
-                <div id="cart-loyalty-info" style="background:#f0faf2; padding:12px; border-radius:10px; margin-bottom:15px; display:none; border:2px solid #c6f6d5; color:#22543d;">
-                    <div style="font-weight:900;">VIP: <span id="member-tag"></span></div>
-                    <div style="font-size:0.8rem; font-weight:600;">Points: <span id="member-pts">0</span></div>
-                </div>
-                <div id="cart-discount-row" style="display:none; color:var(--success); font-weight:800; justify-content:space-between; margin-bottom:8px;"><span>Point Discount</span> -$<span id="pos-disc">0.00</span></div>
-                <div style="display:flex; justify-content:space-between; font-weight:700; color:var(--text-gray);"><span>Total</span> $<span id="pos-total">0.00</span></div>
-                <button class="pay-btn" onclick="startCheckout()">Assign Order</button>
+                <div id="cart-loyalty-info" style="background:#f0faf2; padding:12px; border-radius:10px; margin-bottom:10px; display:none;">VIP: <span id="member-tag" style="font-weight:900;"></span></div>
+                <div id="cart-discount-row" style="display:none; color:var(--success); font-weight:800; justify-content:space-between; margin-bottom:8px;"><span>Discount</span> -$<span id="pos-disc">0.00</span></div>
+                <div style="display:flex; justify-content:space-between; font-weight:900; font-size:1.4rem;"><span>Total</span> $<span id="pos-total">0.00</span></div>
+                <button class="pay-btn" onclick="startCheckout()">Checkout</button>
             </div>
         </aside>
     </main>
 
-    <!-- STAFF VIEW -->
+    <!-- KDS -->
+    <main id="kds-view" class="view-container" style="background:#0f172a;">
+        <div style="padding:25px; border-bottom:1px solid rgba(255,255,255,0.1); color:white; display:flex; justify-content:space-between;">
+            <h2 style="font-weight:900;">Kitchen Board</h2>
+            <button onclick="enableVoice()" style="background:var(--accent); color:white; padding:10px 20px; border-radius:10px;">Sync Audio</button>
+        </div>
+        <div style="padding:20px; flex:1; overflow-y:auto;"><div class="menu-grid" id="kds-grid"></div></div>
+    </main>
+
+    <!-- STAFF -->
     <main id="staff-view" class="view-container" style="background:var(--dark); align-items:center; justify-content:center;">
-        <div class="modal" id="s-login" style="max-width:380px;">
-            <h1 style="font-weight:900; text-align:center; margin-bottom:10px;">Employee Auth</h1>
-            <div id="s-pin-dot" style="font-size:3rem; height:80px; background:#f8fafc; border-radius:12px; display:flex; align-items:center; justify-content:center; color:var(--primary); font-weight:900; margin-bottom:20px;"></div>
-            <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:10px;" class="pin-grid">
+        <div class="modal" id="s-login" style="max-width:340px;">
+            <h1 style="text-align:center; margin-bottom:15px; font-weight:900;">Staff Entry</h1>
+            <div id="s-pin-dot" style="font-size:2.5rem; height:70px; background:#f8fafc; border-radius:10px; display:flex; align-items:center; justify-content:center; color:var(--primary); font-weight:900; margin-bottom:20px;"></div>
+            <div class="pin-grid">
                 <button class="pay-btn" style="background:#f1f5f9; color:var(--dark); margin:0;" onclick="sP('1')">1</button>
                 <button class="pay-btn" style="background:#f1f5f9; color:var(--dark); margin:0;" onclick="sP('2')">2</button>
                 <button class="pay-btn" style="background:#f1f5f9; color:var(--dark); margin:0;" onclick="sP('3')">3</button>
@@ -216,46 +238,61 @@
                 <button class="pay-btn" style="background:#dcfce7; color:#16a34a; margin:0;" onclick="sV()">OK</button>
             </div>
         </div>
-        <div class="modal" id="s-portal" style="display:none; text-align:center; max-width:550px;">
-            <p id="s-role-tag" style="background:var(--primary); color:white; display:inline-block; padding:5px 15px; border-radius:99px; font-size:0.8rem; font-weight:800; margin-bottom:10px;">ROLE</p>
-            <h1 id="s-v-name" style="font-weight:900; font-size:2.5rem; margin-bottom:15px;">User</h1>
-            <div style="background:#f8fafc; padding:25px; border-radius:16px; margin-bottom:25px; border:2px solid #f1f5f9;">
-                <p style="font-weight:700; color:var(--text-gray);">Active Shift Duration:</p>
-                <h2 id="s-v-timer" style="font-size:2.5rem; font-weight:900; color:var(--dark);">00:00:00</h2>
+        <div class="modal" id="s-portal" style="display:none; text-align:center;">
+            <p id="s-role-tag" style="background:var(--primary); color:white; padding:4px 12px; border-radius:99px; display:inline-block; font-size:0.8rem; font-weight:800; margin-bottom:10px;">ROLE</p>
+            <h1 id="s-v-name" style="font-weight:900; margin-bottom:15px;">User</h1>
+            <div style="background:#f8fafc; padding:20px; border-radius:12px; border:2px solid #eee; margin-bottom:20px;">
+                <p style="color:var(--text-gray); font-weight:700;">Shift Time:</p>
+                <h2 id="s-v-timer" style="font-size:2rem; font-weight:900; color:var(--dark);">00:00:00</h2>
             </div>
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px;">
-                <button class="pay-btn" style="margin:0; height:80px;" id="btn-clockin" onclick="shift('in')">Clock In</button>
-                <button class="pay-btn" style="margin:0; height:80px; background:var(--dark);" id="btn-clockout" onclick="shift('out')">Clock Out</button>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                <button class="pay-btn" style="margin:0;" id="btn-clockin" onclick="shift('in')">Clock In</button>
+                <button class="pay-btn" style="margin:0; background:var(--dark);" id="btn-clockout" onclick="shift('out')">Clock Out</button>
             </div>
-            <button class="pay-btn" style="width:100%; background:none; color:var(--text-gray); font-size:1rem; margin-top:20px;" onclick="logOffStaff()">Sign Out</button>
+            <button class="pay-btn" style="width:100%; background:none; color:var(--text-gray); margin-top:15px; font-size:1rem;" onclick="logOffStaff()">Sign Out</button>
         </div>
     </main>
 
     <!-- ALERTS -->
     <main id="calls-view" class="view-container">
-        <div class="master-dash-container">
-            <h1 style="margin-bottom:35px; font-weight:900; font-size:2.5rem;">Alert Station</h1>
-            <div style="display:grid; grid-template-columns: repeat(2, 1fr); gap:20px;">
-                <button class="pay-btn" style="height:140px; font-size:1.5rem; margin:0; background:var(--warning); color:var(--dark);" onclick="bC('Manager Required')">🛎️ MANAGER CALL</button>
-                <button class="pay-btn" style="height:140px; font-size:1.5rem; margin:0; background:var(--accent);" onclick="bC('Restock Needed')">📦 RESTOCK NEEDED</button>
-                <button class="pay-btn" style="height:140px; font-size:1.5rem; margin:0; background:var(--success);" onclick="bC('Cleaning Required')">🧹 CLEANING REQ</button>
-                <button class="pay-btn" style="height:140px; font-size:1.5rem; margin:0; background:var(--dark);" onclick="bC('Security Needed')">👮 SECURITY ALERT</button>
+        <div class="master-dash-container" style="padding:40px; max-width:800px; margin:auto;">
+            <h1 style="font-weight:900; margin-bottom:30px;">Alert Station</h1>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
+                <button class="pay-btn" style="height:120px; margin:0; background:var(--warning); color:var(--dark);" onclick="bC('Manager Request')">🛎️ MGR CALL</button>
+                <button class="pay-btn" style="height:120px; margin:0; background:var(--accent);" onclick="bC('Restock')">📦 RESTOCK</button>
             </div>
         </div>
     </main>
 
-    <!-- MASTER STATION -->
+    <!-- MASTER -->
     <main id="manager-view" class="view-container">
-        <div class="master-dash-container">
-            <div class="master-tabs"><button class="master-tab active" onclick="switchM('s-kpi', this)">Stats</button><button class="master-tab" onclick="switchM('s-inventory', this)">Menu</button><button class="master-tab" onclick="switchM('s-staff', this)">Staff Force</button><button class="master-tab" onclick="switchM('s-loyalty', this)">CRM</button></div>
-            <div id="s-kpi" class="master-content active"><div class="stat-grid" style="display:grid; grid-template-columns: repeat(3, 1fr); gap:20px;"><div class="stat-card" style="background:#fff; padding:30px; border-radius:15px; border-left:10px solid var(--primary);"><div style="color:var(--text-gray); font-weight:800;">Rev</div><div id="m-rev" style="font-size:2rem; font-weight:900;">$0.00</div></div><div class="stat-card" style="background:#fff; padding:30px; border-radius:15px; border-left:10px solid var(--primary);"><div style="color:var(--text-gray); font-weight:800;">Tickets</div><div id="m-ord" style="font-size:2rem; font-weight:900;">0</div></div><div class="stat-card" style="background:#fff; padding:30px; border-radius:15px; border-left:10px solid var(--primary);"><div style="color:var(--text-gray); font-weight:800;">Avg</div><div id="m-avg" style="font-size:2rem; font-weight:900;">$0.00</div></div></div></div>
-            <div id="s-inventory" class="master-content"><div style="background:white; padding:20px; border-radius:12px; margin-bottom:20px; border:1px solid #e5e7eb;"><div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;"><input type="text" id="n-item-n" placeholder="Item Name"><input type="number" id="n-item-p" placeholder="Price"></div><button class="pay-btn" style="width:100%; margin:0;" onclick="addInv()">Add Component</button></div><div id="m-menu-list"></div></div>
-            <div id="s-staff" class="master-content"><div style="background:white; padding:20px; border-radius:12px; margin-bottom:20px; border:1px solid #e5e7eb;"><div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px;"><input type="text" id="n-emp-n" placeholder="Name"><input type="text" id="n-emp-p" placeholder="4-Digit PIN"><select id="n-emp-r"><option value="Manager">Manager</option><option value="Chef">Chef</option><option value="Cashier">Cashier</option></select></div><button class="pay-btn" style="width:100%; margin:0;" onclick="addSt()">Onboard Personnel</button></div><div id="m-staff-list" style="background:white; border-radius:12px; border:1px solid #e5e7eb;"></div></div>
-            <div id="s-loyalty" class="master-content"><div id="m-loy-list" style="background:white; border-radius:12px; border:1px solid #e5e7eb;"></div></div>
+        <div class="master-dash-container" style="padding:40px; max-width:1000px; margin:auto;">
+            <div class="master-tabs" style="display:flex; background:#eee; padding:5px; border-radius:12px; margin-bottom:30px;">
+                <button class="master-tab active" style="flex:1; padding:10px; border-radius:8px;" onclick="switchM('s-kpi', this)">Stats</button>
+                <button class="master-tab" style="flex:1; padding:10px; border-radius:8px;" onclick="switchM('s-staff', this)">Staff</button>
+                <button class="master-tab" style="flex:1; padding:10px; border-radius:8px;" onclick="switchM('s-loyalty', this)">CRM</button>
+            </div>
+            <div id="s-kpi" class="master-content active">Rev: <span id="m-rev">$0.00</span> | Tickets: <span id="m-ord">0</span></div>
+            <div id="s-staff" class="master-content"><div id="m-staff-list"></div></div>
+            <div id="s-loyalty" class="master-content"><div id="m-loy-list"></div></div>
         </div>
     </main>
 
-    <!-- HIDDEN RECEIPT AREA -->
+    <!-- CDS -->
+    <main id="cust-view" class="view-container" style="background:#0f172a; align-items:center; justify-content:center; color:white;">
+        <div id="cds-setup" style="text-align:center;"><button class="pay-btn" onclick="bindC('Takeout')">Takeout Mode</button></div>
+        <div id="cds-active" style="display:none; text-align:center;">
+            <h1 id="cds-status" style="font-size:5rem; font-weight:900;">WELCOME</h1>
+            <div id="cds-items" style="font-size:1.5rem; opacity:0.7;">Ready...</div>
+        </div>
+    </main>
+
+    <!-- KIOSK -->
+    <main id="kiosk-view" class="view-container" style="align-items:center; justify-content:center;">
+        <h1 style="font-size:4rem; font-weight:900; color:var(--primary);">CRAZY BURGERS</h1>
+        <button class="pay-btn" style="padding: 30px 60px; font-size:2rem;" onclick="navTo('pos-view')">TAP TO START</button>
+    </main>
+
     <div id="receipt-area"></div>
 
     <script>
@@ -270,224 +307,104 @@
             { id: 2, name: "Wild Fries", price: 3.49, cat: "Sides", image: "assets/fries.png" },
             { id: 3, name: "3D Printed Patty", price: 12.99, cat: "Hibachi", image: "assets/patty.png" }
         ];
-        let cart = []; let activeOrders = []; let curM = null; let cdsT = null; let sData = null; let sID = null; let sPIN = ""; let ptsToRedeem = 0; let discAmt = 0;
+        let cart = []; let activeOrders = []; let curM = null; let discAmt = 0; let ptsToRedeem = 0; let sPIN = ""; let mPIN = ""; let sData = null; let sID = null; let pinTarget = null; let pBtn = null;
 
-        // UI CORE
+        function navTo(id, btn) {
+            let v = document.getElementById(id);
+            if(!v) return;
+            document.querySelectorAll('.view-container').forEach(c => c.classList.remove('active'));
+            v.classList.add('active');
+            if(btn) { document.querySelectorAll('.nav-button').forEach(b => b.classList.remove('active-nav')); btn.classList.add('active-nav'); }
+            if(id === 'pos-view') renderP();
+        }
+
         function renderP() {
             let g = document.getElementById('pos-grid');
-            g.innerHTML = menu.map(m => `<div class="menu-card" onclick="openMod(${m.id})"><div class="menu-img" style="background-image:url('${m.image}')"></div><div class="menu-content"><span class="menu-badge">${m.cat}</span><div class="menu-title">${m.name}</div><div class="menu-price">$${m.price.toFixed(2)}</div></div></div>`).join('');
+            if(!g) return;
+            g.innerHTML = menu.map(m => `<div class="menu-card" onclick="openMod(${m.id})"><div class="menu-img" style="background-image:url('${m.image}')"></div><div class="menu-content"><div class="menu-title">${m.name}</div><div class="menu-price">$${m.price.toFixed(2)}</div></div></div>`).join('');
         }
-        function navTo(id, btn) {
-            document.querySelectorAll('.view-container').forEach(v => v.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
-            if(btn) { document.querySelectorAll('.nav-button').forEach(b => b.classList.remove('active-nav')); btn.classList.add('active-nav'); }
-            document.getElementById('global-sidebar').style.display = ['kds-view','kiosk-view','cust-view'].includes(id)?'none':'flex';
-            document.getElementById('fab-nav').style.display = ['kds-view','kiosk-view','cust-view'].includes(id)?'flex':'none';
-            if(id==='pos-view') renderP();
+
+        function openMod(id) { 
+            let tI = menu.find(i=>i.id===id); 
+            customConfirm(tI.name, `Add to order?`, () => { cart.push({ cid: Date.now(), ...tI }); renderCart(); }); 
         }
-        function toggleSidebar() { let s = document.getElementById('global-sidebar'); s.style.display = s.style.display==='none' ? 'flex' : 'none'; }
-        function enableVoice() { window.speechSynthesis.cancel(); let sp = new SpeechSynthesisUtterance("Audio Active."); sp.volume = 0; window.speechSynthesis.speak(sp); customAlert("Sync", "Announcements and CDS audio synchronized."); }
 
-        // SOCKETS
-        socket.on('initial-data', d => { activeOrders = d.orders; renderK(); updM(); });
-        socket.on('order-update', o => { activeOrders = o; renderK(); renderC(); updM(); });
-        socket.on('announcement', d => { if(d.id === 'call') { document.getElementById('call-msg').innerText = d.message; document.getElementById('station-call-alert').style.display = 'block'; setTimeout(() => document.getElementById('station-call-alert').style.display='none', 8000); } });
-        function bC(t) { socket.emit('station-call', { type: t }); customAlert("Alert", `Manager notified: ${t}.`); }
-        function sendStationCall() { bC("POS Assistance"); }
-        function clearCall() { document.getElementById('station-call-alert').style.display='none'; }
-
-        // POS
-        let tI = null;
-        function openMod(id) { tI = menu.find(i=>i.id===id); document.getElementById('overlay-alert').style.display='none'; customConfirm(tI.name, "Add to order?", () => { cart.push({ cid: Date.now(), ...tI }); renderCart(); }); }
         function renderCart() {
-            let sum = 0; let c = document.getElementById('op-items'); 
-            if(!cart.length) c.innerHTML = '<div style="text-align:center; padding-top:40px; color:#94a3b8; font-weight:800;">Empty</div>';
-            else { c.innerHTML = cart.map(i => { sum += i.price; return `<div class="cart-row"><div class="cart-info"><div class="cart-name">${i.name}</div></div><div style="text-align:right;"><div>$${i.price.toFixed(2)}</div><button onclick="remC(${i.cid})" style="color:red; background:none;">X</button></div></div>`; }).join(''); }
-            let tot = Math.max(0, sum - discAmt); document.getElementById('pos-total').innerText = tot.toFixed(2);
+            let c = document.getElementById('op-items'); if(!c) return;
+            let sum = cart.reduce((a,b)=>a+b.price,0);
+            c.innerHTML = cart.map(i => `<div class="cart-row"><span>${i.name}</span> <button onclick="remC(${i.cid})" style="background:none; color:red;">X</button></div>`).join('');
+            let tot = Math.max(0, sum - discAmt);
+            document.getElementById('pos-total').innerText = tot.toFixed(2);
         }
         function remC(id) { cart = cart.filter(i=>i.cid!==id); renderCart(); }
-        function clearCart() { cart=[]; curM=null; ptsToRedeem=0; discAmt=0; document.getElementById('cart-loyalty-info').style.display='none'; document.getElementById('cart-discount-row').style.display='none'; renderCart(); }
 
-        // LOYALTY & CHECKOUT
-        function startCheckout() {
-            if(!cart.length) return;
-            if(!curM) { loyS('init'); document.getElementById('overlay-loyalty').style.display='flex'; }
-            else { document.getElementById('overlay-table').style.display='flex'; }
-        }
+        // LOYALTY
         function loyS(s) { document.getElementById('loyalty-init').style.display = s==='init'?'grid':'none'; document.getElementById('loyalty-find').style.display = s==='search'?'block':'none'; document.getElementById('loyalty-create').style.display = s==='create'?'block':'none'; }
-        function skipLoyalty() { document.getElementById('overlay-loyalty').style.display='none'; document.getElementById('overlay-table').style.display='flex'; }
         
-        function findMember() { 
-            let n = document.getElementById('loy-q').value; 
-            db.collection('customers').where('name','==',n).get().then(s => { 
-                if(s.empty) return customAlert("Failed", "Name not found."); 
+        function findMember() {
+            let n = document.getElementById('loy-q').value;
+            db.collection('customers').where('name','==',n).get().then(s => {
+                if(s.empty) return customAlert("Not Found", "Name not in system.");
                 let m = { docId: s.docs[0].id, ...s.docs[0].data() };
-                checkRedemption(m);
+                curM = m; document.getElementById('overlay-loyalty').style.display='none';
+                if(m.points >= 10) { 
+                    ptsToRedeem = Math.floor(m.points/10)*10; discAmt = ptsToRedeem/10;
+                    document.getElementById('r-bal').innerText = m.points; document.getElementById('overlay-redeem').style.display='flex';
+                } else { setM(m); }
             });
         }
-        function createMember() { 
+        function createMember() {
             let n = document.getElementById('loy-n').value; if(!n) return;
             let m = { name: n, joined: new Date().toISOString(), points: 0 };
-            db.collection('customers').add(m).then(ref => { m.docId = ref.id; customAlert("Joined!", "Customer registered."); checkRedemption(m); loadLoy(); });
+            db.collection('customers').add(m).then(ref => { m.docId = ref.id; curM = m; document.getElementById('overlay-loyalty').style.display='none'; setM(m); });
         }
-        function checkRedemption(m) {
-            curM = m; 
-            document.getElementById('overlay-loyalty').style.display='none';
-            if(m.points >= 10) {
-                ptsToRedeem = Math.floor(m.points / 10) * 10;
-                discAmt = ptsToRedeem / 10;
-                document.getElementById('r-bal').innerText = m.points;
-                document.getElementById('r-max').innerText = ptsToRedeem;
-                document.getElementById('r-disc').innerText = discAmt.toFixed(2);
-                document.getElementById('overlay-redeem').style.display='flex';
-            } else { setM(m); }
-        }
-        function redeemPoints(yes) {
-            if(!yes) { ptsToRedeem = 0; discAmt = 0; }
-            else { 
-                document.getElementById('pos-disc').innerText = discAmt.toFixed(2);
-                document.getElementById('cart-discount-row').style.display='flex';
-            }
-            document.getElementById('overlay-redeem').style.display='none';
-            setM(curM);
-        }
-        function setM(m) { 
-            document.getElementById('member-tag').innerText = m.name; 
-            document.getElementById('member-pts').innerText = m.points;
-            document.getElementById('cart-loyalty-info').style.display='block'; 
-            renderCart();
-            document.getElementById('overlay-table').style.display='flex';
-        }
+        function setM(m) { document.getElementById('member-tag').innerText = m.name; document.getElementById('cart-loyalty-info').style.display='block'; renderCart(); document.getElementById('overlay-table').style.display='flex'; }
+        function skipLoyalty() { document.getElementById('overlay-loyalty').style.display='none'; document.getElementById('overlay-table').style.display='flex'; }
 
         function finishOrder(tbl) {
             let tot = parseFloat(document.getElementById('pos-total').innerText);
-            let earned = Math.floor(tot);
-            let o = { id: Math.floor(1000 + Math.random()*9000), table: tbl, items: [...cart], status: 'pending', member: curM?curM.name:null, total: tot };
-            
+            let o = { id: Math.floor(Math.random()*9000), table: tbl, items: [...cart], total: tot };
             if(curM) {
-                let newPts = curM.points + earned - ptsToRedeem;
-                db.collection('customers').doc(curM.docId).update({ points: newPts });
+                let earned = Math.floor(tot);
+                db.collection('customers').doc(curM.docId).update({ points: curM.points + earned - ptsToRedeem });
             }
-            
             socket.emit('new-order', o);
-            printReceipt(o);
-            clearCart();
+            customAlert("Done", "Order sent to kitchen.");
+            cart=[]; curM=null; ptsToRedeem=0; discAmt=0; document.getElementById('cart-loyalty-info').style.display='none'; renderCart();
             document.getElementById('overlay-table').style.display='none';
-            customAlert("Success", "Ticket sent & receipt printed.");
         }
 
-        // RECEIPT ENGINE
-        function printReceipt(o) {
-            let r = document.getElementById('receipt-area');
-            r.innerHTML = `
-                <div style="text-align:center;">
-                    <h2 style="margin:0;">CRAZY BURGERS</h2>
-                    <p style="font-size:0.8rem;">Modern Terminal POS</p>
-                </div>
-                <div class="sep"></div>
-                <div class="item"><span>TICKET:</span> <span>#${o.id}</span></div>
-                <div class="item"><span>DEST:</span> <span>${o.table}</span></div>
-                <div class="sep"></div>
-                ${o.items.map(i => `<div class="item"><span>${i.name}</span> <span>$${i.price.toFixed(2)}</span></div>`).join('')}
-                <div class="sep"></div>
-                ${discAmt > 0 ? `<div class="item" style="color:gray;"><span>Discount:</span> <span>-$${discAmt.toFixed(2)}</span></div>` : ''}
-                <div class="total"><span>TOTAL:</span> <span>$${o.total.toFixed(2)}</span></div>
-                <div class="sep"></div>
-                <p style="text-align:center; font-size:0.7rem;">${o.member ? 'Thank you, ' + o.member : 'Thank you for your visit!'}</p>
-                <p style="text-align:center; font-size:0.6rem;">${new Date().toLocaleString()}</p>
-            `;
-            window.print();
-        }
-
-        // KDS
+        // KDS rendering
         function renderK() {
-            let g = document.getElementById('kds-grid'); let a = activeOrders.filter(o => o.status !== 'completed');
-            g.innerHTML = a.map(o => {
-                let ns = o.status==='pending'?'preparing':(o.status==='preparing'?'ready':'completed');
-                let act = o.status==='pending'?'Cook':(o.status==='preparing'?'Ready':'Clear');
-                let c = o.status==='pending'?'#f59e0b':(o.status==='preparing'?'#3b82f6':'#22C55E');
-                return `<div class="menu-card" style="border-top:10px solid ${c}; padding:15px; grid-row: span 2;"><div style="font-weight:900; display:flex; justify-content:space-between; margin-bottom:10px; font-size:1.1rem;"><span>#${o.id}</span><span>${o.table}</span></div><div style="flex:1;">${o.items.map(i => `<div style="padding-bottom:5px; border-bottom:1px solid #f1f5f9;">• ${i.name}</div>`).join('')}</div><button class="pay-btn" style="margin-top:15px; width:100%;" onclick="cyc(${o.id},'${ns}','${o.table}')">${act}</button></div>`;
-            }).join('');
-        }
-        function cyc(id, s, t) {
-            socket.emit('update-order-status', { id, status: s });
-            if(s==='ready') { 
-                window.speechSynthesis.cancel();
-                let table = t.trim(); let txt = table.toLowerCase()==='takeout' ? `Order ${id} is ready for pick up.` : `Now serving order ${id} at ${table}.`;
-                try { let sp = new SpeechSynthesisUtterance(txt); sp.rate = 0.9; window.speechSynthesis.speak(sp); } catch(e){}
-            }
+            let g = document.getElementById('kds-grid'); if(!g) return;
+            g.innerHTML = activeOrders.map(o => `<div class="menu-card" style="padding:15px; border-top:5px solid var(--primary);"><div style="font-weight:900;">#${o.id} - ${o.table}</div><hr>${o.items.map(i=>`<div>${i.name}</div>`).join('')}</div>`).join('');
         }
 
-        // STAFF & ROLES
-        let shiftInt = null;
-        function sV() { 
-            db.collection('employees').where('pin','==',String(sPIN)).get().then(s => { 
-                if(s.empty) { customAlert("Failed", "Invalid PIN"); sC(); return; } 
-                sID=s.docs[0].id; sData=s.docs[0].data(); 
-                document.getElementById('s-login').style.display='none'; document.getElementById('s-portal').style.display='block'; 
-                document.getElementById('s-v-name').innerText=sData.name; 
-                document.getElementById('s-role-tag').innerText = sData.role.toUpperCase();
-                updatePortal();
-            });
-        }
-        function updatePortal() {
-            if(shiftInt) clearInterval(shiftInt);
-            if(sData.status === 'in' && sData.lastClockIn) {
-                shiftInt = setInterval(() => {
-                    let diff = Date.now() - new Date(sData.lastClockIn).getTime();
-                    let h = Math.floor(diff/3600000); let m = Math.floor((diff%3600000)/60000); let s = Math.floor((diff%60000)/1000);
-                    document.getElementById('s-v-timer').innerText = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
-                }, 1000);
-                document.getElementById('btn-clockin').disabled = true; document.getElementById('btn-clockout').disabled = false;
-            } else {
-                document.getElementById('s-v-timer').innerText = "00:00:00";
-                document.getElementById('btn-clockin').disabled = false; document.getElementById('btn-clockout').disabled = true;
-            }
-        }
-        function shift(t) {
-            let data = { status: t };
-            if(t==='in') data.lastClockIn = new Date().toISOString();
-            db.collection('employees').doc(sID).update(data).then(() => {
-                sData.status = t; if(t==='in') sData.lastClockIn = data.lastClockIn;
-                updatePortal();
-                db.collection('shifts').add({ name: sData.name, type: t, time: new Date().toISOString() });
-            });
-        }
-        function logOffStaff() { sPIN=""; sID=null; sData=null; if(shiftInt) clearInterval(shiftInt); document.getElementById('s-portal').style.display='none'; document.getElementById('s-login').style.display='block'; sC(); }
-        
-        function validateManager(id, b) {
-            if(sData && sData.role === 'Manager') { navTo(id, b); switchM('s-kpi', document.querySelectorAll('.master-tab')[0]); }
-            else { reqPin(id, b); }
-        }
-
-        // MASTER TAB LOADING
-        function switchM(id, b) { document.querySelectorAll('.master-tab').forEach(x=>x.classList.remove('active')); document.querySelectorAll('.master-content').forEach(x=>x.classList.remove('active')); b.classList.add('active'); document.getElementById(id).classList.add('active'); if(id==='s-inventory') loadInv(); if(id==='s-staff') loadSt(); if(id==='s-loyalty') loadLoy(); }
-        function loadInv() { let l = document.getElementById('m-menu-list'); l.innerHTML = menu.map(m => `<div style="display:flex; justify-content:space-between; padding:15px; border-bottom:1px solid #f1f5f9;"><span>${m.name} ($${m.price})</span><button onclick="delInv(${m.id})" style="color:red; background:none; font-weight:800;">REMOVE</button></div>`).join(''); }
-        function addInv() { let n = document.getElementById('n-item-n').value; let p = parseFloat(document.getElementById('n-item-p').value); if(!n||!p) return; menu.push({ id: Date.now(), name: n, price: p, cat: "Fast Food", image: 'assets/burger.png' }); localStorage.setItem('b44_menu', JSON.stringify(menu)); loadInv(); renderP(); }
-        function delInv(id) { menu = menu.filter(m=>m.id!==id); localStorage.setItem('b44_menu', JSON.stringify(menu)); loadInv(); renderP(); }
-        function loadSt() { db.collection('employees').onSnapshot(s => { let h = ''; s.forEach(d => { let a = d.data(); h += `<div style="display:flex; justify-content:space-between; padding:15px; border-bottom:1px solid #f1f5f9;"><span>${a.name} [${a.role}]</span> <button onclick="db.collection('employees').doc('${d.id}').delete()">Fire</button></div>`; }); document.getElementById('m-staff-list').innerHTML = h; }); }
-        function addSt() { let n = document.getElementById('n-emp-n').value; let p = document.getElementById('n-emp-p').value; let r = document.getElementById('n-emp-r').value; if(!n || p.length < 4) return; db.collection('employees').add({ name: n, pin: String(p), role: r, status: 'out' }); }
-        function loadLoy() { db.collection('customers').orderBy('joined','desc').onSnapshot(s => { let h = ''; s.forEach(d => { let a = d.data(); h += `<div style="display:flex; justify-content:space-between; padding:15px; border-bottom:1px solid #f1f5f9;"><span>${a.name} (${a.points} pts)</span> <button onclick="db.collection('customers').doc('${d.id}').delete()">Wipe</button></div>`; }); document.getElementById('m-loy-list').innerHTML = h; }); }
-        function updM() { let r = activeOrders.reduce((a,b)=>a+b.total,0); document.getElementById('m-rev').innerText=`$${r.toFixed(2)}`; document.getElementById('m-ord').innerText=activeOrders.length; let av = activeOrders.length ? r/activeOrders.length : 0; document.getElementById('m-avg').innerText=`$${av.toFixed(2)}`; }
-
-        // PIN HELPERS
-        function sP(n) { if(sPIN.length<4) { sPIN+=n; document.getElementById('s-pin-dot').innerText = "•".repeat(sPIN.length); } }
-        function sC() { sPIN=""; document.getElementById('s-pin-dot').innerText=""; }
+        // PIN LOGIC (Restored)
         function mP(n) { if(mPIN.length<4) { mPIN+=n; document.getElementById('master-pin-dot').innerText = "•".repeat(mPIN.length); } }
         function mC() { mPIN=""; document.getElementById('master-pin-dot').innerText=""; }
-        function reqPin(t, b) { pinTarget=t; pBtn=b; mPIN=""; document.getElementById('pin-overlay').style.display='flex'; document.getElementById('master-pin-dot').innerText=""; }
         function clsPin() { document.getElementById('pin-overlay').style.display='none'; }
-        function mV() { if(mPIN === "2018") { clsPin(); navTo(pinTarget, pBtn); switchM('s-kpi', document.querySelectorAll('.master-tab')[0]); } else { customAlert("Warning", "Manager PIN Incorrect."); mC(); } }
+        function mV() { if(mPIN === "2018") { clsPin(); navTo(pinTarget, pBtn); } else { customAlert("Error", "PIN Wrong"); mC(); } }
+        function reqPin(t, b) { pinTarget=t; pBtn=b; mPIN=""; let d = document.getElementById('pin-overlay'); if(d) d.style.display='flex'; }
 
-        // CDS CORE & AUDIO
-        function bindC(t) { cdsT=t; document.getElementById('cds-setup').style.display='none'; document.getElementById('cds-active').style.display='block'; document.getElementById('cds-t-id').innerText=t; renderC(); }
-        function resetC() { cdsT=null; document.getElementById('cds-active').style.display='none'; document.getElementById('cds-setup').style.display='block'; }
-        function renderC() { if(!cdsT) return; let o = activeOrders.find(x=>x.table===cdsT && x.status!=='completed'); if(!o) { document.getElementById('cds-status').innerText="AWAITING"; document.getElementById('cds-items').innerText="Ready to serve."; } else { document.getElementById('cds-status').innerText=o.status.toUpperCase(); document.getElementById('cds-items').innerHTML=`Ticket #${o.id}<hr style="margin:20px 0; border:1px solid rgba(255,255,255,0.05);">${o.items.map(i=>`• ${i.name}`).join('<br>')}`; } }
+        function sP(n) { if(sPIN.length<4) { sPIN+=n; document.getElementById('s-pin-dot').innerText = "•".repeat(sPIN.length); } }
+        function sC() { sPIN=""; document.getElementById('s-pin-dot').innerText=""; }
+        function sV() { 
+            db.collection('employees').where('pin','==',String(sPIN)).get().then(s => { 
+                if(s.empty) return customAlert("Failed", "Wrong PIN");
+                sID=s.docs[0].id; sData=s.docs[0].data();
+                document.getElementById('s-login').style.display='none'; document.getElementById('s-portal').style.display='block';
+            });
+        }
 
-        // HELPERS
+        function validateManager(id, b) { if(sData && sData.role === 'Manager') navTo(id, b); else reqPin(id, b); }
+
+        socket.on('initial-data', d => { activeOrders = d.orders; renderK(); });
+        socket.on('order-update', o => { activeOrders = o; renderK(); });
+
         function customAlert(t, m) { document.getElementById('alert-title').innerText=t; document.getElementById('alert-body').innerText=m; document.getElementById('overlay-alert').style.display='flex'; }
         function closeAlert() { document.getElementById('overlay-alert').style.display='none'; }
-        let cB = null; function customConfirm(t,m,c) { cB=c; document.getElementById('confirm-title').innerText=t; document.getElementById('confirm-body').innerText=m; document.getElementById('overlay-confirm').style.display='flex'; }
+        let cB = null; function customConfirm(t,m,fn) { cB=fn; document.getElementById('confirm-title').innerText=t; document.getElementById('confirm-body').innerText=m; document.getElementById('overlay-confirm').style.display='flex'; }
         function closeConfirm(p) { document.getElementById('overlay-confirm').style.display='none'; if(p&&cB) cB(); }
 
         navTo('pos-view');
