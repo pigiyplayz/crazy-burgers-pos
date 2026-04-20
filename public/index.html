@@ -3,12 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Base44 Replica | POS Systems</title>
+    <title>Base44 Premium | Crazy Burgers POS</title>
     
-    <!-- Real-time Sockets -->
+    <!-- Premium Typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
+
+    <!-- Real-time Sockets & Firebase -->
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
-    
-    <!-- Firebase Compat SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
@@ -29,488 +32,415 @@
             --radius-lg: 16px;
             --radius-xl: 24px;
             --shadow-sm: 0 1px 2px 0 rgba(0,0,0,0.05);
-            --shadow-md: 0 6px 12px -2px rgba(0,0,0,0.1);
-            --shadow-lg: 0 15px 25px -5px rgba(0,0,0,0.15);
+            --shadow-md: 0 10px 15px -3px rgba(0,0,0,0.1);
+            --shadow-lg: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
         }
 
-        * { box-sizing: border-box; font-family: 'Inter', system-ui, sans-serif; margin: 0; padding: 0; user-select: none; -webkit-tap-highlight-color: transparent; }
+        * { box-sizing: border-box; font-family: 'Inter', sans-serif; margin: 0; padding: 0; user-select: none; -webkit-tap-highlight-color: transparent; }
         body { background-color: var(--secondary); color: var(--text-dark); overflow: hidden; display: flex; height: 100vh; touch-action: manipulation; }
-        button { cursor: pointer; border: none; font-weight: 600; outline: none; transition: transform 0.1s, opacity 0.2s; }
-        button:active { transform: scale(0.96); }
-        button:disabled { opacity: 0.5; cursor: not-allowed; }
+        button { cursor: pointer; border: none; font-weight: 800; outline: none; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
+        button:active { transform: scale(0.95); opacity: 0.8; }
 
-        .view-container { display: none; width: 100%; height: 100%; flex-direction: column; overflow-y: auto;}
+        .view-container { display: none; width: 100%; height: 100%; flex-direction: column; overflow: hidden;}
         .view-container.active { display: flex; animation: fadeIn 0.3s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Left Glob Navigation */
-        .sidebar { width: 120px; background-color: var(--dark); display: flex; flex-direction: column; align-items: center; padding: 25px 0; overflow-y: auto; flex-shrink: 0; scrollbar-width: none; transition: width 0.3s; }
-        .sidebar-logo { width: 70px; height: 70px; background: var(--primary); color: white; font-weight: 900; font-size: 1.8rem; display: flex; align-items: center; justify-content: center; border-radius: var(--radius-lg); margin-bottom: 30px; box-shadow: 0 4px 15px rgba(220, 38, 38, 0.4); }
-        .nav-button { width: 100px; height: 90px; margin-bottom: 12px; background: transparent; color: #9ca3af; border-radius: var(--radius-md); font-size: 0.8rem; gap: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; line-height: 1.2; }
-        .nav-button:hover { background: var(--dark-light); color: white; }
+        /* ---- [ LEFT SIDEBAR ] ---- */
+        .sidebar { width: 115px; background-color: var(--dark); display: flex; flex-direction: column; align-items: center; padding: 30px 0; overflow-y: auto; flex-shrink: 0; scrollbar-width: none; border-right: 1px solid rgba(255,255,255,0.05); }
+        .sidebar-logo { width: 70px; height: 70px; background: linear-gradient(135deg, var(--primary), #991b1b); color: white; font-weight: 900; font-size: 1.8rem; display: flex; align-items: center; justify-content: center; border-radius: var(--radius-lg); margin-bottom: 35px; box-shadow: 0 8px 16px rgba(220, 38, 38, 0.4); }
+        .nav-button { width: 95px; height: 85px; margin-bottom: 12px; background: transparent; color: #9ca3af; border-radius: var(--radius-md); font-size: 0.75rem; gap: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+        .nav-button:hover { background: rgba(255,255,255,0.05); color: white; }
         .nav-button.active-nav { background: var(--primary); color: white; box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3); }
-        .nav-icon { font-size: 2rem; margin-bottom: 4px; }
+        .nav-icon { font-size: 1.8rem; }
 
-        /* Inputs & Touch Areas */
-        input, select, textarea { width: 100%; padding: 18px 20px; border: 2px solid #e5e7eb; border-radius: var(--radius-md); font-size: 1.1rem; margin-bottom: 20px; background: white; color: var(--text-dark); transition: border-color 0.2s; }
-        input:focus { border-color: var(--primary); outline: none; }
+        /* Inputs */
+        input, select, textarea { width: 100%; padding: 15px 20px; border: 2px solid #e5e7eb; border-radius: var(--radius-md); font-size: 1.1rem; margin-bottom: 20px; outline: none; transition: border-color 0.2s; background: #fff;}
+        input:focus { border-color: var(--primary); }
 
         /* ---- [ POS VIEW ] ---- */
         #pos-view { flex-direction: row; }
-        .pos-main { flex: 1; display: flex; flex-direction: column; background: var(--secondary); padding: 20px; position: relative;}
-        .cat-tabs { display: flex; gap: 15px; overflow-x: auto; margin-bottom: 25px; padding-bottom: 5px; scrollbar-width: none; }
-        .cat-tab { padding: 15px 30px; background: white; border-radius: 99px; font-weight: 700; color: var(--text-gray); box-shadow: var(--shadow-sm); flex-shrink: 0; min-width: 120px; text-align: center; font-size: 1.1rem;}
-        .cat-tab.active { background: var(--dark); color: white; }
+        .pos-main { flex: 1; display: flex; flex-direction: column; padding: 25px; overflow-y: auto; background: #f8fafc; }
+        .cat-tabs { display: flex; gap: 12px; margin-bottom: 30px; overflow-x: auto; scrollbar-width: none; padding-bottom: 5px; }
+        .cat-tab { padding: 12px 28px; background: white; border-radius: 99px; font-weight: 800; color: var(--text-gray); box-shadow: var(--shadow-sm); cursor: pointer; border: 2px solid transparent; white-space: nowrap; }
+        .cat-tab.active { background: var(--dark); color: white; border-color: var(--dark); }
         
-        .menu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px; overflow-y: auto; padding-bottom: 100px; }
-        .menu-card { background: white; border-radius: var(--radius-lg); padding: 25px; box-shadow: var(--shadow-sm); border: 3px solid transparent; display: flex; flex-direction: column; cursor: pointer; transition: all 0.2s; }
-        .menu-card:hover { border-color: var(--primary); transform: translateY(-5px); box-shadow: var(--shadow-md); }
-        .menu-badge { font-size: 0.8rem; font-weight: 900; background: #e5e7eb; padding: 6px 12px; border-radius: 6px; width: fit-content; margin-bottom: 15px; color: var(--text-gray); text-transform: uppercase;}
-        .menu-title { font-size: 1.4rem; font-weight: 800; margin-bottom: 8px; }
-        .menu-price { font-size: 1.2rem; color: var(--text-gray); margin-bottom: 20px; flex-grow: 1; font-weight: 600; }
-        .btn-config { background: var(--primary); color: white; width: 100%; padding: 15px; border-radius: var(--radius-md); font-weight: 800; font-size: 1.1rem; }
+        .menu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 20px; }
+        .menu-card { background: white; border-radius: var(--radius-xl); padding: 25px; box-shadow: var(--shadow-sm); border: 3px solid transparent; display: flex; flex-direction: column; cursor: pointer; position: relative; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .menu-card:hover { transform: translateY(-8px); box-shadow: var(--shadow-lg); border-color: var(--primary); }
+        .menu-badge { font-size: 0.75rem; font-weight: 900; background: #f1f5f9; padding: 5px 10px; border-radius: 6px; width: fit-content; margin-bottom: 15px; color: var(--text-gray); text-transform: uppercase; }
+        .menu-title { font-size: 1.4rem; font-weight: 900; margin-bottom: 8px; color: var(--dark); }
+        .menu-price { font-size: 1.2rem; font-weight: 800; color: var(--primary); margin-bottom: 25px; flex-grow: 1; }
+        .btn-add { background: var(--dark); color: white; border-radius: 12px; padding: 15px; width: 100%; font-size: 1rem; }
 
         /* Order Panel */
-        .order-panel { width: 450px; background: white; border-left: 1px solid #e5e7eb; display: flex; flex-direction: column; z-index: 10; box-shadow: -10px 0 30px rgba(0,0,0,0.05); }
-        .op-header { padding: 25px; border-bottom: 1px solid #e5e7eb; }
-        .op-title { font-size: 1.6rem; font-weight: 900; display: flex; justify-content: space-between; align-items: center;}
-        .op-items { flex: 1; overflow-y: auto; padding: 20px; }
-        .cart-row { display: flex; justify-content: space-between; background: var(--secondary); padding: 20px; border-radius: var(--radius-lg); margin-bottom: 15px; border-left: 6px solid var(--primary); }
+        .order-panel { width: 420px; background: white; border-left: 1px solid #e2e8f0; display: flex; flex-direction: column; z-index: 10; box-shadow: -10px 0 30px rgba(0,0,0,0.03); }
+        .op-header { padding: 30px; border-bottom: 1px solid #f1f5f9; }
+        .op-title { font-size: 1.6rem; font-weight: 900; color: var(--dark); display: flex; justify-content: space-between; align-items:center; }
+        .op-items { flex: 1; overflow-y: auto; padding: 25px; }
+        .cart-row { display: flex; justify-content: space-between; background: #f8fafc; padding: 20px; border-radius: var(--radius-lg); margin-bottom: 15px; border-left: 5px solid var(--primary); align-items: center; }
         .cart-info { flex: 1; padding-right: 15px; }
-        .cart-name { font-weight: 800; font-size: 1.2rem; margin-bottom: 6px; }
-        .cart-mods { font-size: 0.9rem; color: #6b7280; line-height: 1.5; font-weight: 500; }
-        .cart-price { font-weight: 800; font-size: 1.2rem; margin-bottom: 10px; }
-        .cart-del { background: #fecaca; color: #dc2626; padding: 12px 18px; border-radius: var(--radius-md); font-weight: 900; font-size: 1.2rem; }
+        .cart-name { font-weight: 800; font-size: 1.15rem; margin-bottom: 5px; }
+        .cart-mods { font-size: 0.9rem; color: #64748b; line-height: 1.5; font-weight: 600; }
+        .cart-del { background: #fee2e2; color: #ef4444; padding: 10px 15px; border-radius: 10px; font-weight: 900; font-size: 1.1rem; }
 
-        .op-footer { padding: 30px; background: #f9fafb; border-top: 1px solid #e5e7eb; }
-        .calc-row { display: flex; justify-content: space-between; font-size: 1.1rem; color: var(--text-gray); margin-bottom: 10px; font-weight: 600; }
-        .calc-total { font-size: 2rem; font-weight: 900; color: var(--text-dark); margin-top: 15px; padding-top: 15px; border-top: 3px dashed #d1d5db; display: flex; justify-content: space-between; }
-        .pay-btn { background: var(--success); color: white; width: 100%; padding: 25px; font-size: 1.5rem; border-radius: var(--radius-lg); margin-top: 25px; box-shadow: 0 8px 20px rgba(34, 197, 94, 0.3); font-weight: 900; }
+        .op-footer { padding: 30px; background: #fdfdfd; border-top: 1px solid #f1f5f9; }
+        .calc-row { display: flex; justify-content: space-between; color: #64748b; margin-bottom: 12px; font-weight: 700; font-size: 1.1rem; }
+        .calc-total { font-size: 2.2rem; font-weight: 900; color: var(--dark); margin-top: 20px; padding-top: 20px; border-top: 3px dashed #e2e8f0; display: flex; justify-content: space-between; }
+        .pay-btn { background: var(--success); color: white; width: 100%; padding: 24px; font-size: 1.5rem; border-radius: var(--radius-lg); margin-top: 25px; box-shadow: 0 10px 25px rgba(34, 197, 94, 0.3); font-weight: 900; letter-spacing: -0.5px; }
 
-        /* Modals & Overlays */
-        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; z-index: 3000; padding: 20px; backdrop-filter: blur(4px); }
-        .modal { background: white; width: 100%; max-width: 550px; border-radius: var(--radius-xl); padding: 40px; box-shadow: var(--shadow-lg); position: relative; max-height: 90vh; overflow-y: auto; }
-        .modal-header { font-size: 2rem; font-weight: 900; margin-bottom: 25px; color: var(--dark); text-align: center; }
+        /* Modals (Glassmorphism Hints) */
+        .overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; z-index: 3000; padding: 20px; }
+        .modal { background: white; width: 100%; max-width: 500px; border-radius: var(--radius-xl); padding: 40px; box-shadow: var(--shadow-lg); overflow: hidden; position: relative; }
+        .modal-header { font-size: 2rem; font-weight: 900; margin-bottom: 30px; color: var(--dark); text-align: center; }
         .btn-flex { display: flex; gap: 15px; margin-top: 30px; }
-        .btn-modal-lg { padding: 20px; font-size: 1.2rem; border-radius: var(--radius-md); font-weight: 800; flex: 1; display: flex; align-items: center; justify-content: center; gap: 10px; }
-        .btn-modal-cancel { background: #f3f4f6; color: var(--text-dark); }
-        .btn-modal-confirm { background: var(--primary); color: white; }
-        .btn-modal-success { background: var(--success); color: white; }
+        .btn-modal { flex: 1; padding: 18px; font-size: 1.1rem; border-radius: 12px; font-weight: 800; display: flex; align-items:center; justify-content: center; gap: 10px; }
+        .btn-cancel { background: #f1f5f9; color: var(--dark); }
+        .btn-confirm { background: var(--primary); color: white; }
+        .btn-success { background: var(--success); color: white; }
 
-        /* ---- [ MANAGER DASHBOARD CONSOLIDATED ] ---- */
-        .mgmt-tabs { display: flex; background: #e5e7eb; padding: 6px; border-radius: var(--radius-md); margin-bottom: 30px; gap: 6px; }
-        .mgmt-tab { flex: 1; padding: 15px; border-radius: 8px; background: transparent; color: var(--text-gray); font-size: 1.1rem; font-weight: 700; }
-        .mgmt-tab.active { background: white; color: var(--text-dark); box-shadow: var(--shadow-sm); }
-        .mgmt-section { display: none; }
-        .mgmt-section.active { display: block; }
+        .table-btn { padding: 25px; font-size: 1.2rem; background: #f8fafc; border: 3px solid #e2e8f0; border-radius: 16px; font-weight: 800; color: var(--dark); }
+        .table-btn:hover { border-color: var(--primary); background: white; }
+
+        /* ---- [ MANAGER CONSOLIDATED MASTER ] ---- */
+        .master-dash-container { max-width: 1100px; width: 100%; margin: 60px auto; padding: 0 40px; }
+        .master-tabs { display: flex; background: #e2e8f0; padding: 6px; border-radius: 14px; margin-bottom: 40px; gap: 6px; }
+        .master-tab { flex: 1; padding: 15px; border-radius: 10px; background: transparent; color: var(--text-gray); font-size: 1rem; font-weight: 800; }
+        .master-tab.active { background: white; color: var(--dark); box-shadow: var(--shadow-sm); }
+        .master-content { display: none; }
+        .master-content.active { display: block; animation: fadeIn 0.4s ease; }
         
-        .list-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        .list-table th { text-align: left; padding: 15px; color: var(--text-gray); border-bottom: 2px solid #f3f4f6; text-transform: uppercase; font-size: 0.9rem; letter-spacing: 1px; }
-        .list-table td { padding: 20px 15px; border-bottom: 1px solid #f3f4f6; font-size: 1.1rem; font-weight: 600; }
-        .btn-action-del { color: #dc2626; background: #fee2e2; padding: 8px 15px; border-radius: 6px; font-size: 0.9rem; font-weight: 800; }
+        .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 25px; margin-bottom: 40px; }
+        .stat-card { background: white; padding: 35px; border-radius: var(--radius-xl); box-shadow: var(--shadow-md); border-top: 8px solid var(--primary); }
+        .stat-label { font-size: 1.1rem; color: var(--text-gray); font-weight: 600; margin-bottom: 10px; }
+        .stat-val { font-size: 2.8rem; font-weight: 900; color: var(--dark); }
+        
+        .data-table { width: 100%; border-collapse: collapse; background: white; border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-sm); }
+        .data-table th { background: #f8fafc; padding: 20px; text-align: left; font-weight: 800; border-bottom: 2px solid #f1f5f9; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 1px; color: #64748b; }
+        .data-table td { padding: 20px; border-bottom: 1px solid #f1f5f9; font-weight: 600; font-size: 1.05rem; }
 
-        /* ---- [ EMPLOYEE CLOCK-IN VIEW ] ---- */
-        .clock-container { max-width: 450px; background: white; padding: 50px; border-radius: var(--radius-xl); text-align: center; box-shadow: var(--shadow-lg); margin: auto; }
-        .clock-display { font-size: 4rem; font-weight: 900; margin-bottom: 10px; color: var(--primary); }
-        .clock-name { font-size: 1.8rem; font-weight: 800; margin-bottom: 40px; color: var(--dark); }
-        .clock-stats { background: var(--secondary); padding: 20px; border-radius: var(--radius-lg); margin-top: 30px; text-align: left; }
+        /* ---- [ STAFF LOGIN STATION ] ---- */
+        .staff-box { background: white; padding: 50px; border-radius: 32px; width: 440px; text-align: center; box-shadow: var(--shadow-lg); border: 1px solid #f1f5f9; }
+        .staff-pin-view { font-size: 3.5rem; letter-spacing: 20px; margin-bottom: 30px; height: 90px; display: flex; align-items:center; justify-content: center; background: #f8fafc; border-radius: 20px; color: var(--primary); font-weight: 900; }
+        .pin-btn { background: #f1f5f9; font-size: 2rem; height: 90px; border-radius: 18px; color: var(--dark); font-weight: 900; }
+        .pin-btn:active { background: #e2e8f0; }
 
-        /* PIN Pad Generic */
-        .pin-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin: 25px 0; }
-        .pin-key { background: #f3f4f6; font-size: 1.8rem; height: 85px; border-radius: 12px; color: var(--text-dark); font-weight: 800; }
-        .pin-key:active { background: #e5e7eb; }
-        .pin-dot-display { font-size: 3.5rem; letter-spacing: 20px; height: 80px; display: flex; align-items: center; justify-content: center; background: var(--secondary); border-radius: var(--radius-md); margin-bottom: 20px; color: var(--primary); }
+        #station-call-alert { position: fixed; top: 25px; left: 50%; transform: translateX(-50%); background: var(--warning); color: var(--dark); padding: 20px 40px; border-radius: 99px; font-weight: 900; font-size: 1.3rem; box-shadow: var(--shadow-lg); z-index: 5000; display: none; animation: popDown 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        @keyframes popDown { from { transform: translate(-50%, -40px); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
 
-        /* Mobile Adjustments */
-        @media (max-width: 1024px) {
-            #pos-view { flex-direction: column; }
-            .sidebar { width: 90px; }
-            .nav-button { width: 75px; height: 75px; font-size: 0.7rem; }
-            .order-panel { width: 100%; height: 50%; border-left: none; border-top: 2px solid #e5e7eb; }
-            .op-items { height: 150px; }
-            .menu-grid { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); }
-        }
-
-        @media (max-width: 640px) {
-            .sidebar { display: none; position: fixed; bottom: 0; left: 0; right: 0; width: 100%; height: 80px; flex-direction: row; justify-content: space-around; padding: 0; z-index: 5000; }
-            .sidebar-logo { display: none; }
-            .nav-button { height: 100%; margin: 0; width: auto; flex: 1; border-radius: 0; }
-            body { padding-bottom: 80px; }
-            .view-container { height: calc(100vh - 80px); }
-            .order-panel { position: fixed; top: 0; right: -100%; width: 100%; height: calc(100% - 80px); transition: right 0.3s; }
-            .order-panel.mobile-open { right: 0; }
-            .mobile-cart-toggle { display: flex; position: fixed; right: 20px; bottom: 100px; width: 70px; height: 70px; background: var(--primary); border-radius: 50%; color: white; align-items: center; justify-content: center; font-size: 1.8rem; box-shadow: var(--shadow-lg); z-index: 4000; }
-        }
-
-        /* FAB for fullscreen mode returns */
-        .fab-nav { display: none; position: fixed; right: -25px; top: 20px; width: 60px; height: 100px; background: var(--primary); color: white; align-items: center; padding-left: 10px; border-radius: 50px 0 0 50px; font-size: 1.5rem; cursor: pointer; z-index: 500; transition: right 0.2s; box-shadow: var(--shadow-lg); }
+        .fab-nav { display: none; position: fixed; right: -30px; top: 50%; transform: translateY(-50%); width: 70px; height: 120px; background: var(--primary); color: white; align-items: center; padding-left: 15px; border-radius: 50px 0 0 50px; font-size: 2rem; cursor: pointer; z-index: 1000; box-shadow: var(--shadow-lg); transition: all 0.3s; }
         .fab-nav:hover { right: 0; }
     </style>
 </head>
 <body>
 
-    <!-- Call Badge -->
-    <div id="station-call-alert">⚠️ CALL INBOUND: <span id="call-msg"></span> <button onclick="clearCall()" style="margin-left: 15px; padding: 8px; border-radius: 6px; background: rgba(0,0,0,0.1);">Clear</button></div>
+    <div id="station-call-alert">ΓÜá∩╕Å ALERT: <span id="call-msg"></span> <button onclick="clearCall()" style="margin-left: 20px; padding: 10px 20px; border-radius: 30px; background: rgba(0,0,0,0.1); font-size: 0.9rem;">DISMISS</button></div>
 
-    <!-- Website Standard Popups -->
+    <!-- Modals -->
     <div id="overlay-alert" class="overlay">
         <div class="modal" style="text-align:center;">
             <div class="modal-header" id="alert-title">Notice</div>
-            <p id="alert-body" style="font-size:1.2rem; color:var(--text-gray); margin-bottom: 30px;"></p>
-            <button class="btn-modal-lg btn-modal-confirm" style="width:100%;" onclick="closeAlert()">Dismiss</button>
+            <p id="alert-body" style="font-size:1.3rem; color:var(--text-gray); margin-bottom: 35px;"></p>
+            <button class="pay-btn" style="width:100%; margin-top:0;" onclick="closeAlert()">Continue</button>
         </div>
     </div>
 
     <div id="overlay-confirm" class="overlay">
         <div class="modal" style="text-align:center;">
             <div class="modal-header" id="confirm-title">Are you sure?</div>
-            <p id="confirm-body" style="font-size:1.2rem; color:var(--text-gray); margin-bottom: 30px;"></p>
+            <p id="confirm-body" style="font-size:1.3rem; color:var(--text-gray); margin-bottom: 35px;"></p>
             <div class="btn-flex">
-                <button class="btn-modal-lg btn-modal-cancel" onclick="closeConfirm(false)">No, Go Back</button>
-                <button class="btn-modal-lg btn-modal-confirm" onclick="closeConfirm(true)">Yes, Proceed</button>
+                <button class="btn-modal btn-cancel" onclick="closeConfirm(false)">Go Back</button>
+                <button class="btn-modal btn-confirm" onclick="closeConfirm(true)">Confirm</button>
             </div>
         </div>
     </div>
 
-    <!-- New Loyalty Step Modal -->
+    <!-- Loyalty Flow (Simplified Name-Only) -->
     <div id="overlay-loyalty" class="overlay">
         <div class="modal">
-            <div class="modal-header">Loyalty Account</div>
-            <p style="text-align:center; color:var(--text-gray); font-size:1.1rem; margin-bottom:30px;">Does the customer have a Crazy Burgers rewards account?</p>
+            <div class="modal-header">Rewards Program</div>
+            <p style="text-align:center; color:var(--text-gray); font-size:1.2rem; margin-bottom: 30px;">Does the customer have a rewards account?</p>
             
-            <div id="loyalty-search-state">
+            <div id="loyalty-init">
                 <div style="display:grid; grid-template-columns: 1fr; gap:15px;">
-                    <button class="btn-modal-lg btn-modal-success" onclick="showLoyaltySearch()">Yes, Find Account</button>
-                    <button class="btn-modal-lg btn-modal-confirm" onclick="showLoyaltyCreate()">No, Create Account</button>
-                    <button class="btn-modal-lg btn-modal-cancel" onclick="skipLoyalty()">Skip Loyalty Step</button>
+                    <button class="btn-modal btn-confirm" style="height:70px;" onclick="loyS('search')">Find Existing Member</button>
+                    <button class="btn-modal btn-success" style="height:70px;" onclick="loyS('create')">Register New Member</button>
+                    <button class="btn-modal btn-cancel" style="height:60px; margin-top:10px;" onclick="skipLoyalty()">Skip (No Rewards)</button>
                 </div>
             </div>
 
-            <div id="loyalty-find-state" style="display:none;">
-                <input type="text" id="loyalty-lookup-name" placeholder="Enter Member Name or Phone">
-                <button class="btn-modal-lg btn-modal-confirm" style="width:100%;" onclick="searchLoyaltyMember()">Search Database</button>
-                <button class="btn-modal-lg btn-modal-cancel" style="width:100%; margin-top:10px;" onclick="resetLoyaltyModal()">Back</button>
+            <div id="loyalty-find" style="display:none;">
+                <input type="text" id="loy-q" placeholder="Enter Full Name">
+                <button class="btn-modal btn-confirm" style="width:100%;" onclick="findMember()">Lookup Account</button>
+                <button class="btn-modal btn-cancel" style="width:100%; margin-top:15px;" onclick="loyS('init')">Back</button>
             </div>
 
-            <div id="loyalty-create-state" style="display:none;">
-                <input type="text" id="loyalty-new-name" placeholder="Full Name">
-                <input type="text" id="loyalty-new-phone" placeholder="Phone Number">
-                <button class="btn-modal-lg btn-modal-success" style="width:100%;" onclick="createNewLoyaltyMember()">Sign Up Member</button>
-                <button class="btn-modal-lg btn-modal-cancel" style="width:100%; margin-top:10px;" onclick="resetLoyaltyModal()">Back</button>
+            <div id="loyalty-create" style="display:none;">
+                <input type="text" id="loy-n" placeholder="Customer Full Name">
+                <button class="btn-modal btn-success" style="width:100%;" onclick="createMember()">Create Account</button>
+                <button class="btn-modal btn-cancel" style="width:100%; margin-top:15px;" onclick="loyS('init')">Back</button>
             </div>
         </div>
     </div>
 
-    <!-- Table Assignment Modal -->
     <div id="overlay-table" class="overlay">
-        <div class="modal" style="max-width: 600px;">
-            <div class="modal-header">Table/Order Assignment</div>
+        <div class="modal" style="max-width: 650px;">
+            <div class="modal-header">Order Assignment</div>
             <div class="table-grid">
-                <button class="table-btn" onclick="assignOrder('Takeout')">🥡 TAKEOUT</button>
-                <button class="table-btn" onclick="assignOrder('Table 1')">🪑 TABLE 1</button>
-                <button class="table-btn" onclick="assignOrder('Table 2')">🪑 TABLE 2</button>
-                <button class="table-btn" onclick="assignOrder('Table 3')">🪑 TABLE 3</button>
-                <button class="table-btn" onclick="assignOrder('Table 4')">🪑 TABLE 4</button>
-                <button class="table-btn" onclick="assignOrder('Table 5')">🪑 TABLE 5</button>
+                <button class="table-btn" onclick="finishOrder('Takeout')">≡ƒì┤ TAKEOUT</button>
+                <button class="table-btn" onclick="finishOrder('Table 1')">≡ƒæí TABLE 1</button>
+                <button class="table-btn" onclick="finishOrder('Table 2')">≡ƒæí TABLE 2</button>
+                <button class="table-btn" onclick="finishOrder('Table 3')">≡ƒæí TABLE 3</button>
+                <button class="table-btn" onclick="finishOrder('Table 4')">≡ƒæí TABLE 4</button>
+                <button class="table-btn" onclick="finishOrder('Table 5')">≡ƒæí TABLE 5</button>
             </div>
-            <button class="btn-modal-lg btn-modal-cancel" style="width:100%; margin-top:15px;" onclick="document.getElementById('overlay-table').style.display='none'">Go Back</button>
+            <button class="btn-modal btn-cancel" style="width:100%; margin-top:20px;" onclick="document.getElementById('overlay-table').style.display='none'">Go Back</button>
         </div>
     </div>
 
-
-    <!-- GLOB SIDEBAR -->
+    <!-- PRIMARY SIDEBAR -->
     <nav class="sidebar" id="global-sidebar">
-        <div class="sidebar-logo">C-B</div>
+        <div class="sidebar-logo">CB</div>
         <button class="nav-button active-nav" onclick="navTo('pos-view', this)">
-            <span class="nav-icon">🍔</span> POS
+            <span class="nav-icon">≡ƒìö</span> POS
         </button>
         <button class="nav-button" onclick="navTo('kiosk-view', this)">
-            <span class="nav-icon">📱</span> Kiosk
+            <span class="nav-icon">≡ƒô▒</span> Kiosk
         </button>
         <button class="nav-button" onclick="navTo('cust-view', this)">
-            <span class="nav-icon">🖥️</span> CDS
+            <span class="nav-icon">≡ƒûÑ∩╕Å</span> CDS
         </button>
         <button class="nav-button" onclick="navTo('kds-view', this)">
-            <span class="nav-icon">🍳</span> KDS
+            <span class="nav-icon">≡ƒì│</span> KDS
         </button>
         <button class="nav-button" onclick="reqPin('manager-view', this)">
-            <span class="nav-icon">📊</span> Manager
+            <span class="nav-icon">≡ƒôè</span> Master
         </button>
-        <button class="nav-button" onclick="navTo('emp-mgmt-view', this)">
-            <span class="nav-icon">🕵️</span> Staff Station
+        <button class="nav-button" onclick="navTo('staff-view', this)">
+            <span class="nav-icon">≡ƒæ¿ΓÇì≡ƒì│</span> Staff
         </button>
         <button class="nav-button" onclick="navTo('calls-view', this)">
-            <span class="nav-icon">🔔</span> Calls
+            <span class="nav-icon">≡ƒöö</span> Alerts
         </button>
     </nav>
 
-    <!-- Mobile Cart Toggle -->
-    <div class="mobile-cart-toggle" id="mobile-cart-btn" onclick="toggleMobileCart()">🛒</div>
-    <div class="fab-nav" id="fab-nav" onclick="toggleSidebar()">◀</div>
+    <div class="fab-nav" id="fab-nav" onclick="toggleSidebar()">ΓùÇ</div>
 
     <!-- 1. POS VIEW -->
     <main id="pos-view" class="view-container active">
         <div class="pos-main">
-            <div style="display:flex; justify-content: space-between; align-items:center; margin-bottom: 25px;">
-                <h1 style="font-size: 2.2rem; font-weight: 900;">Crazy Burgers POS</h1>
-                <button onclick="sendStationCall()" style="background:var(--warning); color:#111827; padding: 15px 25px; border-radius: 12px; font-weight:800; font-size:1rem;">🔔 REQUEST MANAGER</button>
+            <div style="display:flex; justify-content: space-between; align-items:center; margin-bottom: 35px;">
+                <h1 style="font-size: 2.5rem; font-weight: 900; letter-spacing: -1px;">Point of Sale</h1>
+                <button onclick="sendStationCall()" style="background:var(--warning); color:#111827; padding: 15px 30px; border-radius: 14px; font-weight:800;">≡ƒöö CALL MANAGER</button>
             </div>
             <div class="cat-tabs" id="pos-cats"><button class="cat-tab active">All Menu Items</button></div>
             <div class="menu-grid" id="pos-grid"></div>
         </div>
 
-        <aside class="order-panel" id="order-panel">
+        <aside class="order-panel">
             <div class="op-header">
-                <div class="op-title">Current Order <button onclick="clearCart()" style="font-size: 1rem; color: var(--primary); background: transparent; font-weight:800;">Wipe Cart</button></div>
+                <div class="op-title">Current Ticket <button onclick="clearCart()" style="font-size: 1rem; color: var(--primary); background: transparent; font-weight:800;">Wipe Cart</button></div>
             </div>
             <div class="op-items" id="op-items"></div>
             <div class="op-footer">
-                <div id="cart-loyalty-preview" style="background:#f0faf2; padding:10px; border-radius:8px; margin-bottom:15px; font-size:0.9rem; display:none; border:1px solid #c6f6d5; color:#22543d;">Member: <b id="member-name-tag"></b></div>
+                <div id="cart-loyalty-info" style="background:#f0faf2; padding:15px; border-radius:12px; margin-bottom:20px; display:none; border:2px solid #c6f6d5; color:#22543d; font-weight:800;">VIP: <span id="member-tag"></span></div>
                 <div class="calc-row"><span>Subtotal</span> $<span id="pos-subtotal">0.00</span></div>
                 <div class="calc-row"><span>Tax (8%)</span> $<span id="pos-tax">0.00</span></div>
                 <div class="calc-total"><span>Total</span> $<span id="pos-total">0.00</span></div>
-                <button class="pay-btn" onclick="startLoyaltyStep()">Proceed to Payment</button>
+                <button class="pay-btn" onclick="startCheckout()">Proceed to Checkout</button>
             </div>
         </aside>
     </main>
 
-    <!-- MODIFICATION MODAL -->
+    <!-- ITEM MODIFIER -->
     <div id="item-modal-overlay" class="overlay">
         <div class="modal">
-            <div class="modal-header" id="mod-item-name">Item Name</div>
-            <input type="hidden" id="mod-item-id">
-            
-            <label style="font-weight: 800; display:block; margin-bottom: 10px; font-size:1.1rem;">Custom Sauce / Prep</label>
-            <select id="mod-sauce">
-                <option value="None">Standard Preparation</option>
-                <option value="Teriyaki Glaze">Teriyaki Glaze</option>
-                <option value="Spicy Mayo">Spicy Mayo</option>
-                <option value="Extra Ketchup">Extra Ketchup</option>
-                <option value="Ranch">Ranch Dipping Sauce</option>
-                <option value="BBQ Sauce">BBQ Sauce</option>
-            </select>
-            
-            <label style="font-weight: 800; display:block; margin-bottom: 10px; margin-top: 20px; font-size:1.1rem;">Order Special Notes</label>
-            <textarea id="mod-instruction" rows="3" placeholder="No pickles, extra napkins, allergy notes..."></textarea>
-            
+            <div class="modal-header" id="mod-name">Item Name</div>
+            <div style="background:#f8fafc; padding:25px; border-radius:20px;">
+                <label style="font-weight: 800; display:block; margin-bottom: 15px; font-size:1.1rem; color:var(--dark);">Select Preparation / Sauce</label>
+                <select id="mod-sauce" style="border-width:3px;">
+                    <option value="Standard">Standard Prep</option>
+                    <option value="Teriyaki Glaze">Teriyaki Glaze</option>
+                    <option value="Spicy Mayo">Spicy Mayo</option>
+                    <option value="Extra Ketchup">Extra Ketchup</option>
+                    <option value="Ranch">Ranch</option>
+                </select>
+                <label style="font-weight: 800; display:block; margin-bottom: 15px; margin-top: 15px; font-size:1.1rem; color:var(--dark);">Special Instructions</label>
+                <textarea id="mod-note" rows="3" placeholder="No pickles, extra napkins..."></textarea>
+            </div>
             <div class="btn-flex">
-                <button class="btn-modal-lg btn-modal-cancel" onclick="closeModModal()">Cancel</button>
-                <button class="btn-modal-lg btn-modal-confirm" onclick="confirmMod()">Add to Current Order</button>
+                <button class="btn-modal btn-cancel" onclick="closeMod()">Cancel</button>
+                <button class="btn-modal btn-confirm" onclick="confirmMod()">Add to Order</button>
             </div>
         </div>
     </div>
 
-
-    <!-- 2. KDS VIEW -->
-    <main id="kds-view" class="view-container">
-        <div class="kds-nav">
-            <button class="kds-tab">Kitchen Display System (LIVE)</button>
+    <!-- 2. KDS -->
+    <main id="kds-view" class="view-container" style="background:#111827;">
+        <div style="padding:30px; border-bottom:1px solid rgba(255,255,255,0.1); color:white; display:flex; justify-content:space-between; align-items:center;">
+            <h2 style="font-size:2rem; font-weight:900;">Kitchen Dispatch Console</h2>
+            <div style="background:var(--success); color:white; padding:10px 20px; border-radius:30px; font-size:0.9rem; font-weight:800;">LIVE CONNECTED</div>
         </div>
-        <div id="kds-active" class="kds-content">
+        <div style="padding:25px; flex:1; overflow-y:auto;">
             <div class="kds-grid" id="kds-grid"></div>
         </div>
     </main>
 
-    <!-- 4. CONSOLIDATED MANAGER VIEW -->
+    <!-- 3. MASTER DASHBOARD (CONSOLIDATED) -->
     <main id="manager-view" class="view-container">
-        <div class="mgmt-wrapper">
-            <div class="mgmt-header">Master Control Panel</div>
+        <div class="master-dash-container">
+            <div class="mgmt-header">Master Control Station</div>
             
-            <div class="mgmt-tabs">
-                <button class="mgmt-tab active" onclick="switchMgmtTab('m-stats', this)">Stats</button>
-                <button class="mgmt-tab" onclick="switchMgmtTab('m-menu', this)">Menu Mgmt</button>
-                <button class="mgmt-tab" onclick="switchMgmtTab('m-emp', this)">Employees</button>
-                <button class="mgmt-tab" onclick="switchMgmtTab('m-cust', this)">Loyalty CRM</button>
+            <div class="master-tabs">
+                <button class="master-tab active" onclick="switchM('s-kpi', this)">Enterprise Analytics</button>
+                <button class="master-tab" onclick="switchM('s-inventory', this)">Menu Inventory</button>
+                <button class="master-tab" onclick="switchM('s-staff', this)">Staff Management</button>
+                <button class="master-tab" onclick="switchM('s-loyalty', this)">Loyalty CRM</button>
             </div>
 
-            <!-- TAB: STATS -->
-            <div id="m-stats" class="mgmt-section active">
-                <div class="kpi-grid">
-                    <div class="kpi-card"><div class="kpi-label">Current Revenue</div><div class="kpi-val" id="kpi-rev">$0.00</div></div>
-                    <div class="kpi-card"><div class="kpi-label">Active Orders</div><div class="kpi-val" id="kpi-orders">0</div></div>
-                    <div class="kpi-card"><div class="kpi-label">Average Ticket</div><div class="kpi-val" id="kpi-avg">$0.00</div></div>
-                </div>
-                <div class="mgmt-panel">
-                    <h2>System Status: <span style="color:var(--success)">OPERATIONAL</span></h2>
-                    <p style="margin-top:15px; color:var(--text-gray);">Firebase Connection: Verified</p>
-                    <p style="color:var(--text-gray);">KDS Sync: Active</p>
+            <div id="s-kpi" class="master-content active">
+                <div class="stat-grid">
+                    <div class="stat-card"><div class="stat-label">Daily Revenue</div><div class="stat-val" id="m-rev">$0.00</div></div>
+                    <div class="stat-card"><div class="stat-label">Active Orders</div><div class="stat-val" id="m-ord">0</div></div>
+                    <div class="stat-card"><div class="stat-label">Avg Ticket Size</div><div class="stat-val" id="m-avg">$0.00</div></div>
                 </div>
             </div>
 
-            <!-- TAB: MENU -->
-            <div id="m-menu" class="mgmt-section">
-                <div class="mgmt-panel">
-                    <h2 style="margin-bottom:20px;">Add New Menu Item</h2>
-                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px;">
-                        <input type="text" id="new-item-name" placeholder="Item Name">
-                        <input type="number" id="new-item-price" placeholder="Price ($)">
-                        <select id="new-item-cat">
+            <div id="s-inventory" class="master-content">
+                <div class="stat-card" style="margin-bottom:30px;">
+                    <h2 style="margin-bottom:20px;">Register New Menu Item</h2>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
+                        <input type="text" id="n-item-n" placeholder="Item Name">
+                        <input type="number" id="n-item-p" placeholder="Price ($)">
+                        <select id="n-item-c">
                             <option value="Burgers">Burgers</option>
                             <option value="Sides">Sides</option>
                             <option value="Drinks">Drinks</option>
                             <option value="Hibachi">Hibachi</option>
                         </select>
-                        <input type="text" id="new-item-prep" placeholder="Prep Time (e.g., 5 min)">
+                        <input type="text" id="n-item-t" placeholder="Prep Time (e.g. 5 min)">
                     </div>
-                    <button class="btn-modal-lg btn-modal-confirm" style="width:100%;" onclick="addMenuItem()">Publish to POS Grid</button>
+                    <button class="pay-btn" style="width:100%;" onclick="addInv()">+ Add to Master Menu</button>
                 </div>
-                <div class="mgmt-panel" style="margin-top:20px;">
-                    <h2>Active Live Menu</h2>
-                    <table class="list-table">
-                        <thead><tr><th>Item Name</th><th>Price</th><th>Category</th><th>Action</th></tr></thead>
-                        <tbody id="mgmt-menu-list"></tbody>
-                    </table>
-                </div>
+                <table class="data-table">
+                    <thead><tr><th>Item</th><th>Price</th><th>Category</th><th>Action</th></tr></thead>
+                    <tbody id="m-menu-list"></tbody>
+                </table>
             </div>
 
-            <!-- TAB: EMPLOYEES -->
-            <div id="m-emp" class="mgmt-section">
-                <div class="mgmt-panel">
-                    <h2 style="margin-bottom:20px;">Register New Staff Member</h2>
-                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px;">
-                        <input type="text" id="emp-name-input" placeholder="Staff Full Name">
-                        <input type="text" id="emp-pin-input" placeholder="4-Digit Personal PIN" maxlength="4">
-                        <select id="emp-role-input">
-                            <option value="Cashier">Cashier</option>
-                            <option value="Line Cook">Line Cook</option>
+            <div id="s-staff" class="master-content">
+                <div class="stat-card" style="margin-bottom:20px;">
+                    <h2 style="margin-bottom:20px;">Authorize New Employee</h2>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:20px;">
+                        <input type="text" id="n-emp-n" placeholder="Full Name">
+                        <input type="text" id="n-emp-p" placeholder="4-Digit Personal PIN" maxlength="4">
+                        <select id="n-emp-r">
                             <option value="Manager">Manager</option>
-                            <option value="Server">Server</option>
+                            <option value="Chef">Chef</option>
+                            <option value="Cashier">Cashier</option>
                         </select>
                     </div>
-                    <button class="btn-modal-lg btn-modal-confirm" style="width:100%;" onclick="addEmployee()">Authorize Staff Account</button>
+                    <button class="pay-btn" style="width:100%;" onclick="addSt()">Authorize Terminal Access</button>
                 </div>
-                <div class="mgmt-panel" style="margin-top:20px;">
-                    <h2>Staff Directory & PIN Status</h2>
-                    <table class="list-table">
-                        <thead><tr><th>Name</th><th>Role</th><th>PIN</th><th>Action</th></tr></thead>
-                        <tbody id="mgmt-emp-list"></tbody>
-                    </table>
-                </div>
+                <table class="data-table">
+                    <thead><tr><th>Name</th><th>Role</th><th>PIN</th><th>Action</th></tr></thead>
+                    <tbody id="m-staff-list"></tbody>
+                </table>
             </div>
 
-            <!-- TAB: CRM -->
-            <div id="m-cust" class="mgmt-section">
-                <div class="mgmt-panel">
-                    <h2>Loyalty Member Database</h2>
-                    <table class="list-table">
-                        <thead><tr><th>Name</th><th>Phone</th><th>Points</th><th>Action</th></tr></thead>
-                        <tbody id="mgmt-cust-list"></tbody>
-                    </table>
-                </div>
+            <div id="s-loyalty" class="master-content">
+                <table class="data-table">
+                    <thead><tr><th>Name</th><th>Joined</th><th>Action</th></tr></thead>
+                    <tbody id="m-loy-list"></tbody>
+                </table>
             </div>
         </div>
     </main>
 
-    <!-- 5. STAFF CLOCK STATION (PIN PROTECTED INDIVIDUALLY) -->
-    <main id="emp-mgmt-view" class="view-container" style="justify-content:center; align-items:center; background:var(--dark);">
-        <div class="clock-container" id="clock-login">
-            <h2 style="margin-bottom:10px; font-weight:900;">Staff Login</h2>
-            <div class="pin-dot-display" id="clock-pin-display"></div>
+    <!-- 4. STAFF LOGIN STATION -->
+    <main id="staff-view" class="view-container" style="background:var(--dark); align-items:center; justify-content:center;">
+        <div class="staff-box" id="s-login">
+            <h1 style="font-weight:900; font-size:2.5rem; margin-bottom:10px;">Staff Station</h1>
+            <p style="color:var(--text-gray); margin-bottom:40px; font-weight:800;">Authenticate to Manage Shifts</p>
+            <div class="staff-pin-view" id="s-pin-dot"></div>
             <div class="pin-grid">
-                <button class="pin-key" onclick="clockPin('1')">1</button>
-                <button class="pin-key" onclick="clockPin('2')">2</button>
-                <button class="pin-key" onclick="clockPin('3')">3</button>
-                <button class="pin-key" onclick="clockPin('4')">4</button>
-                <button class="pin-key" onclick="clockPin('5')">5</button>
-                <button class="pin-key" onclick="clockPin('6')">6</button>
-                <button class="pin-key" onclick="clockPin('7')">7</button>
-                <button class="pin-key" onclick="clockPin('8')">8</button>
-                <button class="pin-key" onclick="clockPin('9')">9</button>
-                <button class="pin-key" style="background:#fee2e2; color:#dc2626;" onclick="clockPinClear()">C</button>
-                <button class="pin-key" onclick="clockPin('0')">0</button>
-                <button class="pin-key" style="background:#dcfce7; color:#16a34a;" onclick="clockPinVerify()">✔</button>
+                <button class="pin-btn" onclick="sP('1')">1</button><button class="pin-btn" onclick="sP('2')">2</button><button class="pin-btn" onclick="sP('3')">3</button>
+                <button class="pin-btn" onclick="sP('4')">4</button><button class="pin-btn" onclick="sP('5')">5</button><button class="pin-btn" onclick="sP('6')">6</button>
+                <button class="pin-btn" onclick="sP('7')">7</button><button class="pin-btn" onclick="sP('8')">8</button><button class="pin-btn" onclick="sP('9')">9</button>
+                <button class="pin-btn" style="background:#fee2e2; color:#ef4444;" onclick="sC()">CLR</button><button class="pin-btn" onclick="sP('0')">0</button><button class="pin-btn" style="background:#dcfce7; color:#16a34a;" onclick="sV()">OK</button>
             </div>
         </div>
-
-        <div class="clock-container" id="clock-actions" style="display:none; max-width:600px;">
-            <p style="color:var(--text-gray); font-weight:800; font-size:1.2rem; margin-bottom:10px;">AUTHORIZED SESSION</p>
-            <div class="clock-name" id="clock-v-name">Employee Name</div>
-            <div id="clock-status-box" style="margin-bottom:30px; font-size:1.5rem; font-weight:900; background:#f3f4f6; padding:20px; border-radius:12px;">Status: <span id="clock-v-status">Unknown</span></div>
-            
+        <div class="staff-box" id="s-portal" style="display:none; width:600px;">
+            <p style="color:var(--primary); font-weight:900; font-size:1.2rem; margin-bottom:10px;">AUTHENTICATED SESSION</p>
+            <h1 id="s-v-name" style="font-size:3rem; font-weight:900; margin-bottom:30px;">Employee</h1>
+            <div style="background:#f8fafc; padding:30px; border-radius:24px; margin-bottom:40px;">
+                <p style="font-size:1.2rem; font-weight:800;">Current Status:</p>
+                <h2 id="s-v-status" style="font-size:2.5rem; font-weight:900; color:var(--primary);">UNKNOWN</h2>
+            </div>
             <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
-                <button class="btn-modal-lg btn-modal-success" id="btn-clock-in" onclick="performShiftAction('in')">CLOCK IN</button>
-                <button class="btn-modal-lg btn-modal-confirm" id="btn-clock-out" onclick="performShiftAction('out')">CLOCK OUT</button>
+                <button class="pay-btn" style="margin-top:0;" onclick="shift('in')">CLOCK IN</button>
+                <button class="pay-btn" style="margin-top:0; background:var(--dark);" onclick="shift('out')">CLOCK OUT</button>
             </div>
-            
-            <div class="clock-stats" id="clock-v-history">
-                <h3 style="margin-bottom:10px;">Recent Activity</h3>
-                <div id="shift-history-list">No recent shifts recorded.</div>
-            </div>
-            
-            <button class="btn-modal-lg btn-modal-cancel" style="margin-top:40px; width:100%;" onclick="logoutStaff()">Log Out Terminal</button>
+            <button class="btn-modal btn-cancel" style="width:100%; margin-top:40px; padding:20px;" onclick="logOffStaff()">EXIT TERMINAL</button>
         </div>
     </main>
 
-    <!-- CDS STATION -->
-    <main id="cust-view" class="view-container">
-        <div class="cust-setup" id="cust-setup">
-            <h2 style="font-size:2.5rem; margin-bottom:10px; font-weight:900;">Link CDS Terminal</h2>
-            <p style="color:var(--text-gray); font-size:1.2rem; margin-bottom:30px;">Assign this tablet to a specific dining zone</p>
-            <div class="cust-table-grid">
-                <button class="btn-table" onclick="bindCDS('Takeout')">🥡 TAKEOUT / PICKUP</button>
-                <button class="btn-table" onclick="bindCDS('Table 1')">1</button>
-                <button class="btn-table" onclick="bindCDS('Table 2')">2</button>
-                <button class="btn-table" onclick="bindCDS('Table 3')">3</button>
-                <button class="btn-table" onclick="bindCDS('Table 4')">4</button>
-                <button class="btn-table" onclick="bindCDS('Table 5')">5</button>
+    <!-- 5. CDS STATION -->
+    <main id="cust-view" class="view-container" style="background:var(--dark); align-items:center; justify-content:center;">
+        <div class="staff-box" id="cds-setup" style="width:600px;">
+            <h1 style="font-size:2.5rem; font-weight:900; margin-bottom:30px;">CDS Terminal Binding</h1>
+            <div class="table-grid" style="grid-template-columns: 1fr; gap:15px;">
+                <button class="table-btn" onclick="bindC('Takeout')">≡ƒì┤ Pickup Display</button>
+                <button class="table-btn" onclick="bindC('Table 1')">≡ƒæí Table 1</button>
+                <button class="table-btn" onclick="bindC('Table 2')">≡ƒæí Table 2</button>
             </div>
         </div>
-        <div class="cust-active" id="cust-active">
-            <div class="cust-table-badge" id="cd-id" onclick="resetCDS()">Binding...</div>
-            <div class="cust-status-main" id="cd-status">AWAITING</div>
-            <div class="cust-list" id="cd-items">Waiting for order data...</div>
+        <div style="display:none; width:100%; max-width:800px; text-align:center;" id="cds-active">
+            <div style="font-size:1.8rem; background:rgba(255,255,255,0.05); padding:15px 40px; border-radius:99px; color:white; display:inline-block; margin-bottom:50px; cursor:pointer;" onclick="resetC()">STATION: <span id="cds-t-id"></span></div>
+            <div id="cds-status" style="font-size:8rem; font-weight:900; color:white; margin-bottom:40px;">AWAITING</div>
+            <div id="cds-items" style="background:rgba(255,255,255,0.03); padding:40px; border-radius:32px; color:#cbd5e1; font-size:2rem; text-align:left;">Waiting for order data...</div>
         </div>
     </main>
 
-    <!-- 6. KIOSK (SELF-SERVE) -->
-    <main id="kiosk-view" class="view-container" style="background:white; text-align:center; padding-top: 100px;">
-        <h1 style="font-size:6rem; font-weight:900; color:var(--primary); letter-spacing:-2px;">CRAZY BURGERS.</h1>
-        <p style="font-size:2.8rem; color:var(--text-gray); margin-bottom:80px; font-weight:500;">Fast. Fresh. Delicious.</p>
-        <button onclick="navTo('pos-view', document.querySelectorAll('.nav-button')[0])" style="font-size:3rem; padding: 50px 100px; background:var(--primary); color:white; border-radius: 99px; box-shadow:0 20px 40px rgba(220, 38, 38, 0.4); font-weight:900;">TOUCH TO START ORDER</button>
+    <!-- 6. KIOSK -->
+    <main id="kiosk-view" class="view-container" style="background:white; align-items:center; justify-content:center;">
+        <div style="text-align:center;">
+            <h1 style="font-size:8rem; font-weight:900; color:var(--primary); letter-spacing:-4px; margin-bottom:0;">CRAZY</h1>
+            <h1 style="font-size:8rem; font-weight:900; color:var(--dark); letter-spacing:-4px; margin-top:-30px;">BURGERS.</h1>
+            <p style="font-size:2.5rem; color:var(--text-gray); margin-bottom:80px; font-weight:600;">Fast. Fresh. Authentic.</p>
+            <button onclick="navTo('pos-view', document.querySelectorAll('.nav-button')[0])" style="font-size:3rem; padding: 50px 100px; background:var(--primary); color:white; border-radius: 99px; box-shadow: 0 25px 50px rgba(220,38,38,0.4); font-weight:900;">TOUCH TO BEGIN</button>
+        </div>
     </main>
 
-    <!-- 7. STATION CALLS -->
+    <!-- 7. ALERTS -->
     <main id="calls-view" class="view-container">
-        <div class="mgmt-wrapper">
-            <div class="mgmt-header">Broadcast System</div>
-            <p style="margin-bottom:30px; font-size:1.3rem; color:var(--text-gray);">Alert all connected POS terminals and KDS screens instantly.</p>
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:25px;">
-                <button style="background:var(--warning); color:#111827; height:180px; font-size:1.8rem; font-weight:900; border-radius:24px; box-shadow:var(--shadow-md);" onclick="emitCall('Manager Needed at POS')">🆘 CALL MANAGER</button>
-                <button style="background:var(--accent); color:white; height:180px; font-size:1.8rem; font-weight:900; border-radius:24px; box-shadow:var(--shadow-md);" onclick="emitCall('Kitchen Requires Assistance')">👨‍🍳 KITCHEN HELP</button>
-                <button style="background:#6366f1; color:white; height:180px; font-size:1.8rem; font-weight:900; border-radius:24px; box-shadow:var(--shadow-md);" onclick="emitCall('Dining Room Spill / Backup')">🧹 SPILL CLEANUP</button>
-                <button style="background:#ec4899; color:white; height:180px; font-size:1.8rem; font-weight:900; border-radius:24px; box-shadow:var(--shadow-md);" onclick="emitCall('Front Counter Support')">🙋 FRONT DESK</button>
+        <div class="master-dash-container">
+            <div class="mgmt-header">Broadcast Alerts</div>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:30px; margin-top:40px;">
+                <button style="height:200px; background:var(--warning); color:var(--dark); font-size:2rem; font-weight:900; border-radius:32px;" onclick="bC('Manager to POS')">≡ƒöö CALL MANAGER</button>
+                <button style="height:200px; background:var(--accent); color:white; font-size:2rem; font-weight:900; border-radius:32px;" onclick="bC('Kitchen Help Needed')">≡ƒì│ KITCHEN HELP</button>
             </div>
         </div>
     </main>
 
-
-    <!-- MANAGER PIN OVERLAY -->
+    <!-- MASTER PIN -->
     <div id="pin-overlay" class="overlay">
-        <div class="pin-box">
-            <h2 style="margin-bottom:10px; font-weight:900;">Master Access</h2>
-            <div class="pin-dot-display" id="pin-display-text"></div>
+        <div class="staff-box">
+            <h2 style="margin-bottom:20px;">Master Access</h2>
+            <div class="staff-pin-view" id="master-pin-dot"></div>
             <div class="pin-grid">
-                <button class="pin-key" onclick="appPin('1')">1</button>
-                <button class="pin-key" onclick="appPin('2')">2</button>
-                <button class="pin-key" onclick="appPin('3')">3</button>
-                <button class="pin-key" onclick="appPin('4')">4</button>
-                <button class="pin-key" onclick="appPin('5')">5</button>
-                <button class="pin-key" onclick="appPin('6')">6</button>
-                <button class="pin-key" onclick="appPin('7')">7</button>
-                <button class="pin-key" onclick="appPin('8')">8</button>
-                <button class="pin-key" onclick="appPin('9')">9</button>
-                <button class="pin-key" style="background:#fee2e2; color:#dc2626;" onclick="clrPin()">C</button>
-                <button class="pin-key" onclick="appPin('0')">0</button>
-                <button class="pin-key" style="background:#dcfce7; color:#16a34a;" onclick="verPin()">✔</button>
+                <button class="pin-btn" onclick="mP('1')">1</button><button class="pin-btn" onclick="mP('2')">2</button><button class="pin-btn" onclick="mP('3')">3</button>
+                <button class="pin-btn" onclick="mP('4')">4</button><button class="pin-btn" onclick="mP('5')">5</button><button class="pin-btn" onclick="mP('6')">6</button>
+                <button class="pin-btn" onclick="mP('7')">7</button><button class="pin-btn" onclick="mP('8')">8</button><button class="pin-btn" onclick="mP('9')">9</button>
+                <button class="pin-btn" style="background:#fee2e2;" onclick="mC()">C</button><button class="pin-btn" onclick="mP('0')">0</button><button class="pin-btn" style="background:#dcfce7;" onclick="mV()">Γ£ö</button>
             </div>
-            <button class="btn-modal-lg btn-modal-cancel" style="width:100%;" onclick="clsPin()">Cancel</button>
+            <button class="btn-modal btn-cancel" style="width:100%; padding:15px; margin-top:20px;" onclick="clsPin()">Cancel</button>
         </div>
     </div>
 
-
     <script>
-        // ---- FIREBASE CONFIG ---- //
-        const firebaseConfig = {
+        // ---- FIREBASE ---- //
+        const config = {
           apiKey: "AIzaSyCDCnCn53HqVdIyTe-OcoITQ6mIuVn-eg4",
           authDomain: "crazy-burgers-fa20a.firebaseapp.com",
           projectId: "crazy-burgers-fa20a",
@@ -519,348 +449,159 @@
           appId: "1:908213507838:web:0f719ff0398ffa0b3e37af",
           measurementId: "G-DDZZ1TR47D"
         };
-        
-        firebase.initializeApp(firebaseConfig);
+        firebase.initializeApp(config);
         const db = firebase.firestore();
-
         const socket = io();
+
         let menu = JSON.parse(localStorage.getItem('b44_menu')) || [
             { id: 1, name: "Crazy Burger", price: 8.99, cat: "Burgers", prep: "5 min" },
-            { id: 2, name: "Cheese Frenzy", price: 9.99, cat: "Burgers", prep: "6 min" },
-            { id: 3, name: "Wild Fries", price: 3.49, cat: "Sides", prep: "3 min" },
-            { id: 4, name: "3D Printed Patty", price: 12.99, cat: "Hibachi", prep: "9 min" }
+            { id: 2, name: "Wild Fries", price: 3.49, cat: "Sides", prep: "3 min" },
+            { id: 3, name: "3D Printed Patty", price: 12.99, cat: "Hibachi", prep: "9 min" }
         ];
 
         let cart = [];
         let activeOrders = [];
-        let curMember = null;
-        let trackedCDS = null;
-        
-        let confirmCallback = null;
-        function customAlert(title, msg) {
-            document.getElementById('alert-title').innerText = title;
-            document.getElementById('alert-body').innerText = msg;
-            document.getElementById('overlay-alert').style.display = 'flex';
-        }
-        function closeAlert() { document.getElementById('overlay-alert').style.display = 'none'; }
-        function customConfirm(title, msg, callback) {
-            document.getElementById('confirm-title').innerText = title;
-            document.getElementById('confirm-body').innerText = msg;
-            confirmCallback = callback;
-            document.getElementById('overlay-confirm').style.display = 'flex';
-        }
-        function closeConfirm(passed) {
-            document.getElementById('overlay-confirm').style.display = 'none';
-            if(passed && confirmCallback) confirmCallback();
-        }
+        let curM = null;
+        let cdsT = null;
 
-        // Voice
-        function speakVoice(text) {
-            try { var s = new SpeechSynthesisUtterance(text); s.rate = 1.0; window.speechSynthesis.speak(s); } catch(e) {}
-        }
+        // Alerts
+        function customAlert(t, m) { document.getElementById('alert-title').innerText=t; document.getElementById('alert-body').innerText=m; document.getElementById('overlay-alert').style.display='flex'; }
+        function closeAlert() { document.getElementById('overlay-alert').style.display='none'; }
+        let cB = null;
+        function customConfirm(t, m, c) { cB=c; document.getElementById('confirm-title').innerText=t; document.getElementById('confirm-body').innerText=m; document.getElementById('overlay-confirm').style.display='flex'; }
+        function closeConfirm(p) { document.getElementById('overlay-confirm').style.display='none'; if(p&&cB) cB(); }
 
-        // ---- SOCKET BINDINGS ---- //
-        socket.on('initial-data', data => { activeOrders = data.orders; updateKdsRender(); statRecalculate(); });
-        socket.on('order-update', orders => { activeOrders = orders; updateKdsRender(); updateCDSRender(); statRecalculate(); });
-        socket.on('announcement', data => {
-            if(data.id === 'call') {
-                document.getElementById('call-msg').innerText = data.message;
+        function speak(txt) { try { let s = new SpeechSynthesisUtterance(txt); window.speechSynthesis.speak(s); } catch(e){} }
+
+        // Sockets
+        socket.on('initial-data', d => { activeOrders = d.orders; renderK(); updM(); });
+        socket.on('order-update', o => { activeOrders = o; renderK(); renderC(); updM(); });
+        socket.on('announcement', d => {
+            if(d.id === 'call') {
+                document.getElementById('call-msg').innerText = d.message;
                 document.getElementById('station-call-alert').style.display = 'block';
-                setTimeout(() => { document.getElementById('station-call-alert').style.display = 'none'; }, 8000);
+                setTimeout(() => document.getElementById('station-call-alert').style.display='none', 8000);
             }
         });
         function clearCall() { document.getElementById('station-call-alert').style.display = 'none'; }
-        function sendStationCall() { emitCall("Authorized Help Needed at POS"); }
-        function emitCall(msg) { socket.emit('station-call', { id: Date.now(), type: msg }); customAlert("Alert Active", "Nearby terminals have been notified."); }
+        function bC(t) { socket.emit('station-call', { type: t }); customAlert("Alert Active", "Nearby stations notified."); }
 
-        // ---- NAVIGATION ---- //
-        function navTo(id, btnObj) {
+        // Nav
+        function navTo(id, btn) {
             document.querySelectorAll('.view-container').forEach(v => v.classList.remove('active'));
             document.getElementById(id).classList.add('active');
-            if(btnObj) {
-                document.querySelectorAll('.nav-button').forEach(b => b.classList.remove('active-nav'));
-                btnObj.classList.add('active-nav');
-            }
-            if(['kds-view', 'kiosk-view', 'cust-view'].includes(id)) {
-                document.getElementById('global-sidebar').style.display = 'none';
-                document.getElementById('fab-nav').style.display = 'flex';
-            } else {
-                document.getElementById('global-sidebar').style.display = 'flex';
-                document.getElementById('fab-nav').style.display = 'none';
-            }
-            if(id === 'pos-view') renderPOSMenu();
+            if(btn) { document.querySelectorAll('.nav-button').forEach(b => b.classList.remove('active-nav')); btn.classList.add('active-nav'); }
+            if(['kds-view', 'kiosk-view', 'cust-view'].includes(id)) { document.getElementById('global-sidebar').style.display='none'; document.getElementById('fab-nav').style.display='flex'; }
+            else { document.getElementById('global-sidebar').style.display='flex'; document.getElementById('fab-nav').style.display='none'; }
+            if(id==='pos-view') renderP();
         }
-        function toggleSidebar() { 
-            let s = document.getElementById('global-sidebar');
-            s.style.display = s.style.display === 'none' ? 'flex' : 'none';
-        }
-        function toggleMobileCart() {
-            document.getElementById('order-panel').classList.toggle('mobile-open');
-        }
+        function toggleSidebar() { let s = document.getElementById('global-sidebar'); s.style.display = s.style.display === 'none' ? 'flex' : 'none'; }
 
-        // ---- POS LOGIC ---- //
-        function renderPOSMenu() {
+        // POS
+        function renderP() {
             let g = document.getElementById('pos-grid');
             g.innerHTML = menu.map(m => `
-                <div class="menu-card" onclick="openModModal(${m.id})">
+                <div class="menu-card" onclick="openMod(${m.id})">
                     <span class="menu-badge">${m.cat}</span>
                     <div class="menu-title">${m.name}</div>
                     <div class="menu-price">$${m.price.toFixed(2)}</div>
-                    <button class="btn-config">CONFIGURE ITEM</button>
+                    <button class="btn-add">ADD TO ORDER</button>
                 </div>
             `).join('');
         }
 
-        let tempItem = null;
-        function openModModal(id) {
-            tempItem = menu.find(i => i.id === id);
-            document.getElementById('mod-item-name').innerText = tempItem.name;
-            document.getElementById('mod-sauce').value = "None";
-            document.getElementById('mod-instruction').value = "";
-            document.getElementById('item-modal-overlay').style.display = 'flex';
-        }
-        function closeModModal() { document.getElementById('item-modal-overlay').style.display = 'none'; }
+        let tI = null;
+        function openMod(id) { tI = menu.find(i=>i.id===id); document.getElementById('mod-name').innerText=tI.name; document.getElementById('item-modal-overlay').style.display='flex'; }
+        function closeMod() { document.getElementById('item-modal-overlay').style.display='none'; }
         function confirmMod() {
             let s = document.getElementById('mod-sauce').value;
-            let n = document.getElementById('mod-instruction').value;
-            cart.push({ cartId: Date.now(), ...tempItem, modSauce: s !== "None" ? s : null, modNote: n || null });
-            closeModModal(); renderCart();
+            let n = document.getElementById('mod-note').value;
+            cart.push({ cid: Date.now(), ...tI, sauce: s!=='Standard'?s:null, note: n||null });
+            closeMod(); renderCart();
         }
+
         function renderCart() {
             let sum = 0; let c = document.getElementById('op-items');
-            if(cart.length === 0) { c.innerHTML = `<div style="text-align:center; padding-top:60px; color:#9ca3af; font-weight:700;">Cart is empty.</div>`; }
+            if(!cart.length) c.innerHTML = '<div style="text-align:center; padding-top:60px; color:#9ca3af; font-weight:800; font-size:1.2rem;">Ready for items.</div>';
             else {
                 c.innerHTML = cart.map(i => {
                     sum += i.price;
-                    let m = []; if(i.modSauce) m.push(`+ ${i.modSauce}`); if(i.modNote) m.push(`Note: ${i.modNote}`);
-                    return `<div class="cart-row">
-                        <div class="cart-info"><div class="cart-name">${i.name}</div>
-                        ${m.length ? `<div class="cart-mods">${m.join('<br>')}</div>` : ''}</div>
-                        <div style="text-align:right;"><div class="cart-price">$${i.price.toFixed(2)}</div>
-                        <button class="cart-del" onclick="removeCart(${i.cartId})">X</button></div>
-                    </div>`;
+                    return `<div class="cart-row"><div class="cart-info"><div class="cart-name">${i.name}</div>${i.sauce?`<small>+ ${i.sauce}</small>`:''}</div><div style="text-align:right;"><div class="cart-name">$${i.price.toFixed(2)}</div><button class="cart-del" onclick="remC(${i.cid})">X</button></div></div>`;
                 }).join('');
             }
-            let t = sum * 0.08; let tot = sum + t;
+            let tax = sum * 0.08; let tot = sum + tax;
             document.getElementById('pos-subtotal').innerText = sum.toFixed(2);
-            document.getElementById('pos-tax').innerText = t.toFixed(2);
+            document.getElementById('pos-tax').innerText = tax.toFixed(2);
             document.getElementById('pos-total').innerText = tot.toFixed(2);
         }
-        function removeCart(id) { cart = cart.filter(i => i.cartId !== id); renderCart(); }
-        function clearCart() { cart = []; curMember = null; document.getElementById('cart-loyalty-preview').style.display='none'; renderCart(); }
+        function remC(id) { cart = cart.filter(i=>i.cid!==id); renderCart(); }
+        function clearCart() { cart = []; curM = null; document.getElementById('cart-loyalty-info').style.display='none'; renderCart(); }
 
-        // ---- LOYALTY FLOW ---- //
-        function startLoyaltyStep() {
-            if(cart.length === 0) return customAlert("Error", "Cart is empty.");
-            resetLoyaltyModal();
-            document.getElementById('overlay-loyalty').style.display='flex';
-        }
-        function resetLoyaltyModal() {
-            document.getElementById('loyalty-search-state').style.display='block';
-            document.getElementById('loyalty-find-state').style.display='none';
-            document.getElementById('loyalty-create-state').style.display='none';
-        }
-        function showLoyaltySearch() {
-            document.getElementById('loyalty-search-state').style.display='none';
-            document.getElementById('loyalty-find-state').style.display='block';
-        }
-        function showLoyaltyCreate() {
-            document.getElementById('loyalty-search-state').style.display='none';
-            document.getElementById('loyalty-create-state').style.display='block';
-        }
+        // Loyalty
+        function startCheckout() { if(!cart.length) return; loyS('init'); document.getElementById('overlay-loyalty').style.display='flex'; }
+        function loyS(s) { document.getElementById('loyalty-init').style.display = s==='init'?'block':'none'; document.getElementById('loyalty-find').style.display = s==='search'?'block':'none'; document.getElementById('loyalty-create').style.display = s==='create'?'block':'none'; }
         function skipLoyalty() { document.getElementById('overlay-loyalty').style.display='none'; document.getElementById('overlay-table').style.display='flex'; }
-        
-        function searchLoyaltyMember() {
-            let q = document.getElementById('loyalty-lookup-name').value;
-            db.collection('customers').where('phone','==',q).get().then(snap => {
-                if(snap.empty) {
-                    db.collection('customers').where('name','==',q).get().then(snap2 => {
-                        if(snap2.empty) return customAlert("Not Found", "No account matches that name or phone.");
-                        applyMember(snap2.docs[0].data());
-                    });
-                } else {
-                    applyMember(snap.docs[0].data());
-                }
-            });
-        }
-        function createNewLoyaltyMember() {
-            let n = document.getElementById('loyalty-new-name').value;
-            let p = document.getElementById('loyalty-new-phone').value;
-            if(!n || !p) return customAlert("Error", "Required fields missing.");
-            let m = { name: n, phone: p, joined: new Date().toISOString() };
-            db.collection('customers').add(m).then(() => { applyMember(m); });
-        }
-        function applyMember(m) {
-            curMember = m;
-            document.getElementById('member-name-tag').innerText = m.name;
-            document.getElementById('cart-loyalty-preview').style.display = 'block';
-            document.getElementById('overlay-loyalty').style.display='none';
-            customAlert("Welcome Back!", `Member account for ${m.name} attached to order.`);
-            document.getElementById('overlay-table').style.display='flex';
+        function findMember() { let n = document.getElementById('loy-q').value; db.collection('customers').where('name','==',n).get().then(s => { if(s.empty) return customAlert("Not Found", "Member not found."); setM(s.docs[0].data()); }); }
+        function createMember() { let n = document.getElementById('loy-n').value; if(!n) return; let m = { name: n, joined: new Date().toISOString() }; db.collection('customers').add(m).then(() => setM(m)); }
+        function setM(m) { curM = m; document.getElementById('member-tag').innerText = m.name; document.getElementById('cart-loyalty-info').style.display='block'; document.getElementById('overlay-loyalty').style.display='none'; document.getElementById('overlay-table').style.display='flex'; }
+
+        function finishOrder(tbl) {
+            let o = { id: Math.floor(1000 + Math.random()*9000), table: tbl, items: [...cart], status: 'pending', member: curM?curM.name:null, total: parseFloat(document.getElementById('pos-total').innerText) };
+            socket.emit('new-order', o); clearCart(); document.getElementById('overlay-table').style.display='none'; customAlert("Success", "Ticket sent to kitchen.");
         }
 
-        function assignOrder(tbl) {
-            document.getElementById('overlay-table').style.display = 'none';
-            let o = {
-                id: Math.floor(1000 + Math.random()*9000),
-                table: tbl, items: [...cart], status: 'pending',
-                member: curMember ? curMember.name : null,
-                totalCost: parseFloat(document.getElementById('pos-total').innerText)
-            };
-            socket.emit('new-order', o);
-            clearCart();
-            customAlert("Order Complete", `Sent #${o.id} to Kitchen.`);
-            if(document.getElementById('order-panel').classList.contains('mobile-open')) toggleMobileCart();
-        }
-
-        // ---- KDS ---- //
-        function updateKdsRender() {
+        // KDS
+        function renderK() {
             let g = document.getElementById('kds-grid');
             let a = activeOrders.filter(o => o.status !== 'completed');
             g.innerHTML = a.map(o => {
-                let bt = "PENDING"; let act = "Start Prep"; let ns = "preparing";
-                if(o.status === "preparing") { bt = "PREPARING"; act = "Mark Ready"; ns = "ready"; }
-                if(o.status === "ready") { bt = "READY"; act = "Dismiss"; ns = "completed"; }
-                let itemsList = o.items.map(i => `<li>${i.name} ${i.modSauce ? `<span class="mod-line">↳ ${i.modSauce}</span>` : ''}</li>`).join('');
-                return `<div class="kds-card status-${o.status}">
-                    <div class="kds-header"><span>#${o.id} • ${o.table}</span><span>${bt}</span></div>
-                    <div class="kds-body"><ul>${itemsList}</ul></div>
-                    <button class="kds-action" onclick="cycStatus(${o.id},'${ns}','${o.table}')">${act}</button>
+                let ns = o.status==='pending'?'preparing':(o.status==='preparing'?'ready':'completed');
+                let act = o.status==='pending'?'START COOKING':(o.status==='preparing'?'MARK READY':'COMPLETE');
+                let c = o.status==='pending'?'#f59e0b':(o.status==='preparing'?'#3b82f6':'#22C55E');
+                return `<div class="kds-card" style="border-top:10px solid ${c}">
+                    <div style="background:${c}; padding:15px; color:white; font-weight:900; display:flex; justify-content:space-between;"><span>#${o.id}</span><span>${o.table}</span></div>
+                    <div class="kds-body"><ul>${o.items.map(i => `<li>${i.name}</li>`).join('')}</ul></div>
+                    <button class="kds-action" onclick="cyc(${o.id},'${ns}','${o.table}')">${act}</button>
                 </div>`;
             }).join('');
         }
-        function cycStatus(id, s, t) {
+        function cyc(id, s, t) {
             socket.emit('update-order-status', { id, status: s });
-            if(s==='ready') {
-                if(t.toLowerCase() === 'takeout') speakVoice(`Order ${id} is ready for pick up.`);
-                else speakVoice(`Now serving order ${id} at ${t}.`);
-            }
+            if(s==='ready') speak(t.toLowerCase()==='takeout' ? `Order ${id} is ready for pick up.` : `Now serving order ${id} at ${t}.`);
         }
 
-        // ---- MANAGER PANEL ---- //
-        let pinTarget = null; let pinVal = ""; const MASTER_PIN = "2018";
-        function reqPin(t, b) { pinTarget = t; pinVal = ""; updatePinUI(); document.getElementById('pin-overlay').style.display='flex'; }
-        function appPin(n) { if(pinVal.length<4) { pinVal+=n; updatePinUI(); } }
-        function clrPin() { pinVal = ""; updatePinUI(); }
-        function updatePinUI() { document.getElementById('pin-display-text').innerText = "•".repeat(pinVal.length); }
+        // Master
+        function switchM(id, b) { document.querySelectorAll('.master-tab').forEach(x=>x.classList.remove('active')); document.querySelectorAll('.master-content').forEach(x=>x.classList.remove('active')); b.classList.add('active'); document.getElementById(id).classList.add('active'); if(id==='s-inventory') loadInv(); if(id==='s-staff') loadSt(); if(id==='s-loyalty') loadLoy(); }
+        function loadInv() { let l = document.getElementById('m-menu-list'); l.innerHTML = menu.map(m => `<tr><td>${m.name}</td><td>$${m.price.toFixed(2)}</td><td>${m.cat}</td><td><button onclick="delInv(${m.id})" style="color:red; background:none; font-weight:bold;">Delete</button></td></tr>`).join(''); }
+        function addInv() { let n = document.getElementById('n-item-n').value; let p = parseFloat(document.getElementById('n-item-p').value); let c = document.getElementById('n-item-c').value; if(!n||!p) return; menu.push({ id: Date.now(), name: n, price: p, cat: c }); localStorage.setItem('b44_menu', JSON.stringify(menu)); loadInv(); renderP(); }
+        function delInv(id) { menu = menu.filter(m=>m.id!==id); localStorage.setItem('b44_menu', JSON.stringify(menu)); loadInv(); renderP(); }
+        function loadSt() { db.collection('employees').onSnapshot(s => { let h = ''; s.forEach(d => { let a = d.data(); h += `<tr><td>${a.name}</td><td>${a.role}</td><td>••••</td><td><button onclick="db.collection('employees').doc('${d.id}').delete()">Remove</button></td></tr>`; }); document.getElementById('m-staff-list').innerHTML = h; }); }
+        function addSt() { let n = document.getElementById('n-emp-n').value; let p = document.getElementById('n-emp-p').value; let r = document.getElementById('n-emp-r').value; if(!n||p.length!==4) return; db.collection('employees').add({ name: n, pin: p, role: r, status: 'out' }); }
+        function loadLoy() { db.collection('customers').onSnapshot(s => { let h = ''; s.forEach(d => { let a = d.data(); h += `<tr><td>${a.name}</td><td>${new Date(a.joined).toLocaleDateString()}</td><td><button onclick="db.collection('customers').doc('${d.id}').delete()">Wipe</button></td></tr>`; }); document.getElementById('m-loy-list').innerHTML = h; }); }
+        function updM() { let r = activeOrders.reduce((a,b)=>a+b.total,0); document.getElementById('m-rev').innerText=`$${r.toFixed(2)}`; document.getElementById('m-ord').innerText=activeOrders.length; let av = activeOrders.length ? r/activeOrders.length : 0; document.getElementById('m-avg').innerText=`$${av.toFixed(2)}`; }
+
+        // Staff
+        let sPIN = ""; let sID = null; let sData = null;
+        function sP(n) { if(sPIN.length<4) { sPIN+=n; document.getElementById('s-pin-dot').innerText = "≡ƒö⌐".repeat(sPIN.length); } }
+        function sC() { sPIN=""; document.getElementById('s-pin-dot').innerText=""; }
+        function sV() { db.collection('employees').where('pin','==',sPIN).get().then(s => { if(s.empty) { customAlert("Failed", "Invalid PIN"); sC(); return; } sID=s.docs[0].id; sData=s.docs[0].data(); document.getElementById('s-login').style.display='none'; document.getElementById('s-portal').style.display='block'; document.getElementById('s-v-name').innerText=sData.name; document.getElementById('s-v-status').innerText=sData.status.toUpperCase(); }); }
+        function shift(t) { db.collection('employees').doc(sID).update({ status: t }); db.collection('shifts').add({ name: sData.name, type: t, time: new Date().toISOString() }); document.getElementById('s-v-status').innerText=t.toUpperCase(); customAlert("Success", `Clocked ${t} recorded.`); }
+        function logOffStaff() { sPIN=""; sID=null; document.getElementById('s-portal').style.display='none'; document.getElementById('s-login').style.display='block'; document.getElementById('s-pin-dot').innerText=""; }
+
+        // Master Pin
+        let mPIN = ""; let masterT = null; let masterB = null;
+        function reqPin(t, b) { masterT=t; masterB=b; mPIN=""; document.getElementById('master-pin-dot').innerText=""; document.getElementById('pin-overlay').style.display='flex'; }
+        function mP(n) { if(mPIN.length<4) { mPIN+=n; document.getElementById('master-pin-dot').innerText = "≡ƒö⌐".repeat(mPIN.length); } }
+        function mC() { mPIN=""; document.getElementById('master-pin-dot').innerText=""; }
         function clsPin() { document.getElementById('pin-overlay').style.display='none'; }
-        function verPin() {
-            if(pinVal === MASTER_PIN) { clsPin(); navTo(pinTarget); loadAllMgmt(); } 
-            else { customAlert("Access Denied", "Invalid Master PIN."); clrPin(); }
-        }
+        function mV() { if(mPIN === "2018") { clsPin(); navTo(masterT, masterB); switchM('s-kpi', document.querySelectorAll('.master-tab')[0]); } else { customAlert("Denied", "Wrong PIN"); mC(); } }
 
-        function switchMgmtTab(id, btn) {
-            document.querySelectorAll('.mgmt-tab').forEach(b => b.classList.remove('active'));
-            document.querySelectorAll('.mgmt-section').forEach(s => s.classList.remove('active'));
-            btn.classList.add('active'); document.getElementById(id).classList.add('active');
-        }
+        // CDS
+        function bindC(t) { cdsT=t; document.getElementById('cds-setup').style.display='none'; document.getElementById('cds-active').style.display='block'; document.getElementById('cds-t-id').innerText=t; renderC(); }
+        function resetC() { cdsT=null; document.getElementById('cds-active').style.display='none'; document.getElementById('cds-setup').style.display='block'; }
+        function renderC() { if(!cdsT) return; let o = activeOrders.find(x=>x.table===cdsT && x.status!=='completed'); if(!o) { document.getElementById('cds-status').innerText="AWAITING"; document.getElementById('cds-items').innerText="Terminal ready for order."; } else { document.getElementById('cds-status').innerText=o.status.toUpperCase(); document.getElementById('cds-items').innerHTML=`Order #${o.id}<hr style="margin:20px 0; border:1px solid rgba(255,255,255,0.1);">${o.items.map(i=>`ΓÇó ${i.name}`).join('<br>')}`; } }
 
-        function loadAllMgmt() { renderMgmtMenu(); loadFirestoreStaff(); loadFirestoreCustomers(); }
-        
-        function renderMgmtMenu() {
-            let l = document.getElementById('mgmt-menu-list');
-            l.innerHTML = menu.map(m => `<tr>
-                <td>${m.name}</td><td>$${m.price.toFixed(2)}</td><td>${m.cat}</td>
-                <td><button class="btn-action-del" onclick="deleteMenuItem(${m.id})">Delete</button></td>
-            </tr>`).join('');
-        }
-        function addMenuItem() {
-            let n = document.getElementById('new-item-name').value;
-            let p = parseFloat(document.getElementById('new-item-price').value);
-            let c = document.getElementById('new-item-cat').value;
-            let pr = document.getElementById('new-item-prep').value;
-            if(!n || !p) return;
-            menu.push({ id: Date.now(), name: n, price: p, cat: c, prep: pr || "5 min" });
-            localStorage.setItem('b44_menu', JSON.stringify(menu));
-            renderMgmtMenu(); renderPOSMenu();
-        }
-        function deleteMenuItem(id) { 
-            customConfirm("Delete Item?", "Disappear forever?", () => { 
-                menu = menu.filter(m => m.id !== id); localStorage.setItem('b44_menu', JSON.stringify(menu)); renderMgmtMenu(); renderPOSMenu();
-            });
-        }
-
-        function loadFirestoreStaff() {
-            db.collection('employees').onSnapshot(snap => {
-                let h = '';
-                snap.forEach(doc => {
-                    let d = doc.data();
-                    h += `<tr><td>${d.name}</td><td>${d.role}</td><td>••••</td><td><button class="btn-action-del" onclick="db.collection('employees').doc('${doc.id}').delete()">Fire</button></td></tr>`;
-                });
-                document.getElementById('mgmt-emp-list').innerHTML = h;
-            });
-        }
-        function addEmployee() {
-            let n = document.getElementById('emp-name-input').value;
-            let p = document.getElementById('emp-pin-input').value;
-            let r = document.getElementById('emp-role-input').value;
-            if(!n || p.length !== 4) return customAlert("Input Error", "Name and 4-digit PIN required.");
-            db.collection('employees').add({ name: n, pin: p, role: r, status: 'out' });
-        }
-        function loadFirestoreCustomers() {
-            db.collection('customers').onSnapshot(snap => {
-                let h = '';
-                snap.forEach(doc => { let d = doc.data(); h += `<tr><td>${d.name}</td><td>${d.phone}</td><td>0</td><td><button class="btn-action-del" onclick="db.collection('customers').doc('${doc.id}').delete()">Ban</button></td></tr>`; });
-                document.getElementById('mgmt-cust-list').innerHTML = h;
-            });
-        }
-
-        // ---- STAFF CLOCKING ---- //
-        let cPin = ""; let activeStaff = null; let activeStaffDoc = null;
-        function clockPin(n) { if(cPin.length<4) { cPin+=n; document.getElementById('clock-pin-display').innerText = "•".repeat(cPin.length); } }
-        function clockPinClear() { cPin = ""; document.getElementById('clock-pin-display').innerText = ""; }
-        function clockPinVerify() {
-            db.collection('employees').where('pin','==',cPin).get().then(snap => {
-                if(snap.empty) { customAlert("Error", "Invalid Staff PIN."); clockPinClear(); return; }
-                activeStaffDoc = snap.docs[0].id;
-                activeStaff = snap.docs[0].data();
-                showClockActions();
-            });
-        }
-        function showClockActions() {
-            document.getElementById('clock-login').style.display='none';
-            document.getElementById('clock-actions').style.display='block';
-            document.getElementById('clock-v-name').innerText = activeStaff.name;
-            document.getElementById('clock-v-status').innerText = activeStaff.status.toUpperCase();
-            loadStaffHistory();
-        }
-        function performShiftAction(type) {
-            db.collection('employees').doc(activeStaffDoc).update({ status: type });
-            db.collection('shifts').add({ name: activeStaff.name, type, time: new Date().toISOString() });
-            activeStaff.status = type;
-            document.getElementById('clock-v-status').innerText = type.toUpperCase();
-            customAlert("Success", `Clocked ${type} successfully.`);
-            loadStaffHistory();
-        }
-        function loadStaffHistory() {
-            db.collection('shifts').where('name','==',activeStaff.name).orderBy('time','desc').limit(5).get().then(snap => {
-                let h = ''; snap.forEach(d => { let s = d.data(); h += `<div style="padding:10px; border-bottom:1px solid #ddd;">${s.type.toUpperCase()} - ${new Date(s.time).toLocaleString()}</div>`; });
-                document.getElementById('shift-history-list').innerHTML = h || 'No history yet.';
-            });
-        }
-        function logoutStaff() { clockPinClear(); activeStaff=null; document.getElementById('clock-actions').style.display='none'; document.getElementById('clock-login').style.display='block'; }
-
-        // ---- CDS ---- //
-        function bindCDS(t) { trackedCDS = t; document.getElementById('cust-setup').style.display='none'; document.getElementById('cust-active').style.display='block'; document.getElementById('cd-id').innerText = t; updateCDSRender(); }
-        function resetCDS() { customConfirm("Reset Station?", "Return to assignment screen?", () => { trackedCDS=null; document.getElementById('cust-active').style.display='none'; document.getElementById('cust-setup').style.display='block'; }); }
-        function updateCDSRender() {
-            if(!trackedCDS) return;
-            let o = activeOrders.find(ord => ord.table === trackedCDS && ord.status !== 'completed');
-            if(!o) { document.getElementById('cd-status').innerText = "AWAITING"; document.getElementById('cd-items').innerText = "Preparing for next order..."; }
-            else {
-                document.getElementById('cd-status').innerText = o.status === 'ready' ? "READY!" : o.status.toUpperCase();
-                document.getElementById('cd-items').innerHTML = `<b>Order #${o.id}</b><hr style="margin:20px 0;">` + o.items.map(i => `<div>• ${i.name}</div>`).join('');
-            }
-        }
-        function statRecalculate() {
-            document.getElementById('kpi-orders').innerText = activeOrders.length;
-            let rev = activeOrders.reduce((a, b) => a + b.totalCost, 0);
-            document.getElementById('kpi-rev').innerText = `$${rev.toFixed(2)}`;
-            let avg = activeOrders.length > 0 ? rev / activeOrders.length : 0;
-            document.getElementById('kpi-avg').innerText = `$${avg.toFixed(2)}`;
-        }
-
-        renderPOSMenu();
+        navTo('pos-view');
     </script>
 </body>
 </html>
