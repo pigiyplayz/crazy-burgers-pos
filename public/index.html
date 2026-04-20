@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Base44 Replica | POS Systems</title>
     
     <!-- Real-time Sockets -->
@@ -22,141 +22,129 @@
             --accent: #3b82f6;
             --success: #22C55E;
             --warning: #f59e0b;
-            
             --text-dark: #111827;
             --text-gray: #4b5563;
             --text-light: #f9fafb;
-            
-            --radius-md: 8px;
-            --radius-lg: 12px;
-            --radius-xl: 16px;
+            --radius-md: 10px;
+            --radius-lg: 16px;
+            --radius-xl: 24px;
             --shadow-sm: 0 1px 2px 0 rgba(0,0,0,0.05);
-            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1);
-            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1);
+            --shadow-md: 0 6px 12px -2px rgba(0,0,0,0.1);
+            --shadow-lg: 0 15px 25px -5px rgba(0,0,0,0.15);
         }
 
-        * { box-sizing: border-box; font-family: 'Inter', system-ui, sans-serif; margin: 0; padding: 0; user-select: none; }
+        * { box-sizing: border-box; font-family: 'Inter', system-ui, sans-serif; margin: 0; padding: 0; user-select: none; -webkit-tap-highlight-color: transparent; }
         body { background-color: var(--secondary); color: var(--text-dark); overflow: hidden; display: flex; height: 100vh; touch-action: manipulation; }
-        button { cursor: pointer; border: none; font-weight: 600; outline: none; transition: transform 0.1s; }
+        button { cursor: pointer; border: none; font-weight: 600; outline: none; transition: transform 0.1s, opacity 0.2s; }
         button:active { transform: scale(0.96); }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
 
         .view-container { display: none; width: 100%; height: 100%; flex-direction: column; overflow-y: auto;}
-        .view-container.active { display: flex; animation: fadeIn 0.2s ease; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .view-container.active { display: flex; animation: fadeIn 0.3s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
         /* Left Glob Navigation */
-        .sidebar { width: 110px; background-color: var(--dark); display: flex; flex-direction: column; align-items: center; padding: 20px 0; overflow-y: auto; flex-shrink: 0; scrollbar-width: none; }
-        .sidebar-logo { width: 60px; height: 60px; background: var(--primary); color: white; font-weight: 800; font-size: 1.5rem; display: flex; align-items: center; justify-content: center; border-radius: var(--radius-lg); margin-bottom: 25px; }
-        .nav-button { width: 90px; height: 80px; margin-bottom: 8px; background: transparent; color: #9ca3af; border-radius: var(--radius-md); font-size: 0.7rem; gap: 5px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; line-height: 1.2; }
+        .sidebar { width: 120px; background-color: var(--dark); display: flex; flex-direction: column; align-items: center; padding: 25px 0; overflow-y: auto; flex-shrink: 0; scrollbar-width: none; transition: width 0.3s; }
+        .sidebar-logo { width: 70px; height: 70px; background: var(--primary); color: white; font-weight: 900; font-size: 1.8rem; display: flex; align-items: center; justify-content: center; border-radius: var(--radius-lg); margin-bottom: 30px; box-shadow: 0 4px 15px rgba(220, 38, 38, 0.4); }
+        .nav-button { width: 100px; height: 90px; margin-bottom: 12px; background: transparent; color: #9ca3af; border-radius: var(--radius-md); font-size: 0.8rem; gap: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; line-height: 1.2; }
         .nav-button:hover { background: var(--dark-light); color: white; }
-        .nav-button.active-nav { background: var(--primary); color: white; }
-        .nav-icon { font-size: 1.6rem; margin-bottom: 2px; }
+        .nav-button.active-nav { background: var(--primary); color: white; box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3); }
+        .nav-icon { font-size: 2rem; margin-bottom: 4px; }
 
-        input, select, textarea { width: 100%; padding: 12px 15px; border: 1px solid #d1d5db; border-radius: var(--radius-md); font-size: 1rem; margin-bottom: 15px; background: white; color: var(--text-dark); }
-        input:focus, select:focus, textarea:focus { outline: 2px solid var(--primary); }
+        /* Inputs & Touch Areas */
+        input, select, textarea { width: 100%; padding: 18px 20px; border: 2px solid #e5e7eb; border-radius: var(--radius-md); font-size: 1.1rem; margin-bottom: 20px; background: white; color: var(--text-dark); transition: border-color 0.2s; }
+        input:focus { border-color: var(--primary); outline: none; }
 
         /* ---- [ POS VIEW ] ---- */
         #pos-view { flex-direction: row; }
-        .pos-main { flex: 1; display: flex; flex-direction: column; background: var(--secondary); padding: 15px;}
-        .cat-tabs { display: flex; gap: 10px; overflow-x: auto; margin-bottom: 20px; }
-        .cat-tab { padding: 12px 24px; background: white; border-radius: 99px; font-weight: 600; color: var(--text-gray); box-shadow: var(--shadow-sm); }
+        .pos-main { flex: 1; display: flex; flex-direction: column; background: var(--secondary); padding: 20px; position: relative;}
+        .cat-tabs { display: flex; gap: 15px; overflow-x: auto; margin-bottom: 25px; padding-bottom: 5px; scrollbar-width: none; }
+        .cat-tab { padding: 15px 30px; background: white; border-radius: 99px; font-weight: 700; color: var(--text-gray); box-shadow: var(--shadow-sm); flex-shrink: 0; min-width: 120px; text-align: center; font-size: 1.1rem;}
         .cat-tab.active { background: var(--dark); color: white; }
-        .menu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; overflow-y: auto; padding-bottom: 20px; }
-        .menu-card { background: white; border-radius: var(--radius-xl); padding: 20px; box-shadow: var(--shadow-sm); border: 2px solid transparent; display: flex; flex-direction: column; cursor: pointer; }
-        .menu-card:hover { border-color: var(--primary); transform: translateY(-3px); box-shadow: var(--shadow-md); }
-        .menu-badge { font-size: 0.7rem; font-weight: 800; background: #e5e7eb; padding: 4px 8px; border-radius: 4px; width: fit-content; margin-bottom: 10px; color: var(--text-gray); text-transform: uppercase;}
-        .menu-title { font-size: 1.2rem; font-weight: 700; margin-bottom: 5px; }
-        .menu-price { font-size: 1.1rem; color: var(--text-gray); margin-bottom: 15px; flex-grow: 1; }
-
-        /* Moder Modal & Popups */
-        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; z-index: 2000; }
-        .modal { background: white; width: 450px; border-radius: var(--radius-xl); padding: 25px; box-shadow: var(--shadow-lg); text-align: left; }
-        .modal-header { font-size: 1.5rem; font-weight: 800; margin-bottom: 20px; }
-        .btn-flex { display: flex; gap: 10px; margin-top: 20px; }
-        .btn-cancel { flex: 1; padding: 15px; background: #e5e7eb; color: var(--text-dark); border-radius: var(--radius-md); font-size: 1.1rem; }
-        .btn-confirm { flex: 2; padding: 15px; background: var(--primary); color: white; border-radius: var(--radius-md); font-size: 1.1rem; }
-
-        .table-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
-        .table-btn { padding: 20px; font-size: 1.2rem; background: var(--secondary); border: 2px solid #e5e7eb; border-radius: var(--radius-md); }
-        .table-btn:hover { border-color: var(--primary); }
+        
+        .menu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px; overflow-y: auto; padding-bottom: 100px; }
+        .menu-card { background: white; border-radius: var(--radius-lg); padding: 25px; box-shadow: var(--shadow-sm); border: 3px solid transparent; display: flex; flex-direction: column; cursor: pointer; transition: all 0.2s; }
+        .menu-card:hover { border-color: var(--primary); transform: translateY(-5px); box-shadow: var(--shadow-md); }
+        .menu-badge { font-size: 0.8rem; font-weight: 900; background: #e5e7eb; padding: 6px 12px; border-radius: 6px; width: fit-content; margin-bottom: 15px; color: var(--text-gray); text-transform: uppercase;}
+        .menu-title { font-size: 1.4rem; font-weight: 800; margin-bottom: 8px; }
+        .menu-price { font-size: 1.2rem; color: var(--text-gray); margin-bottom: 20px; flex-grow: 1; font-weight: 600; }
+        .btn-config { background: var(--primary); color: white; width: 100%; padding: 15px; border-radius: var(--radius-md); font-weight: 800; font-size: 1.1rem; }
 
         /* Order Panel */
-        .order-panel { width: 400px; background: white; border-left: 1px solid #e5e7eb; display: flex; flex-direction: column; z-index: 10; padding-bottom: env(safe-area-inset-bottom); }
-        .op-header { padding: 20px; border-bottom: 1px solid #e5e7eb; }
-        .op-title { font-size: 1.4rem; font-weight: 800; display: flex; justify-content: space-between; align-items: center;}
-        .order-type-tabs { display: flex; background: #e5e7eb; border-radius: var(--radius-md); padding: 5px; margin-top: 15px; }
-        .order-type-btn { flex: 1; padding: 10px; background: transparent; border-radius: 6px; color: var(--text-gray); font-size: 0.9rem;}
-        .order-type-btn.active { background: white; color: var(--text-dark); box-shadow: var(--shadow-sm); }
-        
+        .order-panel { width: 450px; background: white; border-left: 1px solid #e5e7eb; display: flex; flex-direction: column; z-index: 10; box-shadow: -10px 0 30px rgba(0,0,0,0.05); }
+        .op-header { padding: 25px; border-bottom: 1px solid #e5e7eb; }
+        .op-title { font-size: 1.6rem; font-weight: 900; display: flex; justify-content: space-between; align-items: center;}
         .op-items { flex: 1; overflow-y: auto; padding: 20px; }
-        .cart-row { display: flex; justify-content: space-between; background: var(--secondary); padding: 15px; border-radius: var(--radius-lg); margin-bottom: 10px; border-left: 4px solid var(--primary); }
+        .cart-row { display: flex; justify-content: space-between; background: var(--secondary); padding: 20px; border-radius: var(--radius-lg); margin-bottom: 15px; border-left: 6px solid var(--primary); }
         .cart-info { flex: 1; padding-right: 15px; }
-        .cart-name { font-weight: 700; font-size: 1.05rem; margin-bottom: 4px; }
-        .cart-mods { font-size: 0.85rem; color: #6b7280; line-height: 1.4; }
-        .cart-price { font-weight: 700; font-size: 1.05rem; }
-        .cart-del { background: #fca5a5; color: #991b1b; padding: 8px 12px; border-radius: var(--radius-md); font-weight: 800; font-size: 1rem; }
+        .cart-name { font-weight: 800; font-size: 1.2rem; margin-bottom: 6px; }
+        .cart-mods { font-size: 0.9rem; color: #6b7280; line-height: 1.5; font-weight: 500; }
+        .cart-price { font-weight: 800; font-size: 1.2rem; margin-bottom: 10px; }
+        .cart-del { background: #fecaca; color: #dc2626; padding: 12px 18px; border-radius: var(--radius-md); font-weight: 900; font-size: 1.2rem; }
 
-        .op-footer { padding: 20px; background: #fafafa; border-top: 1px solid #e5e7eb; }
-        .calc-row { display: flex; justify-content: space-between; font-size: 1rem; color: var(--text-gray); margin-bottom: 8px; }
-        .calc-total { font-size: 1.6rem; font-weight: 800; color: var(--text-dark); margin-top: 10px; padding-top: 10px; border-top: 2px dashed #d1d5db; display: flex; justify-content: space-between; }
-        .pay-btn { background: var(--success); color: white; width: 100%; padding: 20px; font-size: 1.3rem; border-radius: var(--radius-lg); margin-top: 20px; box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3); }
+        .op-footer { padding: 30px; background: #f9fafb; border-top: 1px solid #e5e7eb; }
+        .calc-row { display: flex; justify-content: space-between; font-size: 1.1rem; color: var(--text-gray); margin-bottom: 10px; font-weight: 600; }
+        .calc-total { font-size: 2rem; font-weight: 900; color: var(--text-dark); margin-top: 15px; padding-top: 15px; border-top: 3px dashed #d1d5db; display: flex; justify-content: space-between; }
+        .pay-btn { background: var(--success); color: white; width: 100%; padding: 25px; font-size: 1.5rem; border-radius: var(--radius-lg); margin-top: 25px; box-shadow: 0 8px 20px rgba(34, 197, 94, 0.3); font-weight: 900; }
 
-        /* ---- [ KDS - Kitchen Display System ] ---- */
-        #kds-view { background: #111827; }
-        .kds-nav { display: flex; background: #1f2937; padding: 0 20px; border-bottom: 1px solid #374151; }
-        .kds-tab { padding: 20px 30px; font-size: 1.2rem; color: white; background: transparent; border-radius: 0; box-shadow: inset 0 -4px 0 var(--primary); }
+        /* Modals & Overlays */
+        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; z-index: 3000; padding: 20px; backdrop-filter: blur(4px); }
+        .modal { background: white; width: 100%; max-width: 550px; border-radius: var(--radius-xl); padding: 40px; box-shadow: var(--shadow-lg); position: relative; max-height: 90vh; overflow-y: auto; }
+        .modal-header { font-size: 2rem; font-weight: 900; margin-bottom: 25px; color: var(--dark); text-align: center; }
+        .btn-flex { display: flex; gap: 15px; margin-top: 30px; }
+        .btn-modal-lg { padding: 20px; font-size: 1.2rem; border-radius: var(--radius-md); font-weight: 800; flex: 1; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .btn-modal-cancel { background: #f3f4f6; color: var(--text-dark); }
+        .btn-modal-confirm { background: var(--primary); color: white; }
+        .btn-modal-success { background: var(--success); color: white; }
+
+        /* ---- [ MANAGER DASHBOARD CONSOLIDATED ] ---- */
+        .mgmt-tabs { display: flex; background: #e5e7eb; padding: 6px; border-radius: var(--radius-md); margin-bottom: 30px; gap: 6px; }
+        .mgmt-tab { flex: 1; padding: 15px; border-radius: 8px; background: transparent; color: var(--text-gray); font-size: 1.1rem; font-weight: 700; }
+        .mgmt-tab.active { background: white; color: var(--text-dark); box-shadow: var(--shadow-sm); }
+        .mgmt-section { display: none; }
+        .mgmt-section.active { display: block; }
         
-        .kds-content { padding: 20px; display: block; flex-grow: 1; overflow-y: auto; }
-        .kds-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 20px; }
-        .kds-card { background: #1f2937; border-radius: var(--radius-xl); display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
-        .kds-header { padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; font-weight: 800; font-size: 1.1rem; color: #111827; }
-        .status-pending .kds-header { background: var(--warning); }
-        .status-preparing .kds-header { background: var(--accent); color: white; }
-        .status-ready .kds-header { background: var(--success); color: white; }
-        .kds-body { padding: 20px; flex-grow: 1; color: white; }
-        .kds-body ul { list-style: none; font-size: 1.2rem; }
-        .kds-body li { margin-bottom: 15px; border-bottom: 1px solid #374151; padding-bottom: 10px; }
-        .mod-line { font-size: 0.95rem; color: #9ca3af; display: block; margin-top: 5px; font-weight: 400; padding-left: 15px; border-left: 2px solid #4b5563; }
-        .kds-action { width: 100%; padding: 20px; font-size: 1.2rem; background: #374151; color: white; border-radius: 0; text-transform: uppercase; letter-spacing: 1px;}
-        .kds-action:hover { background: #4b5563; }
+        .list-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        .list-table th { text-align: left; padding: 15px; color: var(--text-gray); border-bottom: 2px solid #f3f4f6; text-transform: uppercase; font-size: 0.9rem; letter-spacing: 1px; }
+        .list-table td { padding: 20px 15px; border-bottom: 1px solid #f3f4f6; font-size: 1.1rem; font-weight: 600; }
+        .btn-action-del { color: #dc2626; background: #fee2e2; padding: 8px 15px; border-radius: 6px; font-size: 0.9rem; font-weight: 800; }
 
-        /* ---- [ CUSTOMER DISPLAY ] ---- */
-        #cust-view { background: #1f2937; color: white; align-items: center; justify-content: center;}
-        .cust-setup { background: white; padding: 40px; border-radius: var(--radius-xl); text-align: center; color: var(--text-dark); max-width: 500px; box-shadow: var(--shadow-lg); }
-        .cust-table-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 20px; }
-        .btn-table { padding: 20px; font-size: 1.5rem; background: var(--secondary); border: 2px solid #e5e7eb; border-radius: var(--radius-lg); color: var(--text-dark); font-weight: 700;  }
-        .btn-table:hover { border-color: var(--primary); }
-        .cust-active { display: none; width: 100%; max-width: 800px; text-align: center; }
-        .cust-table-badge { font-size: 1.5rem; background: rgba(255,255,255,0.1); padding: 10px 30px; border-radius: 99px; display: inline-block; margin-bottom: 40px; cursor: pointer;}
-        .cust-table-badge:hover { background: rgba(255,255,255,0.2); }
-        .cust-status-main { font-size: 6rem; font-weight: 900; text-transform: uppercase; margin-bottom: 40px; letter-spacing: -2px; }
-        .status-text-pending { color: var(--warning); }
-        .status-text-preparing { color: var(--accent); }
-        .status-text-ready { color: var(--success); }
-        .cust-list { background: rgba(0,0,0,0.3); border-radius: var(--radius-xl); padding: 30px; font-size: 1.5rem; text-align: left; }
+        /* ---- [ EMPLOYEE CLOCK-IN VIEW ] ---- */
+        .clock-container { max-width: 450px; background: white; padding: 50px; border-radius: var(--radius-xl); text-align: center; box-shadow: var(--shadow-lg); margin: auto; }
+        .clock-display { font-size: 4rem; font-weight: 900; margin-bottom: 10px; color: var(--primary); }
+        .clock-name { font-size: 1.8rem; font-weight: 800; margin-bottom: 40px; color: var(--dark); }
+        .clock-stats { background: var(--secondary); padding: 20px; border-radius: var(--radius-lg); margin-top: 30px; text-align: left; }
 
-        /* ---- [ MANAGER VIEWS ] ---- */
-        .mgmt-wrapper { padding: 40px; max-width: 1000px; margin: 0 auto; width: 100%;}
-        .mgmt-header { font-size: 2.5rem; font-weight: 800; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center; }
-        .kpi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 40px; }
-        .kpi-card { background: white; padding: 30px; border-radius: var(--radius-xl); box-shadow: var(--shadow-sm); border-top: 6px solid var(--primary); }
-        .kpi-label { color: var(--text-gray); font-size: 1.1rem; font-weight: 600; margin-bottom: 10px; }
-        .kpi-val { font-size: 2.5rem; font-weight: 900; }
-        .mgmt-panel { background: white; padding: 30px; border-radius: var(--radius-xl); box-shadow: var(--shadow-sm); margin-bottom: 20px; }
-        
-        /* PIN Pad Overlay */
-        #pin-overlay { position: fixed; inset: 0; background: rgba(17,24,39,0.95); display: none; align-items: center; justify-content: center; z-index: 2500; }
-        .pin-box { background: white; padding: 40px; border-radius: 24px; text-align: center; width: 340px; }
-        .pin-display { font-size: 3rem; letter-spacing: 15px; margin: 20px 0 30px 0; height: 60px; color: var(--primary); font-weight: 900; background: var(--secondary); border-radius: 12px; display: flex; align-items: center; justify-content: center; }
-        .pin-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px; }
-        .pin-key { background: #f3f4f6; font-size: 1.5rem; height: 75px; border-radius: 12px; color: var(--text-dark); }
+        /* PIN Pad Generic */
+        .pin-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin: 25px 0; }
+        .pin-key { background: #f3f4f6; font-size: 1.8rem; height: 85px; border-radius: 12px; color: var(--text-dark); font-weight: 800; }
         .pin-key:active { background: #e5e7eb; }
+        .pin-dot-display { font-size: 3.5rem; letter-spacing: 20px; height: 80px; display: flex; align-items: center; justify-content: center; background: var(--secondary); border-radius: var(--radius-md); margin-bottom: 20px; color: var(--primary); }
 
-        .fab-nav { display: none; position: fixed; right: -25px; top: 50%; width: 60px; height: 100px; background: var(--primary); color: white; align-items: center; padding-left: 10px; border-radius: 50px 0 0 50px; font-size: 1.5rem; cursor: pointer; z-index: 500; transition: right 0.2s; box-shadow: var(--shadow-lg); }
+        /* Mobile Adjustments */
+        @media (max-width: 1024px) {
+            #pos-view { flex-direction: column; }
+            .sidebar { width: 90px; }
+            .nav-button { width: 75px; height: 75px; font-size: 0.7rem; }
+            .order-panel { width: 100%; height: 50%; border-left: none; border-top: 2px solid #e5e7eb; }
+            .op-items { height: 150px; }
+            .menu-grid { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); }
+        }
+
+        @media (max-width: 640px) {
+            .sidebar { display: none; position: fixed; bottom: 0; left: 0; right: 0; width: 100%; height: 80px; flex-direction: row; justify-content: space-around; padding: 0; z-index: 5000; }
+            .sidebar-logo { display: none; }
+            .nav-button { height: 100%; margin: 0; width: auto; flex: 1; border-radius: 0; }
+            body { padding-bottom: 80px; }
+            .view-container { height: calc(100vh - 80px); }
+            .order-panel { position: fixed; top: 0; right: -100%; width: 100%; height: calc(100% - 80px); transition: right 0.3s; }
+            .order-panel.mobile-open { right: 0; }
+            .mobile-cart-toggle { display: flex; position: fixed; right: 20px; bottom: 100px; width: 70px; height: 70px; background: var(--primary); border-radius: 50%; color: white; align-items: center; justify-content: center; font-size: 1.8rem; box-shadow: var(--shadow-lg); z-index: 4000; }
+        }
+
+        /* FAB for fullscreen mode returns */
+        .fab-nav { display: none; position: fixed; right: -25px; top: 20px; width: 60px; height: 100px; background: var(--primary); color: white; align-items: center; padding-left: 10px; border-radius: 50px 0 0 50px; font-size: 1.5rem; cursor: pointer; z-index: 500; transition: right 0.2s; box-shadow: var(--shadow-lg); }
         .fab-nav:hover { right: 0; }
-
-        #station-call-alert { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: var(--warning); color: var(--dark); padding: 15px 25px; border-radius: var(--radius-lg); font-weight: 800; font-size: 1.2rem; box-shadow: var(--shadow-lg); z-index: 3000; display: none; animation: popDown 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        @keyframes popDown { from { transform: translate(-50%, -20px); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
     </style>
 </head>
 <body>
@@ -168,120 +156,146 @@
     <div id="overlay-alert" class="overlay">
         <div class="modal" style="text-align:center;">
             <div class="modal-header" id="alert-title">Notice</div>
-            <p id="alert-body" style="font-size:1.1rem; color:var(--text-gray); margin-bottom: 25px;"></p>
-            <button class="btn-confirm" style="width:100%;" onclick="closeAlert()">Okay</button>
+            <p id="alert-body" style="font-size:1.2rem; color:var(--text-gray); margin-bottom: 30px;"></p>
+            <button class="btn-modal-lg btn-modal-confirm" style="width:100%;" onclick="closeAlert()">Dismiss</button>
         </div>
     </div>
 
     <div id="overlay-confirm" class="overlay">
         <div class="modal" style="text-align:center;">
             <div class="modal-header" id="confirm-title">Are you sure?</div>
-            <p id="confirm-body" style="font-size:1.1rem; color:var(--text-gray); margin-bottom: 25px;"></p>
+            <p id="confirm-body" style="font-size:1.2rem; color:var(--text-gray); margin-bottom: 30px;"></p>
             <div class="btn-flex">
-                <button class="btn-cancel" onclick="closeConfirm(false)">Cancel</button>
-                <button class="btn-confirm" onclick="closeConfirm(true)">Yes, Proceed</button>
+                <button class="btn-modal-lg btn-modal-cancel" onclick="closeConfirm(false)">No, Go Back</button>
+                <button class="btn-modal-lg btn-modal-confirm" onclick="closeConfirm(true)">Yes, Proceed</button>
             </div>
         </div>
     </div>
 
-    <!-- Table Selector Modal for checkout -->
-    <div id="overlay-table" class="overlay">
-        <div class="modal" style="width: 500px;">
-            <div class="modal-header">Select Assignment</div>
-            <p style="color:var(--text-gray); margin-bottom: 15px;">Send this order to:</p>
-            <div class="table-grid">
-                <button class="table-btn" onclick="checkoutTable('Takeout')">Takeout</button>
-                <button class="table-btn" onclick="checkoutTable('Table 1')">Table 1</button>
-                <button class="table-btn" onclick="checkoutTable('Table 2')">Table 2</button>
-                <button class="table-btn" onclick="checkoutTable('Table 3')">Table 3</button>
-                <button class="table-btn" onclick="checkoutTable('Table 4')">Table 4</button>
-                <button class="table-btn" onclick="checkoutTable('Table 5')">Table 5</button>
+    <!-- New Loyalty Step Modal -->
+    <div id="overlay-loyalty" class="overlay">
+        <div class="modal">
+            <div class="modal-header">Loyalty Account</div>
+            <p style="text-align:center; color:var(--text-gray); font-size:1.1rem; margin-bottom:30px;">Does the customer have a Crazy Burgers rewards account?</p>
+            
+            <div id="loyalty-search-state">
+                <div style="display:grid; grid-template-columns: 1fr; gap:15px;">
+                    <button class="btn-modal-lg btn-modal-success" onclick="showLoyaltySearch()">Yes, Find Account</button>
+                    <button class="btn-modal-lg btn-modal-confirm" onclick="showLoyaltyCreate()">No, Create Account</button>
+                    <button class="btn-modal-lg btn-modal-cancel" onclick="skipLoyalty()">Skip Loyalty Step</button>
+                </div>
             </div>
-            <button class="btn-cancel" style="width:100%; margin-top:10px;" onclick="document.getElementById('overlay-table').style.display='none'">Cancel List</button>
+
+            <div id="loyalty-find-state" style="display:none;">
+                <input type="text" id="loyalty-lookup-name" placeholder="Enter Member Name or Phone">
+                <button class="btn-modal-lg btn-modal-confirm" style="width:100%;" onclick="searchLoyaltyMember()">Search Database</button>
+                <button class="btn-modal-lg btn-modal-cancel" style="width:100%; margin-top:10px;" onclick="resetLoyaltyModal()">Back</button>
+            </div>
+
+            <div id="loyalty-create-state" style="display:none;">
+                <input type="text" id="loyalty-new-name" placeholder="Full Name">
+                <input type="text" id="loyalty-new-phone" placeholder="Phone Number">
+                <button class="btn-modal-lg btn-modal-success" style="width:100%;" onclick="createNewLoyaltyMember()">Sign Up Member</button>
+                <button class="btn-modal-lg btn-modal-cancel" style="width:100%; margin-top:10px;" onclick="resetLoyaltyModal()">Back</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Table Assignment Modal -->
+    <div id="overlay-table" class="overlay">
+        <div class="modal" style="max-width: 600px;">
+            <div class="modal-header">Table/Order Assignment</div>
+            <div class="table-grid">
+                <button class="table-btn" onclick="assignOrder('Takeout')">🥡 TAKEOUT</button>
+                <button class="table-btn" onclick="assignOrder('Table 1')">🪑 TABLE 1</button>
+                <button class="table-btn" onclick="assignOrder('Table 2')">🪑 TABLE 2</button>
+                <button class="table-btn" onclick="assignOrder('Table 3')">🪑 TABLE 3</button>
+                <button class="table-btn" onclick="assignOrder('Table 4')">🪑 TABLE 4</button>
+                <button class="table-btn" onclick="assignOrder('Table 5')">🪑 TABLE 5</button>
+            </div>
+            <button class="btn-modal-lg btn-modal-cancel" style="width:100%; margin-top:15px;" onclick="document.getElementById('overlay-table').style.display='none'">Go Back</button>
         </div>
     </div>
 
 
     <!-- GLOB SIDEBAR -->
     <nav class="sidebar" id="global-sidebar">
-        <div class="sidebar-logo">B44</div>
+        <div class="sidebar-logo">C-B</div>
         <button class="nav-button active-nav" onclick="navTo('pos-view', this)">
-            <span class="nav-icon">🍔</span> Point of Sale
+            <span class="nav-icon">🍔</span> POS
         </button>
         <button class="nav-button" onclick="navTo('kiosk-view', this)">
-            <span class="nav-icon">📱</span> Self-Serve Kiosk
+            <span class="nav-icon">📱</span> Kiosk
         </button>
         <button class="nav-button" onclick="navTo('cust-view', this)">
-            <span class="nav-icon">🖥️</span> Customer Display
+            <span class="nav-icon">🖥️</span> CDS
         </button>
         <button class="nav-button" onclick="navTo('kds-view', this)">
-            <span class="nav-icon">🍳</span> Kitchen Display
+            <span class="nav-icon">🍳</span> KDS
         </button>
         <button class="nav-button" onclick="reqPin('manager-view', this)">
-            <span class="nav-icon">📊</span> Manager Dash
+            <span class="nav-icon">📊</span> Manager
         </button>
-        <button class="nav-button" onclick="reqPin('menu-view', this)">
-            <span class="nav-icon">📋</span> Menu Mgmt
-        </button>
-        <button class="nav-button" onclick="reqPin('cust-mgmt-view', this)">
-            <span class="nav-icon">👥</span> Customer Mgmt
-        </button>
-        <button class="nav-button" onclick="reqPin('emp-mgmt-view', this)">
-            <span class="nav-icon">👨‍🍳</span> Employee Mgmt
+        <button class="nav-button" onclick="navTo('emp-mgmt-view', this)">
+            <span class="nav-icon">🕵️</span> Staff Station
         </button>
         <button class="nav-button" onclick="navTo('calls-view', this)">
-            <span class="nav-icon">🔔</span> Station Calls
+            <span class="nav-icon">🔔</span> Calls
         </button>
     </nav>
 
-    <!-- FAB for fullscreen mode returns -->
+    <!-- Mobile Cart Toggle -->
+    <div class="mobile-cart-toggle" id="mobile-cart-btn" onclick="toggleMobileCart()">🛒</div>
     <div class="fab-nav" id="fab-nav" onclick="toggleSidebar()">◀</div>
 
     <!-- 1. POS VIEW -->
     <main id="pos-view" class="view-container active">
         <div class="pos-main">
-            <div style="display:flex; justify-content: space-between; margin-bottom: 20px;">
-                <h1 style="font-size: 2rem;">Menu</h1>
-                <button onclick="sendStationCall()" style="background:var(--warning); color:#111827; padding: 10px 20px; border-radius: 8px;">🔔 Call Manager</button>
+            <div style="display:flex; justify-content: space-between; align-items:center; margin-bottom: 25px;">
+                <h1 style="font-size: 2.2rem; font-weight: 900;">Crazy Burgers POS</h1>
+                <button onclick="sendStationCall()" style="background:var(--warning); color:#111827; padding: 15px 25px; border-radius: 12px; font-weight:800; font-size:1rem;">🔔 REQUEST MANAGER</button>
             </div>
-            <div class="cat-tabs" id="pos-cats"><button class="cat-tab active">All</button></div>
+            <div class="cat-tabs" id="pos-cats"><button class="cat-tab active">All Menu Items</button></div>
             <div class="menu-grid" id="pos-grid"></div>
         </div>
 
-        <aside class="order-panel">
+        <aside class="order-panel" id="order-panel">
             <div class="op-header">
-                <div class="op-title">Current Order <button onclick="clearCart()" style="font-size: 0.9rem; color: var(--primary); background: transparent;">Clear All</button></div>
+                <div class="op-title">Current Order <button onclick="clearCart()" style="font-size: 1rem; color: var(--primary); background: transparent; font-weight:800;">Wipe Cart</button></div>
             </div>
             <div class="op-items" id="op-items"></div>
             <div class="op-footer">
+                <div id="cart-loyalty-preview" style="background:#f0faf2; padding:10px; border-radius:8px; margin-bottom:15px; font-size:0.9rem; display:none; border:1px solid #c6f6d5; color:#22543d;">Member: <b id="member-name-tag"></b></div>
                 <div class="calc-row"><span>Subtotal</span> $<span id="pos-subtotal">0.00</span></div>
                 <div class="calc-row"><span>Tax (8%)</span> $<span id="pos-tax">0.00</span></div>
                 <div class="calc-total"><span>Total</span> $<span id="pos-total">0.00</span></div>
-                <button class="pay-btn" onclick="startPaymentFlow()">Process Payment</button>
+                <button class="pay-btn" onclick="startLoyaltyStep()">Proceed to Payment</button>
             </div>
         </aside>
     </main>
 
-    <!-- ITEM MODIFICATION MODAL -->
+    <!-- MODIFICATION MODAL -->
     <div id="item-modal-overlay" class="overlay">
         <div class="modal">
-            <div class="modal-header"><span id="mod-item-name">Item Name</span></div>
-            <div class="item-modal-price" id="mod-item-price" style="margin-top:-15px; color:var(--text-gray); margin-bottom:20px;">$0.00</div>
+            <div class="modal-header" id="mod-item-name">Item Name</div>
+            <input type="hidden" id="mod-item-id">
             
-            <label style="font-weight: 600; display:block; margin-bottom: 8px;">Select Sauces / Preps</label>
+            <label style="font-weight: 800; display:block; margin-bottom: 10px; font-size:1.1rem;">Custom Sauce / Prep</label>
             <select id="mod-sauce">
-                <option value="None">None</option>
+                <option value="None">Standard Preparation</option>
                 <option value="Teriyaki Glaze">Teriyaki Glaze</option>
                 <option value="Spicy Mayo">Spicy Mayo</option>
                 <option value="Extra Ketchup">Extra Ketchup</option>
-                <option value="Ranch">Ranch</option>
+                <option value="Ranch">Ranch Dipping Sauce</option>
+                <option value="BBQ Sauce">BBQ Sauce</option>
             </select>
-            <label style="font-weight: 600; display:block; margin-bottom: 8px; margin-top: 10px;">Special Instructions</label>
-            <textarea id="mod-instruction" rows="3" placeholder="e.g. No onions, allergy to dairy..."></textarea>
+            
+            <label style="font-weight: 800; display:block; margin-bottom: 10px; margin-top: 20px; font-size:1.1rem;">Order Special Notes</label>
+            <textarea id="mod-instruction" rows="3" placeholder="No pickles, extra napkins, allergy notes..."></textarea>
             
             <div class="btn-flex">
-                <button class="btn-cancel" onclick="closeModModal()">Cancel</button>
-                <button class="btn-confirm" onclick="confirmMod()">Add to Order</button>
+                <button class="btn-modal-lg btn-modal-cancel" onclick="closeModModal()">Cancel</button>
+                <button class="btn-modal-lg btn-modal-confirm" onclick="confirmMod()">Add to Current Order</button>
             </div>
         </div>
     </div>
@@ -290,167 +304,191 @@
     <!-- 2. KDS VIEW -->
     <main id="kds-view" class="view-container">
         <div class="kds-nav">
-            <button class="kds-tab active">Active Orders Dispatch</button>
+            <button class="kds-tab">Kitchen Display System (LIVE)</button>
         </div>
-        <div id="kds-active" class="kds-content active">
+        <div id="kds-active" class="kds-content">
             <div class="kds-grid" id="kds-grid"></div>
         </div>
     </main>
 
-    <!-- 3. CUSTOMER DISPLAY -->
-    <main id="cust-view" class="view-container">
-        <div class="cust-setup" id="cust-setup">
-            <h2>Select Display Station</h2>
-            <p style="color:#6b7280; margin-bottom: 20px;">Which table is this display located at?</p>
-            <div class="cust-table-grid">
-                <button class="btn-table" onclick="bindCustomerDisplay('Takeout')">Takeout</button>
-                <button class="btn-table" onclick="bindCustomerDisplay('Table 1')">Table 1</button>
-                <button class="btn-table" onclick="bindCustomerDisplay('Table 2')">Table 2</button>
-                <button class="btn-table" onclick="bindCustomerDisplay('Table 3')">Table 3</button>
-                <button class="btn-table" onclick="bindCustomerDisplay('Table 4')">Table 4</button>
-                <button class="btn-table" onclick="bindCustomerDisplay('Table 5')">Table 5</button>
+    <!-- 4. CONSOLIDATED MANAGER VIEW -->
+    <main id="manager-view" class="view-container">
+        <div class="mgmt-wrapper">
+            <div class="mgmt-header">Master Control Panel</div>
+            
+            <div class="mgmt-tabs">
+                <button class="mgmt-tab active" onclick="switchMgmtTab('m-stats', this)">Stats</button>
+                <button class="mgmt-tab" onclick="switchMgmtTab('m-menu', this)">Menu Mgmt</button>
+                <button class="mgmt-tab" onclick="switchMgmtTab('m-emp', this)">Employees</button>
+                <button class="mgmt-tab" onclick="switchMgmtTab('m-cust', this)">Loyalty CRM</button>
+            </div>
+
+            <!-- TAB: STATS -->
+            <div id="m-stats" class="mgmt-section active">
+                <div class="kpi-grid">
+                    <div class="kpi-card"><div class="kpi-label">Current Revenue</div><div class="kpi-val" id="kpi-rev">$0.00</div></div>
+                    <div class="kpi-card"><div class="kpi-label">Active Orders</div><div class="kpi-val" id="kpi-orders">0</div></div>
+                    <div class="kpi-card"><div class="kpi-label">Average Ticket</div><div class="kpi-val" id="kpi-avg">$0.00</div></div>
+                </div>
+                <div class="mgmt-panel">
+                    <h2>System Status: <span style="color:var(--success)">OPERATIONAL</span></h2>
+                    <p style="margin-top:15px; color:var(--text-gray);">Firebase Connection: Verified</p>
+                    <p style="color:var(--text-gray);">KDS Sync: Active</p>
+                </div>
+            </div>
+
+            <!-- TAB: MENU -->
+            <div id="m-menu" class="mgmt-section">
+                <div class="mgmt-panel">
+                    <h2 style="margin-bottom:20px;">Add New Menu Item</h2>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px;">
+                        <input type="text" id="new-item-name" placeholder="Item Name">
+                        <input type="number" id="new-item-price" placeholder="Price ($)">
+                        <select id="new-item-cat">
+                            <option value="Burgers">Burgers</option>
+                            <option value="Sides">Sides</option>
+                            <option value="Drinks">Drinks</option>
+                            <option value="Hibachi">Hibachi</option>
+                        </select>
+                        <input type="text" id="new-item-prep" placeholder="Prep Time (e.g., 5 min)">
+                    </div>
+                    <button class="btn-modal-lg btn-modal-confirm" style="width:100%;" onclick="addMenuItem()">Publish to POS Grid</button>
+                </div>
+                <div class="mgmt-panel" style="margin-top:20px;">
+                    <h2>Active Live Menu</h2>
+                    <table class="list-table">
+                        <thead><tr><th>Item Name</th><th>Price</th><th>Category</th><th>Action</th></tr></thead>
+                        <tbody id="mgmt-menu-list"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- TAB: EMPLOYEES -->
+            <div id="m-emp" class="mgmt-section">
+                <div class="mgmt-panel">
+                    <h2 style="margin-bottom:20px;">Register New Staff Member</h2>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px;">
+                        <input type="text" id="emp-name-input" placeholder="Staff Full Name">
+                        <input type="text" id="emp-pin-input" placeholder="4-Digit Personal PIN" maxlength="4">
+                        <select id="emp-role-input">
+                            <option value="Cashier">Cashier</option>
+                            <option value="Line Cook">Line Cook</option>
+                            <option value="Manager">Manager</option>
+                            <option value="Server">Server</option>
+                        </select>
+                    </div>
+                    <button class="btn-modal-lg btn-modal-confirm" style="width:100%;" onclick="addEmployee()">Authorize Staff Account</button>
+                </div>
+                <div class="mgmt-panel" style="margin-top:20px;">
+                    <h2>Staff Directory & PIN Status</h2>
+                    <table class="list-table">
+                        <thead><tr><th>Name</th><th>Role</th><th>PIN</th><th>Action</th></tr></thead>
+                        <tbody id="mgmt-emp-list"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- TAB: CRM -->
+            <div id="m-cust" class="mgmt-section">
+                <div class="mgmt-panel">
+                    <h2>Loyalty Member Database</h2>
+                    <table class="list-table">
+                        <thead><tr><th>Name</th><th>Phone</th><th>Points</th><th>Action</th></tr></thead>
+                        <tbody id="mgmt-cust-list"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 5. STAFF CLOCK STATION (PIN PROTECTED INDIVIDUALLY) -->
+    <main id="emp-mgmt-view" class="view-container" style="justify-content:center; align-items:center; background:var(--dark);">
+        <div class="clock-container" id="clock-login">
+            <h2 style="margin-bottom:10px; font-weight:900;">Staff Login</h2>
+            <div class="pin-dot-display" id="clock-pin-display"></div>
+            <div class="pin-grid">
+                <button class="pin-key" onclick="clockPin('1')">1</button>
+                <button class="pin-key" onclick="clockPin('2')">2</button>
+                <button class="pin-key" onclick="clockPin('3')">3</button>
+                <button class="pin-key" onclick="clockPin('4')">4</button>
+                <button class="pin-key" onclick="clockPin('5')">5</button>
+                <button class="pin-key" onclick="clockPin('6')">6</button>
+                <button class="pin-key" onclick="clockPin('7')">7</button>
+                <button class="pin-key" onclick="clockPin('8')">8</button>
+                <button class="pin-key" onclick="clockPin('9')">9</button>
+                <button class="pin-key" style="background:#fee2e2; color:#dc2626;" onclick="clockPinClear()">C</button>
+                <button class="pin-key" onclick="clockPin('0')">0</button>
+                <button class="pin-key" style="background:#dcfce7; color:#16a34a;" onclick="clockPinVerify()">✔</button>
             </div>
         </div>
 
+        <div class="clock-container" id="clock-actions" style="display:none; max-width:600px;">
+            <p style="color:var(--text-gray); font-weight:800; font-size:1.2rem; margin-bottom:10px;">AUTHORIZED SESSION</p>
+            <div class="clock-name" id="clock-v-name">Employee Name</div>
+            <div id="clock-status-box" style="margin-bottom:30px; font-size:1.5rem; font-weight:900; background:#f3f4f6; padding:20px; border-radius:12px;">Status: <span id="clock-v-status">Unknown</span></div>
+            
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
+                <button class="btn-modal-lg btn-modal-success" id="btn-clock-in" onclick="performShiftAction('in')">CLOCK IN</button>
+                <button class="btn-modal-lg btn-modal-confirm" id="btn-clock-out" onclick="performShiftAction('out')">CLOCK OUT</button>
+            </div>
+            
+            <div class="clock-stats" id="clock-v-history">
+                <h3 style="margin-bottom:10px;">Recent Activity</h3>
+                <div id="shift-history-list">No recent shifts recorded.</div>
+            </div>
+            
+            <button class="btn-modal-lg btn-modal-cancel" style="margin-top:40px; width:100%;" onclick="logoutStaff()">Log Out Terminal</button>
+        </div>
+    </main>
+
+    <!-- CDS STATION -->
+    <main id="cust-view" class="view-container">
+        <div class="cust-setup" id="cust-setup">
+            <h2 style="font-size:2.5rem; margin-bottom:10px; font-weight:900;">Link CDS Terminal</h2>
+            <p style="color:var(--text-gray); font-size:1.2rem; margin-bottom:30px;">Assign this tablet to a specific dining zone</p>
+            <div class="cust-table-grid">
+                <button class="btn-table" onclick="bindCDS('Takeout')">🥡 TAKEOUT / PICKUP</button>
+                <button class="btn-table" onclick="bindCDS('Table 1')">1</button>
+                <button class="btn-table" onclick="bindCDS('Table 2')">2</button>
+                <button class="btn-table" onclick="bindCDS('Table 3')">3</button>
+                <button class="btn-table" onclick="bindCDS('Table 4')">4</button>
+                <button class="btn-table" onclick="bindCDS('Table 5')">5</button>
+            </div>
+        </div>
         <div class="cust-active" id="cust-active">
-            <div class="cust-table-badge" id="cd-id" onclick="resetCustomerDisplay()" title="Click to Change Display Station">Station Bound</div>
+            <div class="cust-table-badge" id="cd-id" onclick="resetCDS()">Binding...</div>
             <div class="cust-status-main" id="cd-status">AWAITING</div>
             <div class="cust-list" id="cd-items">Waiting for order data...</div>
         </div>
     </main>
 
-    <!-- 4. MANAGER DASHBOARD -->
-    <main id="manager-view" class="view-container">
-        <div class="mgmt-wrapper">
-            <div class="mgmt-header">Manager Dashboard</div>
-            <div class="kpi-grid">
-                <div class="kpi-card"><div class="kpi-label">Today's Revenue</div><div class="kpi-val" id="kpi-rev">$0.00</div></div>
-                <div class="kpi-card"><div class="kpi-label">Total Orders</div><div class="kpi-val" id="kpi-orders">0</div></div>
-                <div class="kpi-card"><div class="kpi-label">Avg Ticket</div><div class="kpi-val" id="kpi-avg">$0.00</div></div>
-            </div>
-        </div>
+    <!-- 6. KIOSK (SELF-SERVE) -->
+    <main id="kiosk-view" class="view-container" style="background:white; text-align:center; padding-top: 100px;">
+        <h1 style="font-size:6rem; font-weight:900; color:var(--primary); letter-spacing:-2px;">CRAZY BURGERS.</h1>
+        <p style="font-size:2.8rem; color:var(--text-gray); margin-bottom:80px; font-weight:500;">Fast. Fresh. Delicious.</p>
+        <button onclick="navTo('pos-view', document.querySelectorAll('.nav-button')[0])" style="font-size:3rem; padding: 50px 100px; background:var(--primary); color:white; border-radius: 99px; box-shadow:0 20px 40px rgba(220, 38, 38, 0.4); font-weight:900;">TOUCH TO START ORDER</button>
     </main>
 
-    <!-- 5. MENU MANAGEMENT -->
-    <main id="menu-view" class="view-container">
-        <div class="mgmt-wrapper">
-            <div class="mgmt-header">Menu Management</div>
-            <div class="mgmt-panel" style="display:flex; justify-content:space-between; align-items:center;">
-                <div>
-                    <h2>Database Integrity</h2>
-                    <p style="color:#6b7280;">Modify the local instance menu payload directly.</p>
-                </div>
-                <button style="background:var(--dark); color:white; padding:15px; border-radius:8px; font-weight:bold;" onclick="resetMenu()">Restore Default Menu</button>
-            </div>
-
-            <div class="mgmt-panel">
-                <h2 style="margin-bottom: 20px;">Add New Menu Item</h2>
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px;">
-                    <input type="text" id="new-item-name" placeholder="Item Name (e.g., Triple Smash)">
-                    <input type="number" id="new-item-price" placeholder="Price ($)">
-                    <select id="new-item-cat">
-                        <option value="Burgers">Burgers</option>
-                        <option value="Sides">Sides</option>
-                        <option value="Drinks">Drinks</option>
-                        <option value="Hibachi">Hibachi</option>
-                    </select>
-                    <input type="text" id="new-item-prep" placeholder="Prep Time (e.g., 5 min)">
-                </div>
-                <button style="background:var(--primary); color:white; padding:15px; border-radius:8px; font-weight:bold; width:100%; font-size:1.1rem; margin-top:10px;" onclick="addMenuItem()">+ Publish to Menu</button>
-            </div>
-        </div>
-    </main>
-
-    <!-- 6. FIREBASE CUSTOMER CRM -->
-    <main id="cust-mgmt-view" class="view-container">
-        <div class="mgmt-wrapper">
-            <div class="mgmt-header">Customer CRM Database</div>
-            
-            <div class="mgmt-panel" style="display:flex; gap:15px; margin-bottom:20px;">
-                <input type="text" id="cust-name-input" placeholder="Customer Name">
-                <input type="text" id="cust-phone-input" placeholder="Phone Number">
-                <button style="background:var(--primary); color:white; padding:15px; border-radius:8px; min-width:150px; font-weight:bold;" onclick="addCustomer()">Add Customer</button>
-            </div>
-            
-            <div class="mgmt-panel">
-                <h3 style="margin-bottom:15px; font-size:1.5rem;">Registered Base44 Customers</h3>
-                <table style="width:100%; text-align:left; border-collapse:collapse; margin-top:15px;" id="cust-table">
-                    <thead>
-                        <tr style="border-bottom:1px solid #e5e7eb; color:var(--text-gray);">
-                            <th style="padding:10px 0;">Name</th>
-                            <th>Phone Number</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody id="cust-list">
-                        <tr><td colspan="3" style="padding:15px 0;">Connecting to Firebase...</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </main>
-
-    <!-- 7. FIREBASE EMPLOYEE MGMT -->
-    <main id="emp-mgmt-view" class="view-container">
-        <div class="mgmt-wrapper">
-            <div class="mgmt-header">Employee Directory</div>
-            
-            <div class="mgmt-panel" style="display:flex; gap:15px; margin-bottom:20px;">
-                <input type="text" id="emp-name-input" placeholder="Employee Name">
-                <select id="emp-role-input">
-                    <option value="Cashier">Cashier</option>
-                    <option value="Line Cook">Line Cook</option>
-                    <option value="Manager">Manager</option>
-                    <option value="Janitor">Janitor</option>
-                </select>
-                <button style="background:var(--primary); color:white; padding:15px; border-radius:8px; min-width:150px; font-weight:bold;" onclick="addEmployee()">Add Staff</button>
-            </div>
-            
-            <div class="mgmt-panel">
-                <h3 style="margin-bottom:15px; font-size:1.5rem;">Active Employees</h3>
-                <table style="width:100%; text-align:left; border-collapse:collapse; margin-top:15px;" id="emp-table">
-                    <thead>
-                        <tr style="border-bottom:1px solid #e5e7eb; color:var(--text-gray);">
-                            <th style="padding:10px 0;">Name</th>
-                            <th>Role</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody id="emp-list">
-                        <tr><td colspan="3" style="padding:15px 0;">Connecting to Firebase...</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </main>
-
-    <!-- 8. STATION CALLS -->
+    <!-- 7. STATION CALLS -->
     <main id="calls-view" class="view-container">
         <div class="mgmt-wrapper">
-            <div class="mgmt-header">Station Calls</div>
-            <div class="mgmt-panel">
-                <p style="margin-bottom:20px; font-size:1.1rem;">Broadcast alerts directly to connected terminals.</p>
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px;">
-                    <button style="background:var(--warning); color:#111827; height:100px; font-size:1.2rem; font-weight:bold; border-radius:12px;" onclick="emitCall('Manager Needed at POS')">Call Manager</button>
-                    <button style="background:var(--accent); color:white; height:100px; font-size:1.2rem; font-weight:bold; border-radius:12px;" onclick="emitCall('Kitchen Requires Assistance')">Kitchen Assistance</button>
-                </div>
+            <div class="mgmt-header">Broadcast System</div>
+            <p style="margin-bottom:30px; font-size:1.3rem; color:var(--text-gray);">Alert all connected POS terminals and KDS screens instantly.</p>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:25px;">
+                <button style="background:var(--warning); color:#111827; height:180px; font-size:1.8rem; font-weight:900; border-radius:24px; box-shadow:var(--shadow-md);" onclick="emitCall('Manager Needed at POS')">🆘 CALL MANAGER</button>
+                <button style="background:var(--accent); color:white; height:180px; font-size:1.8rem; font-weight:900; border-radius:24px; box-shadow:var(--shadow-md);" onclick="emitCall('Kitchen Requires Assistance')">👨‍🍳 KITCHEN HELP</button>
+                <button style="background:#6366f1; color:white; height:180px; font-size:1.8rem; font-weight:900; border-radius:24px; box-shadow:var(--shadow-md);" onclick="emitCall('Dining Room Spill / Backup')">🧹 SPILL CLEANUP</button>
+                <button style="background:#ec4899; color:white; height:180px; font-size:1.8rem; font-weight:900; border-radius:24px; box-shadow:var(--shadow-md);" onclick="emitCall('Front Counter Support')">🙋 FRONT DESK</button>
             </div>
         </div>
     </main>
 
-    <!-- 9. KIOSK (SELF-SERVE) -->
-    <main id="kiosk-view" class="view-container" style="background:white; text-align:center; padding-top: 50px;">
-        <h1 style="font-size:4rem; font-weight:900; color:var(--primary);">Welcome.</h1>
-        <p style="font-size:2rem; color:var(--text-gray); margin-bottom:50px;">Tap below to start your order.</p>
-        <button onclick="navTo('pos-view', document.querySelectorAll('.nav-button')[0])" style="font-size:2.5rem; padding: 40px 80px; background:var(--primary); color:white; border-radius: 99px; box-shadow:var(--shadow-lg);">Touch to Start</button>
-    </main>
 
-
-    <!-- SECURITY PIN PAD -->
+    <!-- MANAGER PIN OVERLAY -->
     <div id="pin-overlay" class="overlay">
         <div class="pin-box">
-            <h2 style="margin-bottom:10px;">Enter Manager Passcode</h2>
-            <div class="pin-display" id="pin-display-text"></div>
+            <h2 style="margin-bottom:10px; font-weight:900;">Master Access</h2>
+            <div class="pin-dot-display" id="pin-display-text"></div>
             <div class="pin-grid">
                 <button class="pin-key" onclick="appPin('1')">1</button>
                 <button class="pin-key" onclick="appPin('2')">2</button>
@@ -461,17 +499,17 @@
                 <button class="pin-key" onclick="appPin('7')">7</button>
                 <button class="pin-key" onclick="appPin('8')">8</button>
                 <button class="pin-key" onclick="appPin('9')">9</button>
-                <button class="pin-key" onclick="clrPin()" style="background:#fecaca; color:#dc2626;">C</button>
+                <button class="pin-key" style="background:#fee2e2; color:#dc2626;" onclick="clrPin()">C</button>
                 <button class="pin-key" onclick="appPin('0')">0</button>
-                <button class="pin-key" onclick="verPin()" style="background:#bbf7d0; color:#16a34a;">✔</button>
+                <button class="pin-key" style="background:#dcfce7; color:#16a34a;" onclick="verPin()">✔</button>
             </div>
-            <button class="btn-cancel" onclick="clsPin()">Cancel</button>
+            <button class="btn-modal-lg btn-modal-cancel" style="width:100%;" onclick="clsPin()">Cancel</button>
         </div>
     </div>
 
 
     <script>
-        // ---- FIREBASE SDK INIT ---- //
+        // ---- FIREBASE CONFIG ---- //
         const firebaseConfig = {
           apiKey: "AIzaSyCDCnCn53HqVdIyTe-OcoITQ6mIuVn-eg4",
           authDomain: "crazy-burgers-fa20a.firebaseapp.com",
@@ -482,15 +520,9 @@
           measurementId: "G-DDZZ1TR47D"
         };
         
-        let db;
-        try {
-            if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-            db = firebase.firestore();
-        } catch(e) {
-            console.error("Firebase Init Failed", e);
-        }
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
 
-        // Base Logic
         const socket = io();
         let menu = JSON.parse(localStorage.getItem('b44_menu')) || [
             { id: 1, name: "Crazy Burger", price: 8.99, cat: "Burgers", prep: "5 min" },
@@ -501,13 +533,9 @@
 
         let cart = [];
         let activeOrders = [];
-        let trackedTable = null; 
+        let curMember = null;
+        let trackedCDS = null;
         
-        let pinTarget = null;
-        let pinTargetBtn = null;
-        let pinVal = "";
-        const VIP_PIN = "2018"; 
-
         let confirmCallback = null;
         function customAlert(title, msg) {
             document.getElementById('alert-title').innerText = title;
@@ -515,7 +543,6 @@
             document.getElementById('overlay-alert').style.display = 'flex';
         }
         function closeAlert() { document.getElementById('overlay-alert').style.display = 'none'; }
-        
         function customConfirm(title, msg, callback) {
             document.getElementById('confirm-title').innerText = title;
             document.getElementById('confirm-body').innerText = msg;
@@ -527,54 +554,33 @@
             if(passed && confirmCallback) confirmCallback();
         }
 
+        // Voice
         function speakVoice(text) {
-            try {
-                let speech = new SpeechSynthesisUtterance(text);
-                speech.rate = 1.0;
-                window.speechSynthesis.speak(speech);
-            } catch(e) {}
+            try { var s = new SpeechSynthesisUtterance(text); s.rate = 1.0; window.speechSynthesis.speak(s); } catch(e) {}
         }
 
-
         // ---- SOCKET BINDINGS ---- //
-        socket.on('initial-data', (data) => {
-            activeOrders = data.orders;
-            updateKdsRender();
-            statRecalculate();
-        });
-
-        socket.on('order-update', (orders) => {
-            activeOrders = orders;
-            updateKdsRender();
-            updateCustomerDisplayRender();
-            statRecalculate();
-        });
-
-        socket.on('announcement', (data) => {
+        socket.on('initial-data', data => { activeOrders = data.orders; updateKdsRender(); statRecalculate(); });
+        socket.on('order-update', orders => { activeOrders = orders; updateKdsRender(); updateCDSRender(); statRecalculate(); });
+        socket.on('announcement', data => {
             if(data.id === 'call') {
                 document.getElementById('call-msg').innerText = data.message;
                 document.getElementById('station-call-alert').style.display = 'block';
                 setTimeout(() => { document.getElementById('station-call-alert').style.display = 'none'; }, 8000);
             }
         });
-
         function clearCall() { document.getElementById('station-call-alert').style.display = 'none'; }
-        function sendStationCall() { emitCall("Assistance Required at POS"); }
-        function emitCall(msg) {
-            socket.emit('station-call', { id: Date.now(), type: msg });
-            customAlert("Broadcast Sent", "Station successfully alerted!");
-        }
+        function sendStationCall() { emitCall("Authorized Help Needed at POS"); }
+        function emitCall(msg) { socket.emit('station-call', { id: Date.now(), type: msg }); customAlert("Alert Active", "Nearby terminals have been notified."); }
 
-        // ---- NAVIGATION LOGIC ---- //
+        // ---- NAVIGATION ---- //
         function navTo(id, btnObj) {
             document.querySelectorAll('.view-container').forEach(v => v.classList.remove('active'));
             document.getElementById(id).classList.add('active');
-            
             if(btnObj) {
                 document.querySelectorAll('.nav-button').forEach(b => b.classList.remove('active-nav'));
                 btnObj.classList.add('active-nav');
             }
-
             if(['kds-view', 'kiosk-view', 'cust-view'].includes(id)) {
                 document.getElementById('global-sidebar').style.display = 'none';
                 document.getElementById('fab-nav').style.display = 'flex';
@@ -582,24 +588,25 @@
                 document.getElementById('global-sidebar').style.display = 'flex';
                 document.getElementById('fab-nav').style.display = 'none';
             }
-
-            if(id === 'pos-view') renderMenu();
+            if(id === 'pos-view') renderPOSMenu();
+        }
+        function toggleSidebar() { 
+            let s = document.getElementById('global-sidebar');
+            s.style.display = s.style.display === 'none' ? 'flex' : 'none';
+        }
+        function toggleMobileCart() {
+            document.getElementById('order-panel').classList.toggle('mobile-open');
         }
 
-        function toggleSidebar() {
-            let sb = document.getElementById('global-sidebar');
-            sb.style.display = sb.style.display === 'none' ? 'flex' : 'none';
-        }
-
-        // ---- POS & CART LOGIC ---- //
-        function renderMenu() {
-            let grid = document.getElementById('pos-grid');
-            grid.innerHTML = menu.map(m => `
+        // ---- POS LOGIC ---- //
+        function renderPOSMenu() {
+            let g = document.getElementById('pos-grid');
+            g.innerHTML = menu.map(m => `
                 <div class="menu-card" onclick="openModModal(${m.id})">
-                    <span class="menu-badge">${m.cat} • ${m.prep}</span>
+                    <span class="menu-badge">${m.cat}</span>
                     <div class="menu-title">${m.name}</div>
                     <div class="menu-price">$${m.price.toFixed(2)}</div>
-                    <button style="background:var(--primary); color:white; width:100%; padding:10px; border-radius:8px; font-weight:bold;">CONFIGURE</button>
+                    <button class="btn-config">CONFIGURE ITEM</button>
                 </div>
             `).join('');
         }
@@ -608,304 +615,252 @@
         function openModModal(id) {
             tempItem = menu.find(i => i.id === id);
             document.getElementById('mod-item-name').innerText = tempItem.name;
-            document.getElementById('mod-item-price').innerText = `$${tempItem.price.toFixed(2)}`;
             document.getElementById('mod-sauce').value = "None";
             document.getElementById('mod-instruction').value = "";
             document.getElementById('item-modal-overlay').style.display = 'flex';
         }
-
-        function closeModModal() { document.getElementById('item-modal-overlay').style.display = 'none'; tempItem = null; }
-
+        function closeModModal() { document.getElementById('item-modal-overlay').style.display = 'none'; }
         function confirmMod() {
-            let sauce = document.getElementById('mod-sauce').value;
-            let note = document.getElementById('mod-instruction').value;
-            cart.push({ cartId: Date.now(), ...tempItem, modSauce: sauce !== "None" ? sauce : null, modNote: note || null });
-            closeModModal();
-            renderCart();
+            let s = document.getElementById('mod-sauce').value;
+            let n = document.getElementById('mod-instruction').value;
+            cart.push({ cartId: Date.now(), ...tempItem, modSauce: s !== "None" ? s : null, modNote: n || null });
+            closeModModal(); renderCart();
         }
-
         function renderCart() {
-            let sum = 0;
-            const container = document.getElementById('op-items');
-            if(cart.length === 0) {
-                container.innerHTML = `<div style="text-align:center; padding-top:40px; color:#9ca3af;">Cart is Empty</div>`;
-            } else {
-                container.innerHTML = cart.map(c => {
-                    sum += c.price;
-                    let mods = [];
-                    if(c.modSauce) mods.push(`+ ${c.modSauce}`);
-                    if(c.modNote) mods.push(`Note: ${c.modNote}`);
-                    
-                    return `
-                    <div class="cart-row">
-                        <div class="cart-info">
-                            <div class="cart-name">${c.name}</div>
-                            ${mods.length ? `<div class="cart-mods">${mods.join('<br>')}</div>` : ''}
-                        </div>
-                        <div style="text-align:right;">
-                            <div class="cart-price">$${c.price.toFixed(2)}</div>
-                            <button class="cart-del" style="margin-top:5px;" onclick="removeCart(${c.cartId})">X</button>
-                        </div>
+            let sum = 0; let c = document.getElementById('op-items');
+            if(cart.length === 0) { c.innerHTML = `<div style="text-align:center; padding-top:60px; color:#9ca3af; font-weight:700;">Cart is empty.</div>`; }
+            else {
+                c.innerHTML = cart.map(i => {
+                    sum += i.price;
+                    let m = []; if(i.modSauce) m.push(`+ ${i.modSauce}`); if(i.modNote) m.push(`Note: ${i.modNote}`);
+                    return `<div class="cart-row">
+                        <div class="cart-info"><div class="cart-name">${i.name}</div>
+                        ${m.length ? `<div class="cart-mods">${m.join('<br>')}</div>` : ''}</div>
+                        <div style="text-align:right;"><div class="cart-price">$${i.price.toFixed(2)}</div>
+                        <button class="cart-del" onclick="removeCart(${i.cartId})">X</button></div>
                     </div>`;
                 }).join('');
             }
-            let tax = sum * 0.08;
-            let total = sum + tax;
+            let t = sum * 0.08; let tot = sum + t;
             document.getElementById('pos-subtotal').innerText = sum.toFixed(2);
-            document.getElementById('pos-tax').innerText = tax.toFixed(2);
-            document.getElementById('pos-total').innerText = total.toFixed(2);
+            document.getElementById('pos-tax').innerText = t.toFixed(2);
+            document.getElementById('pos-total').innerText = tot.toFixed(2);
+        }
+        function removeCart(id) { cart = cart.filter(i => i.cartId !== id); renderCart(); }
+        function clearCart() { cart = []; curMember = null; document.getElementById('cart-loyalty-preview').style.display='none'; renderCart(); }
+
+        // ---- LOYALTY FLOW ---- //
+        function startLoyaltyStep() {
+            if(cart.length === 0) return customAlert("Error", "Cart is empty.");
+            resetLoyaltyModal();
+            document.getElementById('overlay-loyalty').style.display='flex';
+        }
+        function resetLoyaltyModal() {
+            document.getElementById('loyalty-search-state').style.display='block';
+            document.getElementById('loyalty-find-state').style.display='none';
+            document.getElementById('loyalty-create-state').style.display='none';
+        }
+        function showLoyaltySearch() {
+            document.getElementById('loyalty-search-state').style.display='none';
+            document.getElementById('loyalty-find-state').style.display='block';
+        }
+        function showLoyaltyCreate() {
+            document.getElementById('loyalty-search-state').style.display='none';
+            document.getElementById('loyalty-create-state').style.display='block';
+        }
+        function skipLoyalty() { document.getElementById('overlay-loyalty').style.display='none'; document.getElementById('overlay-table').style.display='flex'; }
+        
+        function searchLoyaltyMember() {
+            let q = document.getElementById('loyalty-lookup-name').value;
+            db.collection('customers').where('phone','==',q).get().then(snap => {
+                if(snap.empty) {
+                    db.collection('customers').where('name','==',q).get().then(snap2 => {
+                        if(snap2.empty) return customAlert("Not Found", "No account matches that name or phone.");
+                        applyMember(snap2.docs[0].data());
+                    });
+                } else {
+                    applyMember(snap.docs[0].data());
+                }
+            });
+        }
+        function createNewLoyaltyMember() {
+            let n = document.getElementById('loyalty-new-name').value;
+            let p = document.getElementById('loyalty-new-phone').value;
+            if(!n || !p) return customAlert("Error", "Required fields missing.");
+            let m = { name: n, phone: p, joined: new Date().toISOString() };
+            db.collection('customers').add(m).then(() => { applyMember(m); });
+        }
+        function applyMember(m) {
+            curMember = m;
+            document.getElementById('member-name-tag').innerText = m.name;
+            document.getElementById('cart-loyalty-preview').style.display = 'block';
+            document.getElementById('overlay-loyalty').style.display='none';
+            customAlert("Welcome Back!", `Member account for ${m.name} attached to order.`);
+            document.getElementById('overlay-table').style.display='flex';
         }
 
-        function removeCart(cid) { cart = cart.filter(c => c.cartId !== cid); renderCart(); }
-        function clearCart() { cart = []; renderCart(); }
-
-        // Checkout Modal Flow
-        function startPaymentFlow() {
-            if(cart.length === 0) return customAlert("Error", "Your cart is empty. Please add items.");
-            document.getElementById('overlay-table').style.display = 'flex';
-        }
-
-        function checkoutTable(tbl) {
+        function assignOrder(tbl) {
             document.getElementById('overlay-table').style.display = 'none';
-            let order = {
-                id: Math.floor(1000 + Math.random() * 9000),
-                table: tbl,
-                items: [...cart],
-                status: 'pending',
-                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            let o = {
+                id: Math.floor(1000 + Math.random()*9000),
+                table: tbl, items: [...cart], status: 'pending',
+                member: curMember ? curMember.name : null,
                 totalCost: parseFloat(document.getElementById('pos-total').innerText)
             };
-            socket.emit('new-order', order);
+            socket.emit('new-order', o);
             clearCart();
-            customAlert("Payment Success", `Order #${order.id} sent to KDS successfully.`);
+            customAlert("Order Complete", `Sent #${o.id} to Kitchen.`);
+            if(document.getElementById('order-panel').classList.contains('mobile-open')) toggleMobileCart();
         }
 
-
-        // ---- KDS LOGIC ---- //
+        // ---- KDS ---- //
         function updateKdsRender() {
-            let grid = document.getElementById('kds-grid');
-            let pendingAndPrep = activeOrders.filter(o => o.status !== 'completed'); 
-            
-            grid.innerHTML = pendingAndPrep.map(o => {
-                let badgeTxt = "PENDING";
-                let toggleAction = "Start Preparing";
-                let nextStat = "preparing";
-                
-                if(o.status === "preparing") { badgeTxt = "PREPARING"; toggleAction = "Mark Ready"; nextStat = "ready"; }
-                if(o.status === "ready") { badgeTxt = "READY TO SERVE"; toggleAction = "Complete Ticket"; nextStat = "completed"; }
-
-                let lis = o.items.map(i => {
-                    let res = `<li>${i.name}`;
-                    if(i.modSauce) res += `<span class="mod-line">↳ ${i.modSauce}</span>`;
-                    if(i.modNote) res += `<span class="mod-line">↳ ${i.modNote}</span>`;
-                    res += `</li>`;
-                    return res;
-                }).join('');
-
-                return `
-                <div class="kds-card status-${o.status}">
-                    <div class="kds-header">
-                        <span>#${o.id} • ${o.table}</span>
-                        <span style="font-size:0.8rem;">${badgeTxt}</span>
-                    </div>
-                    <div class="kds-body"><ul>${lis}</ul></div>
-                    <button class="kds-action" onclick="cycKdsStatus(${o.id}, '${nextStat}', '${o.table}')">${toggleAction}</button>
+            let g = document.getElementById('kds-grid');
+            let a = activeOrders.filter(o => o.status !== 'completed');
+            g.innerHTML = a.map(o => {
+                let bt = "PENDING"; let act = "Start Prep"; let ns = "preparing";
+                if(o.status === "preparing") { bt = "PREPARING"; act = "Mark Ready"; ns = "ready"; }
+                if(o.status === "ready") { bt = "READY"; act = "Dismiss"; ns = "completed"; }
+                let itemsList = o.items.map(i => `<li>${i.name} ${i.modSauce ? `<span class="mod-line">↳ ${i.modSauce}</span>` : ''}</li>`).join('');
+                return `<div class="kds-card status-${o.status}">
+                    <div class="kds-header"><span>#${o.id} • ${o.table}</span><span>${bt}</span></div>
+                    <div class="kds-body"><ul>${itemsList}</ul></div>
+                    <button class="kds-action" onclick="cycStatus(${o.id},'${ns}','${o.table}')">${act}</button>
                 </div>`;
             }).join('');
         }
-
-        // Voice Synthesized KDS Adjustments
-        function cycKdsStatus(id, newStatus, table) {
-            socket.emit('update-order-status', { id, status: newStatus });
-            
-            let phrase = "";
-            if (newStatus === "preparing") phrase = `Now preparing order ${id}`;
-            if (newStatus === "ready") {
-                if (table.toLowerCase() === "takeout") {
-                    phrase = `Order ${id} is ready for pick up`;
-                } else {
-                    phrase = `Now serving order ${id} at ${table}`;
-                }
-            }
-            if(phrase) speakVoice(phrase);
-        }
-
-
-        // ---- CUSTOMER DISPLAY LOGIC ---- //
-        function bindCustomerDisplay(tableName) {
-            trackedTable = tableName;
-            document.getElementById('cust-setup').style.display = 'none';
-            document.getElementById('cust-active').style.display = 'block';
-            document.getElementById('cd-id').innerText = tableName;
-            updateCustomerDisplayRender();
-        }
-
-        function resetCustomerDisplay() {
-            customConfirm("Change Display Station?", "Do you want to re-assign this customer display to a new table?", () => {
-                trackedTable = null;
-                document.getElementById('cust-active').style.display = 'none';
-                document.getElementById('cust-setup').style.display = 'block';
-            });
-        }
-
-        function updateCustomerDisplayRender() {
-            if(!trackedTable) return;
-            let ord = activeOrders.find(o => o.table === trackedTable && o.status !== 'completed');
-            const statDom = document.getElementById('cd-status');
-            const itemDom = document.getElementById('cd-items');
-
-            if(!ord) {
-                statDom.innerText = "AWAITING ORDER";
-                statDom.className = "cust-status-main";
-                itemDom.innerText = "Please place your order at the terminal.";
-            } else {
-                statDom.className = `cust-status-main status-text-${ord.status}`;
-                if(ord.status === 'pending') statDom.innerText = "RECEIVED";
-                if(ord.status === 'preparing') statDom.innerText = "PREPARING";
-                if(ord.status === 'ready') statDom.innerText = "READY!";
-
-                let iList = ord.items.map(i => `<div>• ${i.name}</div>`).join('');
-                itemDom.innerHTML = `<strong>Order #${ord.id}</strong><hr style="border-color:rgba(255,255,255,0.1); margin: 15px 0;">${iList}`;
+        function cycStatus(id, s, t) {
+            socket.emit('update-order-status', { id, status: s });
+            if(s==='ready') {
+                if(t.toLowerCase() === 'takeout') speakVoice(`Order ${id} is ready for pick up.`);
+                else speakVoice(`Now serving order ${id} at ${t}.`);
             }
         }
 
-        // ---- PIN / SECURITY LOGIC ---- //
-        function reqPin(tgt, btnObj) {
-            pinTarget = tgt;
-            pinTargetBtn = btnObj;
-            pinVal = "";
-            renderPin();
-            document.getElementById('pin-overlay').style.display = 'flex';
-        }
-        function appPin(n) { if(pinVal.length<4) { pinVal+=n; renderPin(); } }
-        function clrPin() { pinVal = ""; renderPin(); }
-        function renderPin() { document.getElementById('pin-display-text').innerText = "•".repeat(pinVal.length); }
-        function clsPin() { document.getElementById('pin-overlay').style.display = 'none'; pinTarget = null; pinTargetBtn = null; }
-        
+        // ---- MANAGER PANEL ---- //
+        let pinTarget = null; let pinVal = ""; const MASTER_PIN = "2018";
+        function reqPin(t, b) { pinTarget = t; pinVal = ""; updatePinUI(); document.getElementById('pin-overlay').style.display='flex'; }
+        function appPin(n) { if(pinVal.length<4) { pinVal+=n; updatePinUI(); } }
+        function clrPin() { pinVal = ""; updatePinUI(); }
+        function updatePinUI() { document.getElementById('pin-display-text').innerText = "•".repeat(pinVal.length); }
+        function clsPin() { document.getElementById('pin-overlay').style.display='none'; }
         function verPin() {
-            if(pinVal === VIP_PIN) {
-                let tgt = pinTarget;
-                let btn = pinTargetBtn;
-                clsPin();
-                navTo(tgt, btn); 
-            } else {
-                customAlert("Authentication Failed", "Incorrect manager passcode entered.");
-                clrPin();
-            }
+            if(pinVal === MASTER_PIN) { clsPin(); navTo(pinTarget); loadAllMgmt(); } 
+            else { customAlert("Access Denied", "Invalid Master PIN."); clrPin(); }
         }
 
-        // ---- MANAGER LOGIC ---- //
-        function statRecalculate() {
-            totalOrd = activeOrders.length;
-            totalRev = activeOrders.reduce((acc, o) => acc + o.totalCost, 0);
-            document.getElementById('kpi-orders').innerText = totalOrd;
-            document.getElementById('kpi-rev').innerText = `$${totalRev.toFixed(2)}`;
-            let avg = totalOrd > 0 ? totalRev / totalOrd : 0;
-            document.getElementById('kpi-avg').innerText = `$${avg.toFixed(2)}`;
+        function switchMgmtTab(id, btn) {
+            document.querySelectorAll('.mgmt-tab').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.mgmt-section').forEach(s => s.classList.remove('active'));
+            btn.classList.add('active'); document.getElementById(id).classList.add('active');
         }
 
-        // ---- MENU MGMT ---- //
+        function loadAllMgmt() { renderMgmtMenu(); loadFirestoreStaff(); loadFirestoreCustomers(); }
+        
+        function renderMgmtMenu() {
+            let l = document.getElementById('mgmt-menu-list');
+            l.innerHTML = menu.map(m => `<tr>
+                <td>${m.name}</td><td>$${m.price.toFixed(2)}</td><td>${m.cat}</td>
+                <td><button class="btn-action-del" onclick="deleteMenuItem(${m.id})">Delete</button></td>
+            </tr>`).join('');
+        }
         function addMenuItem() {
             let n = document.getElementById('new-item-name').value;
             let p = parseFloat(document.getElementById('new-item-price').value);
             let c = document.getElementById('new-item-cat').value;
-            let t = document.getElementById('new-item-prep').value;
-
-            if(!n || isNaN(p)) return customAlert("Error", "Please fill out the name and provide a valid price.");
-            menu.push({ id: Date.now(), name: n, price: p, cat: c, prep: t || "5 min" });
+            let pr = document.getElementById('new-item-prep').value;
+            if(!n || !p) return;
+            menu.push({ id: Date.now(), name: n, price: p, cat: c, prep: pr || "5 min" });
             localStorage.setItem('b44_menu', JSON.stringify(menu));
-            customAlert("Saved", `${n} has been securely added to the local JSON configuration.`);
-            renderMenu();
-            
-            document.getElementById('new-item-name').value = '';
-            document.getElementById('new-item-price').value = '';
-            document.getElementById('new-item-prep').value = '';
+            renderMgmtMenu(); renderPOSMenu();
         }
-
-        function resetMenu() {
-            customConfirm("Wipe System Memory?", "This will restore factory defaults.", () => {
-                localStorage.removeItem('b44_menu');
-                location.reload();
+        function deleteMenuItem(id) { 
+            customConfirm("Delete Item?", "Disappear forever?", () => { 
+                menu = menu.filter(m => m.id !== id); localStorage.setItem('b44_menu', JSON.stringify(menu)); renderMgmtMenu(); renderPOSMenu();
             });
         }
 
-        // ============================================
-        // FIREBASE CRM SYSTEM
-        // ============================================
-        
-        // CUSTOMERS
-        function loadCustomers() {
-            if(!db) return;
-            db.collection('customers').onSnapshot(snap => {
-                const tgt = document.getElementById('cust-list');
-                if(snap.empty) { tgt.innerHTML = '<tr><td colspan="3" style="padding:15px 0;">No customers found.</td></tr>'; return; }
-                
-                let h = '';
-                snap.forEach(doc => {
-                    let d = doc.data();
-                    h += `<tr>
-                        <td style="padding:15px 0; font-weight:bold;">${d.name}</td>
-                        <td>${d.phone}</td>
-                        <td><button style="color:var(--primary); background:transparent; border:1px solid var(--primary); padding:6px 12px; border-radius:6px;" onclick="deleteDoc('customers', '${doc.id}')">Remove</button></td>
-                    </tr>`;
-                });
-                tgt.innerHTML = h;
-            });
-        }
-
-        function addCustomer() {
-            if(!db) return customAlert("Error", "Database not connected");
-            let name = document.getElementById('cust-name-input').value;
-            let phone = document.getElementById('cust-phone-input').value;
-            if(!name || !phone) return customAlert('Missing Data', 'Please fill name and phone.');
-            
-            db.collection('customers').add({ name, phone, joined: new Date().toISOString() });
-            document.getElementById('cust-name-input').value = '';
-            document.getElementById('cust-phone-input').value = '';
-        }
-
-        // EMPLOYEES
-        function loadEmployees() {
-            if(!db) return;
+        function loadFirestoreStaff() {
             db.collection('employees').onSnapshot(snap => {
-                const tgt = document.getElementById('emp-list');
-                if(snap.empty) { tgt.innerHTML = '<tr><td colspan="3" style="padding:15px 0;">No employees found.</td></tr>'; return; }
-                
                 let h = '';
                 snap.forEach(doc => {
                     let d = doc.data();
-                    h += `<tr>
-                        <td style="padding:15px 0; font-weight:bold;">${d.name}</td>
-                        <td><span style="background:#e5e7eb; padding:6px 12px; border-radius:6px; font-size:0.9rem; font-weight:600;">${d.role}</span></td>
-                        <td><button style="color:var(--primary); background:transparent; border:1px solid var(--primary); padding:6px 12px; border-radius:6px;" onclick="deleteDoc('employees', '${doc.id}')">Terminate</button></td>
-                    </tr>`;
+                    h += `<tr><td>${d.name}</td><td>${d.role}</td><td>••••</td><td><button class="btn-action-del" onclick="db.collection('employees').doc('${doc.id}').delete()">Fire</button></td></tr>`;
                 });
-                tgt.innerHTML = h;
+                document.getElementById('mgmt-emp-list').innerHTML = h;
+            });
+        }
+        function addEmployee() {
+            let n = document.getElementById('emp-name-input').value;
+            let p = document.getElementById('emp-pin-input').value;
+            let r = document.getElementById('emp-role-input').value;
+            if(!n || p.length !== 4) return customAlert("Input Error", "Name and 4-digit PIN required.");
+            db.collection('employees').add({ name: n, pin: p, role: r, status: 'out' });
+        }
+        function loadFirestoreCustomers() {
+            db.collection('customers').onSnapshot(snap => {
+                let h = '';
+                snap.forEach(doc => { let d = doc.data(); h += `<tr><td>${d.name}</td><td>${d.phone}</td><td>0</td><td><button class="btn-action-del" onclick="db.collection('customers').doc('${doc.id}').delete()">Ban</button></td></tr>`; });
+                document.getElementById('mgmt-cust-list').innerHTML = h;
             });
         }
 
-        function addEmployee() {
-            if(!db) return customAlert("Error", "Database not connected");
-            let name = document.getElementById('emp-name-input').value;
-            let role = document.getElementById('emp-role-input').value;
-            if(!name) return customAlert('Missing Data', 'Please provide an employee name.');
-            
-            db.collection('employees').add({ name, role, hired: new Date().toISOString() });
-            document.getElementById('emp-name-input').value = '';
+        // ---- STAFF CLOCKING ---- //
+        let cPin = ""; let activeStaff = null; let activeStaffDoc = null;
+        function clockPin(n) { if(cPin.length<4) { cPin+=n; document.getElementById('clock-pin-display').innerText = "•".repeat(cPin.length); } }
+        function clockPinClear() { cPin = ""; document.getElementById('clock-pin-display').innerText = ""; }
+        function clockPinVerify() {
+            db.collection('employees').where('pin','==',cPin).get().then(snap => {
+                if(snap.empty) { customAlert("Error", "Invalid Staff PIN."); clockPinClear(); return; }
+                activeStaffDoc = snap.docs[0].id;
+                activeStaff = snap.docs[0].data();
+                showClockActions();
+            });
+        }
+        function showClockActions() {
+            document.getElementById('clock-login').style.display='none';
+            document.getElementById('clock-actions').style.display='block';
+            document.getElementById('clock-v-name').innerText = activeStaff.name;
+            document.getElementById('clock-v-status').innerText = activeStaff.status.toUpperCase();
+            loadStaffHistory();
+        }
+        function performShiftAction(type) {
+            db.collection('employees').doc(activeStaffDoc).update({ status: type });
+            db.collection('shifts').add({ name: activeStaff.name, type, time: new Date().toISOString() });
+            activeStaff.status = type;
+            document.getElementById('clock-v-status').innerText = type.toUpperCase();
+            customAlert("Success", `Clocked ${type} successfully.`);
+            loadStaffHistory();
+        }
+        function loadStaffHistory() {
+            db.collection('shifts').where('name','==',activeStaff.name).orderBy('time','desc').limit(5).get().then(snap => {
+                let h = ''; snap.forEach(d => { let s = d.data(); h += `<div style="padding:10px; border-bottom:1px solid #ddd;">${s.type.toUpperCase()} - ${new Date(s.time).toLocaleString()}</div>`; });
+                document.getElementById('shift-history-list').innerHTML = h || 'No history yet.';
+            });
+        }
+        function logoutStaff() { clockPinClear(); activeStaff=null; document.getElementById('clock-actions').style.display='none'; document.getElementById('clock-login').style.display='block'; }
+
+        // ---- CDS ---- //
+        function bindCDS(t) { trackedCDS = t; document.getElementById('cust-setup').style.display='none'; document.getElementById('cust-active').style.display='block'; document.getElementById('cd-id').innerText = t; updateCDSRender(); }
+        function resetCDS() { customConfirm("Reset Station?", "Return to assignment screen?", () => { trackedCDS=null; document.getElementById('cust-active').style.display='none'; document.getElementById('cust-setup').style.display='block'; }); }
+        function updateCDSRender() {
+            if(!trackedCDS) return;
+            let o = activeOrders.find(ord => ord.table === trackedCDS && ord.status !== 'completed');
+            if(!o) { document.getElementById('cd-status').innerText = "AWAITING"; document.getElementById('cd-items').innerText = "Preparing for next order..."; }
+            else {
+                document.getElementById('cd-status').innerText = o.status === 'ready' ? "READY!" : o.status.toUpperCase();
+                document.getElementById('cd-items').innerHTML = `<b>Order #${o.id}</b><hr style="margin:20px 0;">` + o.items.map(i => `<div>• ${i.name}</div>`).join('');
+            }
+        }
+        function statRecalculate() {
+            document.getElementById('kpi-orders').innerText = activeOrders.length;
+            let rev = activeOrders.reduce((a, b) => a + b.totalCost, 0);
+            document.getElementById('kpi-rev').innerText = `$${rev.toFixed(2)}`;
+            let avg = activeOrders.length > 0 ? rev / activeOrders.length : 0;
+            document.getElementById('kpi-avg').innerText = `$${avg.toFixed(2)}`;
         }
 
-        function deleteDoc(coll, id) {
-            customConfirm('Delete Record?', 'This action cannot be undone.', () => {  db.collection(coll).doc(id).delete(); });
-        }
-
-
-        // INITIALIZATION
-        renderMenu();
-        if(db) {
-            loadCustomers();
-            loadEmployees();
-        }
-
+        renderPOSMenu();
     </script>
 </body>
 </html>
