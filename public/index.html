@@ -67,13 +67,22 @@
         .pin-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
         #station-call-alert { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: var(--warning); color: var(--dark); padding: 18px 35px; border-radius: 99px; font-weight: 900; font-size: 1.1rem; box-shadow: 0 10px 15px rgba(0,0,0,0.2); z-index: 20000; display: none; border: 3px solid white; }
 
+        /* RECEIPT PRINTING STYLES (Optimized for 72mm/80mm) */
         #receipt-area { display: none; }
         @media print {
             body * { visibility: hidden; }
             #receipt-area, #receipt-area * { visibility: visible; }
-            #receipt-area { position: fixed; left: 0; top: 0; display: block; width: 3in; padding: 0.2in; font-family: 'Courier New', Courier, monospace; color: black; background: white; text-align: center; }
-            .sep { border-bottom: 1px dashed #000; margin: 10px 0; }
-            .item { display: flex; justify-content: space-between; margin: 4px 0; text-align: left; }
+            #receipt-area { 
+                position: fixed; left: 0; top: 0; display: block; 
+                width: 72mm; padding: 2mm; 
+                font-family: 'Courier New', Courier, monospace; 
+                color: black; background: white; text-align: center; 
+            }
+            #receipt-area h1 { font-size: 16pt; margin: 5mm 0; }
+            #receipt-area p { font-size: 10pt; margin: 2mm 0; }
+            .sep { border-bottom: 1px dashed #000; margin: 3mm 0; }
+            .item { display: flex; justify-content: space-between; margin: 2mm 0; text-align: left; font-size: 10pt; }
+            .receipt-logo { width: 40mm; height: auto; margin-bottom: 5mm; }
         }
 
         input, select, textarea { width: 100%; padding: 14px; border: 2px solid #e2e8f0; border-radius: 12px; font-size: 1.1rem; margin-bottom: 12px; outline: none; background: #fff; font-weight: 600; }
@@ -81,6 +90,7 @@
         .master-tab.active { background: #f1f5f9; color: var(--primary); }
         .master-content { display: none; }
         .master-content.active { display: block; }
+        .toggle-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; }
     </style>
 </head>
 <body>
@@ -254,10 +264,34 @@
             <div id="s-loyalty" class="master-content"><h3>Customer Loyalty Data</h3><div id="m-loy-list"></div></div>
             <div id="s-config" class="master-content">
                 <div style="background:white; padding:25px; border-radius:15px; box-shadow:var(--shadow-md);">
-                    <h3 style="margin-bottom:15px;">Receipt Configuration</h3>
-                    <p style="color:var(--text-gray); margin-bottom:10px;">Header Title:</p><input type="text" id="cfg-header" placeholder="CRAZY BURGERS INC">
-                    <p style="color:var(--text-gray); margin-bottom:10px;">Footer Name:</p><input type="text" id="cfg-footer" placeholder="Thank you!">
-                    <button class="pay-btn" onclick="saveCfg()">Save Settings</button>
+                    <h3 style="margin-bottom:20px;">Receipt Configuration</h3>
+                    
+                    <p style="color:var(--text-gray); margin-bottom:8px; font-weight:700;">Logo Image URL (Optional):</p>
+                    <input type="text" id="cfg-logo" placeholder="https://example.com/logo.png">
+                    
+                    <p style="color:var(--text-gray); margin-bottom:8px; font-weight:700;">Receipt Header Title:</p>
+                    <input type="text" id="cfg-header" placeholder="CRAZY BURGERS INC">
+                    
+                    <p style="color:var(--text-gray); margin-bottom:8px; font-weight:700;">Receipt Footer Message:</p>
+                    <input type="text" id="cfg-footer" placeholder="Thank you for your patronage!">
+
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; margin-top:20px; border-top:1px solid #eee; padding-top:20px;">
+                        <div>
+                            <p style="color:var(--text-gray); margin-bottom:10px; font-weight:700;">Font Size:</p>
+                            <select id="cfg-font">
+                                <option value="small">Small (Standard)</option>
+                                <option value="medium">Medium</option>
+                                <option value="large">Large</option>
+                            </select>
+                        </div>
+                        <div>
+                            <p style="color:var(--text-gray); margin-bottom:10px; font-weight:700;">Display Options:</p>
+                            <div class="toggle-row"><span>Show Prices</span> <input type="checkbox" id="cfg-prices" checked style="width:25px; margin:0;"></div>
+                            <div class="toggle-row"><span>Show Order Date</span> <input type="checkbox" id="cfg-date" checked style="width:25px; margin:0;"></div>
+                        </div>
+                    </div>
+
+                    <button class="pay-btn" onclick="saveCfg()">Save Receipt Settings</button>
                 </div>
             </div>
         </div>
@@ -294,7 +328,6 @@
         const db = firebase.firestore();
         const socket = io();
 
-        // HYBRID PERSISTENCE STATE
         let menu = [
             { id: 1, name: "Crazy Burger", price: 8.99, image: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=800&q=80" },
             { id: 2, name: "Wild Fries", price: 3.49, image: "https://images.unsplash.com/photo-1630384066252-19e1ed95536a?auto=format&fit=crop&w=800&q=80" },
@@ -305,7 +338,16 @@
         let localCusts = JSON.parse(localStorage.getItem('b44_custs')) || [];
         let cart = []; let activeOrders = []; let curM = null; let discAmt = 0; let ptsToRedeem = 0; 
         let sPIN = ""; let mPIN = ""; let sData = null; let sID = null; let pinTarget = null; let pBtn = null;
-        let cID = null; let rConfig = JSON.parse(localStorage.getItem('b44_rcfg')) || { head: "CRAZY BURGERS INC", foot: "THANK YOU FOR YOUR PATRONAGE" };
+        let cID = null; 
+        
+        let rConfig = JSON.parse(localStorage.getItem('b44_rcfg')) || { 
+            head: "CRAZY BURGERS INC", 
+            foot: "THANK YOU FOR YOUR PATRONAGE",
+            logo: "",
+            fontSize: "small",
+            showPrices: true,
+            showDate: true
+        };
 
         function navTo(id, btn) {
             let v = document.getElementById(id); if(!v) return;
@@ -328,41 +370,27 @@
         }
         function remC(id) { cart = cart.filter(i=>i.cid!==id); renderCart(); }
 
-        // HYBRID SYNC LOGIC
         function syncCloud(col, data) {
-            db.collection(col).add(data).then(() => console.log(`Cloud sync success: ${col}`))
-            .catch(e => {
-                console.error(`Cloud sync failed: ${e.code}`, e.message);
-                if(e.code === 'permission-denied') {
-                    customAlert("Database Blocked", "Your Firebase Rules are blocking saves. Go to Firebase Console -> Firestore -> Rules and set 'allow read, write: if true;'");
-                }
-            });
+            db.collection(col).add(data).catch(e => console.error("Cloud sync fail", e.code));
         }
 
         function loyS(s) { document.getElementById('loyalty-init').style.display = s==='init'?'grid':'none'; document.getElementById('loyalty-find').style.display = s==='search'?'block':'none'; document.getElementById('loyalty-create').style.display = s==='create'?'block':'none'; }
         
         function findMember() {
             let n = document.getElementById('loy-q').value;
-            // Search local first
             let m = localCusts.find(c => c.name === n);
             if(m) { setM(m); document.getElementById('overlay-loyalty').style.display='none'; return; }
-            
-            // Then search cloud
             db.collection('customers').where('name','==',n).get().then(s => {
                 if(s.empty) return customAlert("Not Found", "Member not in system.");
-                let dm = { docId: s.docs[0].id, ...s.docs[0].data() };
-                curM = dm; document.getElementById('overlay-loyalty').style.display='none';
-                if(dm.points >= 10) { ptsToRedeem = Math.floor(dm.points/10)*10; discAmt = ptsToRedeem/10; document.getElementById('r-bal').innerText = dm.points; document.getElementById('r-disc').innerText = discAmt.toFixed(2); document.getElementById('overlay-redeem').style.display='flex'; }
-                else setM(dm);
-            }).catch(e => customAlert("Connection Error", `Firestore said: ${e.code}. Using local data only.`));
+                let dm = { docId: s.docs[0].id, ...s.docs[0].data() }; curM = dm; setM(dm); document.getElementById('overlay-loyalty').style.display='none';
+            });
         }
 
         function createMember() {
             let n = document.getElementById('loy-n').value; if(!n) return;
             let m = { name: n, joined: new Date().toISOString(), points: 0, lid: Date.now() };
             localCusts.push(m); localStorage.setItem('b44_custs', JSON.stringify(localCusts));
-            curM = m; document.getElementById('overlay-loyalty').style.display='none';
-            setM(m); syncCloud('customers', m);
+            curM = m; setM(m); document.getElementById('overlay-loyalty').style.display='none'; syncCloud('customers', m);
         }
 
         function setM(m) { document.getElementById('member-tag').innerText = m.name; document.getElementById('cart-loyalty-info').style.display='block'; renderCart(); document.getElementById('overlay-table').style.display='flex'; }
@@ -374,11 +402,7 @@
             let o = { id: Math.floor(Math.random()*9000), table: tbl, items: [...cart], total: tot, status: 'preparing', time: new Date().toLocaleTimeString() };
             if(curM) {
                 curM.points = (curM.points || 0) + Math.floor(tot) - ptsToRedeem;
-                // Update Local
-                let idx = localCusts.findIndex(c => c.lid === curM.lid || c.name === curM.name);
-                if(idx !== -1) { localCusts[idx].points = curM.points; localStorage.setItem('b44_custs', JSON.stringify(localCusts)); }
-                // Update Cloud
-                if(curM.docId) db.collection('customers').doc(curM.docId).update({ points: curM.points }).catch(e => console.error("Cloud point sync fail"));
+                if(curM.docId) db.collection('customers').doc(curM.docId).update({ points: curM.points });
             }
             socket.emit('new-order', o);
             printRec(o);
@@ -388,9 +412,18 @@
         }
 
         function printRec(o) {
-            let h = `<h1>${rConfig.head}</h1><p>${o.time}</p><div class="sep"></div><h2>TABLE: ${o.table}</h2><div class="sep"></div>`;
-            o.items.forEach(i => h += `<div class="item"><span>${i.name}</span><span>$${i.price.toFixed(2)}</span></div>`);
-            h += `<div class="sep"></div><h2>Total: $${o.total.toFixed(2)}</h2><div class="sep"></div><p>${rConfig.foot}</p>`;
+            let h = '';
+            if(rConfig.logo) h += `<img src="${rConfig.logo}" class="receipt-logo">`;
+            h += `<h1 style="font-size:${rConfig.fontSize === 'medium' ? '18pt' : (rConfig.fontSize === 'large' ? '22pt' : '16pt')}">${rConfig.head}</h1>`;
+            if(rConfig.showDate) h += `<p>${o.time}</p>`;
+            h += `<div class="sep"></div><h2 style="font-size:14pt;">TABLE: ${o.table}</h2><div class="sep"></div>`;
+            o.items.forEach(i => {
+                h += `<div class="item" style="font-size:${rConfig.fontSize === 'medium' ? '12pt' : (rConfig.fontSize === 'large' ? '14pt' : '10pt')}">
+                    <span>${i.name}</span>
+                    ${rConfig.showPrices ? `<span>$${i.price.toFixed(2)}</span>` : ''}
+                </div>`;
+            });
+            h += `<div class="sep"></div><h2 style="display:flex; justify-content:space-between; font-size:16pt;"><span>Total</span><span>$${o.total.toFixed(2)}</span></h2><div class="sep"></div><p>${rConfig.foot}</p>`;
             document.getElementById('receipt-area').innerHTML = h; window.print();
         }
 
@@ -399,30 +432,19 @@
         function sP(n) { if(sPIN.length<4) { sPIN+=n; document.getElementById('s-pin-dot').innerText = "•".repeat(sPIN.length); } }
         function sC() { sPIN=""; document.getElementById('s-pin-dot').innerText=""; }
         function sV() { 
-            // Try local first
             let m = localStaff.find(e => e.pin === String(sPIN));
             if(m) { sData = m; loginSuccess(); return; }
-            
             db.collection('employees').where('pin','==',String(sPIN)).get().then(s => { 
                 if(s.empty) return customAlert("Security", "Invalid PIN");
-                sID=s.docs[0].id; sData=s.docs[0].data();
-                loginSuccess();
-            }).catch(e => {
-                 customAlert("Connection Fail", `Using Local Backup Mode (Error: ${e.code})`);
-                 // Check local again just in case
-                 if(m) { sData = m; loginSuccess(); }
+                sID=s.docs[0].id; sData=s.docs[0].data(); loginSuccess();
             });
         }
-        function loginSuccess() {
-            document.getElementById('s-login').style.display='none'; document.getElementById('s-portal').style.display='block';
-            document.getElementById('s-v-name').innerText=sData.name; document.getElementById('s-role-tag').innerText=sData.role.toUpperCase();
-            updatePortal();
-        }
+        function loginSuccess() { document.getElementById('s-login').style.display='none'; document.getElementById('s-portal').style.display='block'; document.getElementById('s-v-name').innerText=sData.name; document.getElementById('s-role-tag').innerText=sData.role.toUpperCase(); updatePortal(); }
 
         let shiftInt = null;
         function updatePortal() {
             if(shiftInt) clearInterval(shiftInt);
-            if(sData.status === 'in' && sData.lastClockIn) {
+            if(sData && sData.status === 'in' && sData.lastClockIn) {
                 shiftInt = setInterval(() => {
                     let diff = Date.now() - new Date(sData.lastClockIn).getTime();
                     let h = Math.floor(diff/3600000); let m = Math.floor((diff%3600000)/60000); let s = Math.floor((diff%60000)/1000);
@@ -431,13 +453,10 @@
             } else { document.getElementById('s-v-timer').innerText = "00:00:00"; }
         }
         function shift(t) {
-            let now = new Date().toISOString();
-            sData.status = t; if(t==='in') sData.lastClockIn = now;
-            // Update Local
+            let now = new Date().toISOString(); sData.status = t; if(t==='in') sData.lastClockIn = now;
             let idx = localStaff.findIndex(e => e.pin === sData.pin);
             if(idx !== -1) { localStaff[idx] = sData; localStorage.setItem('b44_staff', JSON.stringify(localStaff)); }
-            // Update Cloud
-            if(sID) db.collection('employees').doc(sID).update({ status: t, lastClockIn: t==='in'?now:sData.lastClockIn }).catch(() => console.log("Cloud shift sync fail"));
+            if(sID) db.collection('employees').doc(sID).update({ status: t, lastClockIn: t==='in'?now:sData.lastClockIn });
             updatePortal();
         }
         function logOffStaff() { sPIN=""; sID=null; sData=null; if(shiftInt) clearInterval(shiftInt); document.getElementById('s-portal').style.display='none'; document.getElementById('s-login').style.display='block'; sC(); }
@@ -453,24 +472,42 @@
 
         function bC(m) { socket.emit('station-call', { type: m, timestamp: Date.now() }); }
 
-        function saveCfg() { rConfig = { head: document.getElementById('cfg-header').value, foot: document.getElementById('cfg-footer').value }; localStorage.setItem('b44_rcfg', JSON.stringify(rConfig)); customAlert("Settings", "Receipt config saved."); }
-        
+        function saveCfg() { 
+            rConfig = { 
+                head: document.getElementById('cfg-header').value, 
+                foot: document.getElementById('cfg-footer').value,
+                logo: document.getElementById('cfg-logo').value,
+                fontSize: document.getElementById('cfg-font').value,
+                showPrices: document.getElementById('cfg-prices').checked,
+                showDate: document.getElementById('cfg-date').checked
+            }; 
+            localStorage.setItem('b44_rcfg', JSON.stringify(rConfig)); 
+            customAlert("Saved", "Receipt settings updated."); 
+        }
+
         function addSt() { 
             let n = document.getElementById('n-emp-n').value; let p = document.getElementById('n-emp-p').value; let r = document.getElementById('n-emp-r').value; 
             if(n&&p) {
                 let s = { name: n, pin: String(p), role: r, status: 'out', lid: Date.now() };
                 localStaff.push(s); localStorage.setItem('b44_staff', JSON.stringify(localStaff));
-                loadSt(); customAlert("Success", "Staff saved locally. Cloud sync pending.");
-                syncCloud('employees', s);
+                loadSt(); customAlert("Success", "Staff added locally."); syncCloud('employees', s);
             }
         }
-        function loadSt() { 
-            let h = ''; 
-            localStaff.forEach(a => { h += `<div style="padding:15px; border-bottom:1px solid #eee; display:flex; justify-content:space-between;"><span>${a.name} [${a.role}]</span><span>${a.status.toUpperCase()}</span></div>`; }); 
-            document.getElementById('m-staff-list').innerHTML = h; 
+        function loadSt() { let h = ''; localStaff.forEach(a => { h += `<div style="padding:15px; border-bottom:1px solid #eee; display:flex; justify-content:space-between;"><span>${a.name} [${a.role}]</span><span>${a.status.toUpperCase()}</span></div>`; }); document.getElementById('m-staff-list').innerHTML = h; }
+        function switchM(id, b) { 
+            document.querySelectorAll('.master-tab').forEach(x=>x.classList.remove('active')); 
+            document.querySelectorAll('.master-content').forEach(x=>x.classList.remove('active')); 
+            b.classList.add('active'); document.getElementById(id).classList.add('active'); 
+            if(id==='s-staff') loadSt(); 
+            if(id==='s-config') { 
+                document.getElementById('cfg-logo').value = rConfig.logo || "";
+                document.getElementById('cfg-header').value = rConfig.head; 
+                document.getElementById('cfg-footer').value = rConfig.foot; 
+                document.getElementById('cfg-font').value = rConfig.fontSize || "small";
+                document.getElementById('cfg-prices').checked = rConfig.showPrices;
+                document.getElementById('cfg-date').checked = rConfig.showDate;
+            } 
         }
-
-        function switchM(id, b) { document.querySelectorAll('.master-tab').forEach(x=>x.classList.remove('active')); document.querySelectorAll('.master-content').forEach(x=>x.classList.remove('active')); b.classList.add('active'); document.getElementById(id).classList.add('active'); if(id==='s-staff') loadSt(); }
 
         function mP(n) { if(mPIN.length<4) { mPIN+=n; document.getElementById('master-pin-dot').innerText = "•".repeat(mPIN.length); } }
         function mC() { mPIN=""; document.getElementById('master-pin-dot').innerText=""; }
