@@ -87,7 +87,6 @@
 
     <div id="station-call-alert">⚠️ ALERT: <span id="call-msg"></span> <button onclick="clearCall()" style="margin-left: 15px; padding: 8px 20px; border-radius: 30px; background: rgba(0,0,0,0.1); font-weight:900;">CLEAR</button></div>
 
-    <!-- UI Overlay Modals -->
     <div id="overlay-alert" class="overlay"><div class="modal" style="text-align:center;"><div id="alert-title" style="font-size:1.8rem; font-weight:900; margin-bottom:15px;">Notice</div><p id="alert-body" style="font-size:1.2rem; color:var(--text-gray); margin-bottom: 25px;"></p><button class="pay-btn" style="margin:0;" onclick="closeAlert()">Okay</button></div></div>
     <div id="overlay-confirm" class="overlay"><div class="modal" style="text-align:center;"><div id="confirm-title" style="font-size:1.8rem; font-weight:900; margin-bottom:15px;">Confirm?</div><p id="confirm-body" style="font-size:1.1rem; color:var(--text-gray); margin-bottom: 25px;"></p><div style="display:flex; gap:15px;"><button class="pay-btn" style="background:#f1f5f9; color:var(--dark); margin:0;" onclick="closeConfirm(false)">Cancel</button><button class="pay-btn" style="margin:0;" onclick="closeConfirm(true)">Confirm</button></div></div></div>
 
@@ -295,12 +294,17 @@
         const db = firebase.firestore();
         const socket = io();
 
+        // HYBRID PERSISTENCE STATE
         let menu = [
             { id: 1, name: "Crazy Burger", price: 8.99, image: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=800&q=80" },
             { id: 2, name: "Wild Fries", price: 3.49, image: "https://images.unsplash.com/photo-1630384066252-19e1ed95536a?auto=format&fit=crop&w=800&q=80" },
             { id: 3, name: "3D Printed Patty", price: 12.99, image: "https://images.unsplash.com/photo-1594212699903-ec8a3eca50f5?auto=format&fit=crop&w=800&q=80" }
         ];
-        let cart = []; let activeOrders = []; let curM = null; let discAmt = 0; let ptsToRedeem = 0; let sPIN = ""; let mPIN = ""; let sData = null; let sID = null; let pinTarget = null; let pBtn = null;
+
+        let localStaff = JSON.parse(localStorage.getItem('b44_staff')) || [];
+        let localCusts = JSON.parse(localStorage.getItem('b44_custs')) || [];
+        let cart = []; let activeOrders = []; let curM = null; let discAmt = 0; let ptsToRedeem = 0; 
+        let sPIN = ""; let mPIN = ""; let sData = null; let sID = null; let pinTarget = null; let pBtn = null;
         let cID = null; let rConfig = JSON.parse(localStorage.getItem('b44_rcfg')) || { head: "CRAZY BURGERS INC", foot: "THANK YOU FOR YOUR PATRONAGE" };
 
         function navTo(id, btn) {
@@ -324,22 +328,43 @@
         }
         function remC(id) { cart = cart.filter(i=>i.cid!==id); renderCart(); }
 
+        // HYBRID SYNC LOGIC
+        function syncCloud(col, data) {
+            db.collection(col).add(data).then(() => console.log(`Cloud sync success: ${col}`))
+            .catch(e => {
+                console.error(`Cloud sync failed: ${e.code}`, e.message);
+                if(e.code === 'permission-denied') {
+                    customAlert("Database Blocked", "Your Firebase Rules are blocking saves. Go to Firebase Console -> Firestore -> Rules and set 'allow read, write: if true;'");
+                }
+            });
+        }
+
         function loyS(s) { document.getElementById('loyalty-init').style.display = s==='init'?'grid':'none'; document.getElementById('loyalty-find').style.display = s==='search'?'block':'none'; document.getElementById('loyalty-create').style.display = s==='create'?'block':'none'; }
+        
         function findMember() {
             let n = document.getElementById('loy-q').value;
+            // Search local first
+            let m = localCusts.find(c => c.name === n);
+            if(m) { setM(m); document.getElementById('overlay-loyalty').style.display='none'; return; }
+            
+            // Then search cloud
             db.collection('customers').where('name','==',n).get().then(s => {
-                if(s.empty) return customAlert("Error", "Customer Not Found");
-                let m = { docId: s.docs[0].id, ...s.docs[0].data() };
-                curM = m; document.getElementById('overlay-loyalty').style.display='none';
-                if(m.points >= 10) { ptsToRedeem = Math.floor(m.points/10)*10; discAmt = ptsToRedeem/10; document.getElementById('r-bal').innerText = m.points; document.getElementById('r-disc').innerText = discAmt.toFixed(2); document.getElementById('overlay-redeem').style.display='flex'; }
-                else setM(m);
-            }).catch(e => customAlert("Save Error", "Please ensure Firestore API is enabled in your Google Console."));
+                if(s.empty) return customAlert("Not Found", "Member not in system.");
+                let dm = { docId: s.docs[0].id, ...s.docs[0].data() };
+                curM = dm; document.getElementById('overlay-loyalty').style.display='none';
+                if(dm.points >= 10) { ptsToRedeem = Math.floor(dm.points/10)*10; discAmt = ptsToRedeem/10; document.getElementById('r-bal').innerText = dm.points; document.getElementById('r-disc').innerText = discAmt.toFixed(2); document.getElementById('overlay-redeem').style.display='flex'; }
+                else setM(dm);
+            }).catch(e => customAlert("Connection Error", `Firestore said: ${e.code}. Using local data only.`));
         }
+
         function createMember() {
             let n = document.getElementById('loy-n').value; if(!n) return;
-            let m = { name: n, joined: new Date().toISOString(), points: 0 };
-            db.collection('customers').add(m).then(ref => { m.docId = ref.id; curM = m; document.getElementById('overlay-loyalty').style.display='none'; setM(m); }).catch(e => customAlert("Save Error", "Firestore API not enabled. Visit Google Console."));
+            let m = { name: n, joined: new Date().toISOString(), points: 0, lid: Date.now() };
+            localCusts.push(m); localStorage.setItem('b44_custs', JSON.stringify(localCusts));
+            curM = m; document.getElementById('overlay-loyalty').style.display='none';
+            setM(m); syncCloud('customers', m);
         }
+
         function setM(m) { document.getElementById('member-tag').innerText = m.name; document.getElementById('cart-loyalty-info').style.display='block'; renderCart(); document.getElementById('overlay-table').style.display='flex'; }
         function redeemPoints(yes) { if(!yes) { ptsToRedeem=0; discAmt=0; } document.getElementById('overlay-redeem').style.display='none'; setM(curM); }
         function skipLoyalty() { document.getElementById('overlay-loyalty').style.display='none'; document.getElementById('overlay-table').style.display='flex'; }
@@ -347,7 +372,14 @@
         function finishOrder(tbl) {
             let tot = parseFloat(document.getElementById('pos-total').innerText);
             let o = { id: Math.floor(Math.random()*9000), table: tbl, items: [...cart], total: tot, status: 'preparing', time: new Date().toLocaleTimeString() };
-            if(curM) db.collection('customers').doc(curM.docId).update({ points: curM.points + Math.floor(tot) - ptsToRedeem });
+            if(curM) {
+                curM.points = (curM.points || 0) + Math.floor(tot) - ptsToRedeem;
+                // Update Local
+                let idx = localCusts.findIndex(c => c.lid === curM.lid || c.name === curM.name);
+                if(idx !== -1) { localCusts[idx].points = curM.points; localStorage.setItem('b44_custs', JSON.stringify(localCusts)); }
+                // Update Cloud
+                if(curM.docId) db.collection('customers').doc(curM.docId).update({ points: curM.points }).catch(e => console.error("Cloud point sync fail"));
+            }
             socket.emit('new-order', o);
             printRec(o);
             customAlert("Order Complete", "Kitchen notified.");
@@ -362,20 +394,32 @@
             document.getElementById('receipt-area').innerHTML = h; window.print();
         }
 
-        // SYNCED KDS BUTTONS
         function cyc(id, s) { socket.emit('update-order-status', { id: Number(id), status: s }); }
 
         function sP(n) { if(sPIN.length<4) { sPIN+=n; document.getElementById('s-pin-dot').innerText = "•".repeat(sPIN.length); } }
         function sC() { sPIN=""; document.getElementById('s-pin-dot').innerText=""; }
         function sV() { 
+            // Try local first
+            let m = localStaff.find(e => e.pin === String(sPIN));
+            if(m) { sData = m; loginSuccess(); return; }
+            
             db.collection('employees').where('pin','==',String(sPIN)).get().then(s => { 
                 if(s.empty) return customAlert("Security", "Invalid PIN");
                 sID=s.docs[0].id; sData=s.docs[0].data();
-                document.getElementById('s-login').style.display='none'; document.getElementById('s-portal').style.display='block';
-                document.getElementById('s-v-name').innerText=sData.name; document.getElementById('s-role-tag').innerText=sData.role.toUpperCase();
-                updatePortal();
+                loginSuccess();
+            }).catch(e => {
+                 customAlert("Connection Fail", `Using Local Backup Mode (Error: ${e.code})`);
+                 // Check local again just in case
+                 if(m) { sData = m; loginSuccess(); }
             });
         }
+        function loginSuccess() {
+            document.getElementById('s-login').style.display='none'; document.getElementById('s-portal').style.display='block';
+            document.getElementById('s-v-name').innerText=sData.name; document.getElementById('s-role-tag').innerText=sData.role.toUpperCase();
+            updatePortal();
+        }
+
+        let shiftInt = null;
         function updatePortal() {
             if(shiftInt) clearInterval(shiftInt);
             if(sData.status === 'in' && sData.lastClockIn) {
@@ -387,12 +431,17 @@
             } else { document.getElementById('s-v-timer').innerText = "00:00:00"; }
         }
         function shift(t) {
-            let data = { status: t }; if(t==='in') data.lastClockIn = new Date().toISOString();
-            db.collection('employees').doc(sID).update(data).then(() => { sData.status = t; if(t==='in') sData.lastClockIn = data.lastClockIn; updatePortal(); }).catch(e => customAlert("Save Error", "Firestore API not enabled."));
+            let now = new Date().toISOString();
+            sData.status = t; if(t==='in') sData.lastClockIn = now;
+            // Update Local
+            let idx = localStaff.findIndex(e => e.pin === sData.pin);
+            if(idx !== -1) { localStaff[idx] = sData; localStorage.setItem('b44_staff', JSON.stringify(localStaff)); }
+            // Update Cloud
+            if(sID) db.collection('employees').doc(sID).update({ status: t, lastClockIn: t==='in'?now:sData.lastClockIn }).catch(() => console.log("Cloud shift sync fail"));
+            updatePortal();
         }
         function logOffStaff() { sPIN=""; sID=null; sData=null; if(shiftInt) clearInterval(shiftInt); document.getElementById('s-portal').style.display='none'; document.getElementById('s-login').style.display='block'; sC(); }
 
-        // SYNCED CDS
         function bindC(tbl) { cID=tbl; document.getElementById('cds-setup').style.display='none'; document.getElementById('cds-active').style.display='block'; renderC(); }
         function resetC() { cID=null; document.getElementById('cds-setup').style.display='block'; document.getElementById('cds-active').style.display='none'; }
         function renderC() {
@@ -402,15 +451,25 @@
             else { document.getElementById('cds-status').innerText = "WELCOME"; document.getElementById('cds-items').innerText = "Please wait..."; }
         }
 
-        // SYNCED ALERTS
         function bC(m) { socket.emit('station-call', { type: m, timestamp: Date.now() }); }
 
         function saveCfg() { rConfig = { head: document.getElementById('cfg-header').value, foot: document.getElementById('cfg-footer').value }; localStorage.setItem('b44_rcfg', JSON.stringify(rConfig)); customAlert("Settings", "Receipt config saved."); }
+        
         function addSt() { 
             let n = document.getElementById('n-emp-n').value; let p = document.getElementById('n-emp-p').value; let r = document.getElementById('n-emp-r').value; 
-            if(n&&p) db.collection('employees').add({ name: n, pin: String(p), role: r, status: 'out' }).then(() => { loadSt(); customAlert("Success", "Staff member added."); }).catch(e => customAlert("Save Error", "Firestore API is disabled. You must enable it in the Google Console.")); 
+            if(n&&p) {
+                let s = { name: n, pin: String(p), role: r, status: 'out', lid: Date.now() };
+                localStaff.push(s); localStorage.setItem('b44_staff', JSON.stringify(localStaff));
+                loadSt(); customAlert("Success", "Staff saved locally. Cloud sync pending.");
+                syncCloud('employees', s);
+            }
         }
-        function loadSt() { db.collection('employees').get().then(s => { let h = ''; s.forEach(d => { let a = d.data(); h += `<div style="padding:15px; border-bottom:1px solid #eee; display:flex; justify-content:space-between;"><span>${a.name} [${a.role}]</span><span>${a.status.toUpperCase()}</span></div>`; }); document.getElementById('m-staff-list').innerHTML = h; }); }
+        function loadSt() { 
+            let h = ''; 
+            localStaff.forEach(a => { h += `<div style="padding:15px; border-bottom:1px solid #eee; display:flex; justify-content:space-between;"><span>${a.name} [${a.role}]</span><span>${a.status.toUpperCase()}</span></div>`; }); 
+            document.getElementById('m-staff-list').innerHTML = h; 
+        }
+
         function switchM(id, b) { document.querySelectorAll('.master-tab').forEach(x=>x.classList.remove('active')); document.querySelectorAll('.master-content').forEach(x=>x.classList.remove('active')); b.classList.add('active'); document.getElementById(id).classList.add('active'); if(id==='s-staff') loadSt(); }
 
         function mP(n) { if(mPIN.length<4) { mPIN+=n; document.getElementById('master-pin-dot').innerText = "•".repeat(mPIN.length); } }
