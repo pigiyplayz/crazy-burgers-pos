@@ -39,7 +39,7 @@
 
         * { box-sizing: border-box; font-family: 'Inter', sans-serif; margin: 0; padding: 0; user-select: none; -webkit-tap-highlight-color: transparent; }
         body { background-color: var(--secondary); color: var(--text-dark); overflow: hidden; display: flex; height: 100vh; touch-action: manipulation; }
-        button { cursor: pointer; border: none; font-weight: 800; outline: none; transition: all 0.1s cubic-bezier(0.4, 0, 0.2, 1); }
+        button { cursor: pointer; border: none; font-weight: 800; outline: none; transition: all 0.1s; }
         button:active { transform: scale(0.96); opacity: 0.9; }
 
         .view-container { display: none; width: 100%; height: 100%; flex-direction: column; overflow: hidden;}
@@ -86,11 +86,11 @@
         .pay-btn { background: var(--success); color: white; width: 100%; padding: 20px; font-size: 1.3rem; border-radius: 14px; margin-top: 20px; font-weight: 900; }
 
         /* ---- [ OVERLAYS ] ---- */
-        .overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 2000; padding: 20px; }
+        .overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; z-index: 10000; padding: 20px; }
         .modal { background: white; width: 100%; max-width: 480px; border-radius: var(--radius-xl); padding: 30px; box-shadow: var(--shadow-lg); overflow: hidden; }
         .modal-header { font-size: 1.8rem; font-weight: 900; margin-bottom: 25px; color: var(--dark); text-align: center; }
 
-        #station-call-alert { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: var(--warning); color: var(--dark); padding: 15px 30px; border-radius: 99px; font-weight: 900; font-size: 1.1rem; box-shadow: var(--shadow-lg); z-index: 10000; display: none; }
+        #station-call-alert { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: var(--warning); color: var(--dark); padding: 15px 30px; border-radius: 99px; font-weight: 900; font-size: 1.1rem; box-shadow: var(--shadow-lg); z-index: 20000; display: none; }
         .fab-nav { display: none; position: fixed; right: -35px; top: 50%; transform: translateY(-50%); width: 70px; height: 100px; background: var(--primary); color: white; align-items: center; padding-left: 15px; border-radius: 40px 0 0 40px; font-size: 2rem; cursor: pointer; z-index: 1000; box-shadow: var(--shadow-lg); }
 
         /* DATA TABLES */
@@ -103,6 +103,8 @@
 
         input, select, textarea { width: 100%; padding: 14px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 1.1rem; margin-bottom: 15px; outline: none; background: #fff; font-weight:600;}
         input:focus { border-color: var(--primary); }
+
+        .pin-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
     </style>
 </head>
 <body>
@@ -228,13 +230,13 @@
         <div style="padding:20px; flex:1; overflow-y:auto;"><div class="menu-grid" id="kds-grid"></div></div>
     </main>
 
-    <!-- MASTER STATION (PIN REQUIRED) -->
+    <!-- MASTER STATION -->
     <main id="manager-view" class="view-container">
         <div class="master-dash-container">
             <div class="master-tabs">
                 <button class="master-tab active" onclick="switchM('s-kpi', this)">Stats</button>
                 <button class="master-tab" onclick="switchM('s-inventory', this)">Menu</button>
-                <button class="master-tab" onclick="switchM('s-staff', this)">Staff</button>
+                <button class="master-tab" onclick="switchM('s-staff', this)">Staff Force</button>
                 <button class="master-tab" onclick="switchM('s-loyalty', this)">CRM</button>
             </div>
             <div id="s-kpi" class="master-content active">
@@ -253,15 +255,27 @@
                 </div>
                 <div id="m-menu-list"></div>
             </div>
+            <div id="s-staff" class="master-content">
+                <div style="background:white; padding:20px; border-radius:12px; border:1px solid #e5e7eb; margin-bottom:20px;">
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:15px;">
+                        <input type="text" id="n-emp-n" placeholder="Name"><input type="text" id="n-emp-p" placeholder="4-Digit PIN">
+                    </div>
+                    <button class="pay-btn" style="width:100%; margin:0;" onclick="addSt()">Authorize Staff</button>
+                </div>
+                <div id="m-staff-list"></div>
+            </div>
+            <div id="s-loyalty" class="master-content">
+                <div id="m-loy-list"></div>
+            </div>
         </div>
     </main>
 
     <!-- STAFF LOGIN -->
     <main id="staff-view" class="view-container" style="background:var(--dark); align-items:center; justify-content:center;">
         <div class="modal" id="s-login" style="max-width:380px;">
-            <h1 style="font-weight:900; text-align:center; margin-bottom:10px;">Staff Terminal</h1>
+            <h1 style="font-weight:900; text-align:center; margin-bottom:10px;">Staff Authenticate</h1>
             <div id="s-pin-dot" style="font-size:3rem; height:80px; background:#f8fafc; border-radius:12px; display:flex; align-items:center; justify-content:center; color:var(--primary); font-weight:900; margin-bottom:20px;"></div>
-            <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:10px;">
+            <div class="pin-grid">
                 <button class="pay-btn" style="background:#f1f5f9; color:var(--dark); margin:0;" onclick="sP('1')">1</button>
                 <button class="pay-btn" style="background:#f1f5f9; color:var(--dark); margin:0;" onclick="sP('2')">2</button>
                 <button class="pay-btn" style="background:#f1f5f9; color:var(--dark); margin:0;" onclick="sP('3')">3</button>
@@ -288,6 +302,29 @@
             <button class="pay-btn" style="width:100%; height:auto; padding:10px; background:none; color:var(--text-gray); font-size:1rem; margin-top:20px;" onclick="logOffStaff()">Sign Out</button>
         </div>
     </main>
+
+    <!-- ADMIN OVERLAY -->
+    <div id="pin-overlay" class="overlay">
+        <div class="modal" style="max-width:340px;">
+            <h1 style="text-align:center; font-size:1.5rem; margin-bottom:20px;">Manager PIN</h1>
+            <div id="master-pin-dot" style="font-size:2rem; height:60px; background:#f8fafc; border-radius:10px; display:flex; align-items:center; justify-content:center; font-weight:900; margin-bottom:20px;"></div>
+            <div class="pin-grid">
+                <button class="pay-btn" style="background:#f1f5f9; color:var(--dark); margin:0;" onclick="mP('1')">1</button>
+                <button class="pay-btn" style="background:#f1f5f9; color:var(--dark); margin:0;" onclick="mP('2')">2</button>
+                <button class="pay-btn" style="background:#f1f5f9; color:var(--dark); margin:0;" onclick="mP('3')">3</button>
+                <button class="pay-btn" style="background:#f1f5f9; color:var(--dark); margin:0;" onclick="mP('4')">4</button>
+                <button class="pay-btn" style="background:#f1f5f9; color:var(--dark); margin:0;" onclick="mP('5')">5</button>
+                <button class="pay-btn" style="background:#f1f5f9; color:var(--dark); margin:0;" onclick="mP('6')">6</button>
+                <button class="pay-btn" style="background:#f1f5f9; color:var(--dark); margin:0;" onclick="mP('7')">7</button>
+                <button class="pay-btn" style="background:#f1f5f9; color:var(--dark); margin:0;" onclick="mP('8')">8</button>
+                <button class="pay-btn" style="background:#f1f5f9; color:var(--dark); margin:0;" onclick="mP('9')">9</button>
+                <button class="pay-btn" style="background:#fee2e2; color:#ef4444; margin:0;" onclick="mC()">C</button>
+                <button class="pay-btn" style="background:#f1f5f9; color:var(--dark); margin:0;" onclick="mP('0')">0</button>
+                <button class="pay-btn" style="background:#dcfce7; color:#16a34a; margin:0;" onclick="mV()">OK</button>
+            </div>
+            <button onclick="clsPin()" style="width:100%; margin-top:15px; background:none; color:var(--text-gray);">Cancel</button>
+        </div>
+    </div>
 
     <!-- CDS -->
     <main id="cust-view" class="view-container" style="background:#0f172a; align-items:center; justify-content:center;">
@@ -317,26 +354,9 @@
     <main id="calls-view" class="view-container">
         <div class="master-dash-container">
             <h1 style="margin-bottom:30px;">Alerts</h1>
-            <button class="pay-btn" style="height:150px; font-size:2rem; width:100%;" onclick="bC('Manager Required')">🛎️ CALL MANAGER</button>
+            <button class="pay-btn" style="height:150px; font-size:2rem; width:100%;" onclick="bC('Manager Request')">🛎️ CALL MANAGER</button>
         </div>
     </main>
-
-    <!-- MASTER ACCESS PIN -->
-    <div id="pin-overlay" class="overlay">
-        <div class="modal" style="max-width:340px;">
-            <h1 style="text-align:center; font-size:1.5rem; margin-bottom:20px;">Manager Access</h1>
-            <div id="master-pin-dot" style="font-size:2rem; height:60px; background:#f8fafc; border-radius:10px; display:flex; align-items:center; justify-content:center; font-weight:900; margin-bottom:20px;"></div>
-            <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:10px;">
-                <button class="pay-btn" style="background:#f1f5f9; color:var(--dark); margin:0;" onclick="mP('1')">1</button>
-                <button class="pay-btn" style="background:#f1f5f9; color:var(--dark); margin:0;" onclick="mP('2')">2</button>
-                <button class="pay-btn" style="background:#f1f5f9; color:var(--dark); margin:0;" onclick="mP('3')">3</button>
-                <button class="pay-btn" style="background:#fee2e2; color:var(--primary); margin:0;" onclick="mC()">C</button>
-                <button class="pay-btn" style="background:#f1f5f9; color:var(--dark); margin:0;" onclick="mP('0')">0</button>
-                <button class="pay-btn" style="background:#dcfce7; color:#16a34a; margin:0;" onclick="mV()">OK</button>
-            </div>
-            <button onclick="clsPin()" style="width:100%; margin-top:15px; background:none; color:var(--text-gray);">Cancel</button>
-        </div>
-    </div>
 
     <script>
         lucide.createIcons();
@@ -366,26 +386,24 @@
             if(id==='pos-view') renderP();
         }
         function toggleSidebar() { let s = document.getElementById('global-sidebar'); s.style.display = s.style.display==='none' ? 'flex' : 'none'; }
-
-        // AUDIO FIX: Requires User Interaction
-        function enableVoice() { window.speechSynthesis.cancel(); let sp = new SpeechSynthesisUtterance("Audio active."); sp.volume = 0; window.speechSynthesis.speak(sp); customAlert("Audio Sync", "Voice announcements enabled for this session."); }
+        function enableVoice() { window.speechSynthesis.cancel(); let sp = new SpeechSynthesisUtterance(""); sp.volume = 0; window.speechSynthesis.speak(sp); customAlert("Sync", "Audio active."); }
 
         // SOCKETS
         socket.on('initial-data', d => { activeOrders = d.orders; renderK(); updM(); });
         socket.on('order-update', o => { activeOrders = o; renderK(); renderC(); updM(); });
         socket.on('announcement', d => { if(d.id === 'call') { document.getElementById('call-msg').innerText = d.message; document.getElementById('station-call-alert').style.display = 'block'; setTimeout(() => document.getElementById('station-call-alert').style.display='none', 8000); } });
-        function bC(t) { socket.emit('station-call', { type: t }); }
-        function sendStationCall() { bC("POS 1 Help"); }
+        function bC(t) { socket.emit('station-call', { type: t }); customAlert("Broadcast", "Manager Alerted."); }
+        function sendStationCall() { bC("POS Help"); }
         function clearCall() { document.getElementById('station-call-alert').style.display='none'; }
 
-        // POS LOGIC
+        // POS
         let tI = null;
         function openMod(id) { tI = menu.find(i=>i.id===id); document.getElementById('mod-name').innerText=tI.name; document.getElementById('item-modal-overlay').style.display='flex'; }
         function closeMod() { document.getElementById('item-modal-overlay').style.display='none'; }
         function confirmMod() { let s = document.getElementById('mod-sauce').value; let n = document.getElementById('mod-note').value; cart.push({ cid: Date.now(), ...tI, sauce: s!=='Standard'?s:null, note: n||null }); closeMod(); renderCart(); }
         function renderCart() {
             let sum = 0; let c = document.getElementById('op-items'); 
-            if(!cart.length) c.innerHTML = '<div style="text-align:center; padding-top:40px; color:#94a3b8;">Cart empty.</div>';
+            if(!cart.length) c.innerHTML = '<div style="text-align:center; padding-top:40px; color:#94a3b8;">Add items.</div>';
             else { c.innerHTML = cart.map(i => { sum += i.price; return `<div class="cart-row"><div class="cart-info"><div class="cart-name">${i.name}</div>${i.sauce?`<small>+ ${i.sauce}</small>`:''}</div><div style="text-align:right;"><div>$${i.price.toFixed(2)}</div><button class="cart-del" onclick="remC(${i.cid})">X</button></div></div>`; }).join(''); }
             let tax = sum * 0.08; let tot = sum + tax; document.getElementById('pos-subtotal').innerText = sum.toFixed(2); document.getElementById('pos-tax').innerText = tax.toFixed(2); document.getElementById('pos-total').innerText = tot.toFixed(2);
         }
@@ -396,19 +414,37 @@
         function startCheckout() { if(!cart.length) return; loyS('init'); document.getElementById('overlay-loyalty').style.display='flex'; }
         function loyS(s) { document.getElementById('loyalty-init').style.display = s==='init'?'grid':'none'; document.getElementById('loyalty-find').style.display = s==='search'?'block':'none'; document.getElementById('loyalty-create').style.display = s==='create'?'block':'none'; }
         function skipLoyalty() { document.getElementById('overlay-loyalty').style.display='none'; document.getElementById('overlay-table').style.display='flex'; }
-        function findMember() { let n = document.getElementById('loy-q').value; db.collection('customers').where('name','==',n).get().then(s => { if(s.empty) return customAlert("Error", "Not found."); setM(s.docs[0].data()); }); }
-        function createMember() { let n = document.getElementById('loy-n').value; if(!n) return; let m = { name: n, joined: new Date().toISOString() }; db.collection('customers').add(m).then(() => setM(m)); }
+        
+        function findMember() { 
+            let n = document.getElementById('loy-q').value; 
+            db.collection('customers').where('name','==',n).get().then(s => { 
+                if(s.empty) return customAlert("Not Found", "Account not found."); 
+                setM(s.docs[0].data()); 
+            }).catch(e => { console.error(e); customAlert("Error", "Storage unreachable."); });
+        }
+        
+        function createMember() { 
+            let n = document.getElementById('loy-n').value; 
+            if(!n) return; 
+            let m = { name: n, joined: new Date().toISOString() }; 
+            db.collection('customers').add(m).then(() => { 
+                customAlert("Welcome", "Account created successfully.");
+                setM(m); 
+                loadLoy(); // Refresh CRM
+            }).catch(e => { console.error(e); customAlert("Error", "Could not save customer."); });
+        }
+        
         function setM(m) { curM = m; document.getElementById('member-tag').innerText = m.name; document.getElementById('cart-loyalty-info').style.display='block'; document.getElementById('overlay-loyalty').style.display='none'; document.getElementById('overlay-table').style.display='flex'; }
-        function finishOrder(tbl) { let o = { id: Math.floor(1000 + Math.random()*9000), table: tbl, items: [...cart], status: 'pending', member: curM?curM.name:null, total: parseFloat(document.getElementById('pos-total').innerText) }; socket.emit('new-order', o); clearCart(); document.getElementById('overlay-table').style.display='none'; customAlert("Accepted", "Order broadcasted."); }
+        function finishOrder(tbl) { let o = { id: Math.floor(1000 + Math.random()*9000), table: tbl, items: [...cart], status: 'pending', member: curM?curM.name:null, total: parseFloat(document.getElementById('pos-total').innerText) }; socket.emit('new-order', o); clearCart(); document.getElementById('overlay-table').style.display='none'; customAlert("Accepted", "Kitchen notified."); }
 
-        // KDS LOGIC
+        // KDS
         function renderK() {
             let g = document.getElementById('kds-grid'); let a = activeOrders.filter(o => o.status !== 'completed');
             g.innerHTML = a.map(o => {
                 let ns = o.status==='pending'?'preparing':(o.status==='preparing'?'ready':'completed');
                 let act = o.status==='pending'?'Cook':(o.status==='preparing'?'Ready':'Clear');
                 let c = o.status==='pending'?'#f59e0b':(o.status==='preparing'?'#3b82f6':'#22C55E');
-                return `<div class="menu-card" style="border-top:10px solid ${c}; padding:15px;"><div style="font-weight:900; display:flex; justify-content:space-between; margin-bottom:10px; font-size:1.1rem;"><span>#${o.id}</span><span>${o.table}</span></div><div style="flex:1;">${o.items.map(i => `<div style="padding-bottom:5px; border-bottom:1px solid #f1f5f9;">${i.name}</div>`).join('')}</div><button class="pay-btn" style="margin-top:15px; width:100%; border-radius:10px;" onclick="cyc(${o.id},'${ns}','${o.table}')">${act}</button></div>`;
+                return `<div class="menu-card" style="border-top:10px solid ${c}; padding:15px;"><div style="font-weight:900; display:flex; justify-content:space-between; margin-bottom:10px;"><span>#${o.id}</span><span>${o.table}</span></div><div style="flex:1;">${o.items.map(i => `<div style="padding-bottom:5px; border-bottom:1px solid #f1f5f9;">${i.name}</div>`).join('')}</div><button class="pay-btn" style="margin-top:15px; width:100%; border-radius:10px;" onclick="cyc(${o.id},'${ns}','${o.table}')">${act}</button></div>`;
             }).join('');
         }
         function cyc(id, s, t) {
@@ -421,21 +457,53 @@
             }
         }
 
-        // MASTER CONTROL
+        // MASTER
         function switchM(id, b) { document.querySelectorAll('.master-tab').forEach(x=>x.classList.remove('active')); document.querySelectorAll('.master-content').forEach(x=>x.classList.remove('active')); b.classList.add('active'); document.getElementById(id).classList.add('active'); if(id==='s-inventory') loadInv(); if(id==='s-staff') loadSt(); if(id==='s-loyalty') loadLoy(); }
         function loadInv() { let l = document.getElementById('m-menu-list'); l.innerHTML = menu.map(m => `<div style="display:flex; justify-content:space-between; padding:10px; border-bottom:1px solid #f1f5f9;"><span>${m.name}</span><button onclick="delInv(${m.id})" style="color:red; background:none;">X</button></div>`).join(''); }
         function addInv() { let n = document.getElementById('n-item-n').value; let p = parseFloat(document.getElementById('n-item-p').value); if(!n||!p) return; menu.push({ id: Date.now(), name: n, price: p, cat: "Burgers", image: 'assets/burger.png' }); localStorage.setItem('b44_menu', JSON.stringify(menu)); loadInv(); renderP(); }
         function delInv(id) { menu = menu.filter(m=>m.id!==id); localStorage.setItem('b44_menu', JSON.stringify(menu)); loadInv(); renderP(); }
-        function loadSt() { db.collection('employees').onSnapshot(s => { /* List employees... */ }); }
-        function addSt() { /* Add staff... */ }
-        function loadLoy() { db.collection('customers').orderBy('joined','desc').onSnapshot(s => { /* List loyal... */ }); }
+        
+        function loadSt() { 
+            db.collection('employees').onSnapshot(s => { 
+                let h = ''; 
+                s.forEach(d => { 
+                    let a = d.data(); 
+                    h += `<div style="display:flex; justify-content:space-between; padding:10px; border-bottom:1px solid #f1f5f9;"><span>${a.name} (${a.pin})</span><button onclick="db.collection('employees').doc('${d.id}').delete()">Fire</button></div>`;
+                }); 
+                document.getElementById('m-staff-list').innerHTML = h;
+            }); 
+        }
+        function addSt() { 
+            let n = document.getElementById('n-emp-n').value; 
+            let p = document.getElementById('n-emp-p').value; 
+            if(!n || p.length < 4) return;
+            db.collection('employees').add({ name: n, pin: String(p), status: 'out' });
+        }
+        
+        function loadLoy() { 
+            db.collection('customers').orderBy('joined','desc').onSnapshot(s => { 
+                let h = ''; 
+                s.forEach(d => { 
+                    let a = d.data(); 
+                    h += `<div style="display:flex; justify-content:space-between; padding:10px; border-bottom:1px solid #f1f5f9;"><span>${a.name}</span><button onclick="db.collection('customers').doc('${d.id}').delete()">Wipe</button></div>`;
+                }); 
+                document.getElementById('m-loy-list').innerHTML = h;
+            }); 
+        }
         function updM() { let r = activeOrders.reduce((a,b)=>a+b.total,0); document.getElementById('m-rev').innerText=`$${r.toFixed(2)}`; document.getElementById('m-ord').innerText=activeOrders.length; let av = activeOrders.length ? r/activeOrders.length : 0; document.getElementById('m-avg').innerText=`$${av.toFixed(2)}`; }
 
         // STAFF SESSION
         let sPIN = ""; let sID = null; let sData = null;
         function sP(n) { if(sPIN.length<4) { sPIN+=n; document.getElementById('s-pin-dot').innerText = "•".repeat(sPIN.length); } }
         function sC() { sPIN=""; document.getElementById('s-pin-dot').innerText=""; }
-        function sV() { db.collection('employees').where('pin','==',sPIN).get().then(s => { if(s.empty) { customAlert("Failed", "Invalid PIN"); sC(); return; } sID=s.docs[0].id; sData=s.docs[0].data(); document.getElementById('s-login').style.display='none'; document.getElementById('s-portal').style.display='block'; document.getElementById('s-v-name').innerText=sData.name; document.getElementById('s-v-status').innerText=sData.status.toUpperCase(); }); }
+        function sV() { 
+            db.collection('employees').where('pin','==',String(sPIN)).get().then(s => { 
+                if(s.empty) { customAlert("Failed", "Unauthorized PIN"); sC(); return; } 
+                sID=s.docs[0].id; sData=s.docs[0].data(); 
+                document.getElementById('s-login').style.display='none'; document.getElementById('s-portal').style.display='block'; 
+                document.getElementById('s-v-name').innerText=sData.name; document.getElementById('s-v-status').innerText=sData.status.toUpperCase(); 
+            }).catch(e => { console.error(e); customAlert("Error", "Auth service down."); });
+        }
         function shift(t) { db.collection('employees').doc(sID).update({ status: t }); db.collection('shifts').add({ name: sData.name, type: t, time: new Date().toISOString() }); document.getElementById('s-v-status').innerText=t.toUpperCase(); }
         function logOffStaff() { sPIN=""; sID=null; document.getElementById('s-portal').style.display='none'; document.getElementById('s-login').style.display='block'; document.getElementById('s-pin-dot').innerText=""; }
 
@@ -444,7 +512,7 @@
         function mP(n) { if(mPIN.length<4) { mPIN+=n; document.getElementById('master-pin-dot').innerText = "•".repeat(mPIN.length); } }
         function mC() { mPIN=""; document.getElementById('master-pin-dot').innerText=""; }
         function clsPin() { document.getElementById('pin-overlay').style.display='none'; }
-        function mV() { if(mPIN === "2018") { clsPin(); navTo(pinTarget, pBtn); switchM('s-kpi', document.querySelectorAll('.master-tab')[0]); } else { customAlert("Warning", "Denied"); mC(); } }
+        function mV() { if(mPIN === "2018") { clsPin(); navTo(pinTarget, pBtn); switchM('s-kpi', document.querySelectorAll('.master-tab')[0]); } else { customAlert("Warning", "Manager PIN Incorrect."); mC(); } }
 
         // CDS CORE
         function bindC(t) { cdsT=t; document.getElementById('cds-setup').style.display='none'; document.getElementById('cds-active').style.display='block'; document.getElementById('cds-t-id').innerText=t; renderC(); }
@@ -452,7 +520,13 @@
         function renderC() { if(!cdsT) return; let o = activeOrders.find(x=>x.table===cdsT && x.status!=='completed'); if(!o) { document.getElementById('cds-status').innerText="AWAITING"; document.getElementById('cds-items').innerText="Ready to serve you."; } else { document.getElementById('cds-status').innerText=o.status.toUpperCase(); document.getElementById('cds-items').innerHTML=`Ticket #${o.id}<hr style="margin:20px 0; border:1px solid rgba(255,255,255,0.05);">${o.items.map(i=>`• ${i.name}`).join('<br>')}`; } }
 
         // ALERTS
-        function customAlert(t, m) { document.getElementById('alert-title').innerText=t; document.getElementById('alert-body').innerText=m; document.getElementById('overlay-alert').style.display='flex'; }
+        function customAlert(t, m) { 
+            document.getElementById('alert-title').innerText=t; 
+            document.getElementById('alert-body').innerText=m; 
+            let overlay = document.getElementById('overlay-alert');
+            overlay.style.display='flex'; 
+            overlay.style.zIndex='99999'; // Force front
+        }
         function closeAlert() { document.getElementById('overlay-alert').style.display='none'; }
         let cB = null; function customConfirm(t,m,c) { cB=c; document.getElementById('confirm-title').innerText=t; document.getElementById('confirm-body').innerText=m; document.getElementById('overlay-confirm').style.display='flex'; }
         function closeConfirm(p) { document.getElementById('overlay-confirm').style.display='none'; if(p&&cB) cB(); }
