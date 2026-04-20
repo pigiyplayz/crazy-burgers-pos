@@ -4,7 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Base44 Replica | POS Systems</title>
+    
+    <!-- Real-time Sockets -->
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+    
+    <!-- Firebase Compat SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
     <style>
         :root {
             --primary: #DC2626;
@@ -68,8 +75,6 @@
         .btn-flex { display: flex; gap: 10px; margin-top: 20px; }
         .btn-cancel { flex: 1; padding: 15px; background: #e5e7eb; color: var(--text-dark); border-radius: var(--radius-md); font-size: 1.1rem; }
         .btn-confirm { flex: 2; padding: 15px; background: var(--primary); color: white; border-radius: var(--radius-md); font-size: 1.1rem; }
-        .btn-green { flex: 2; padding: 15px; background: var(--success); color: white; border-radius: var(--radius-md); font-size: 1.1rem; }
-        .btn-blue { flex: 2; padding: 15px; background: var(--accent); color: white; border-radius: var(--radius-md); font-size: 1.1rem; }
 
         .table-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
         .table-btn { padding: 20px; font-size: 1.2rem; background: var(--secondary); border: 2px solid #e5e7eb; border-radius: var(--radius-md); }
@@ -99,10 +104,9 @@
         /* ---- [ KDS - Kitchen Display System ] ---- */
         #kds-view { background: #111827; }
         .kds-nav { display: flex; background: #1f2937; padding: 0 20px; border-bottom: 1px solid #374151; }
-        .kds-tab { padding: 20px 30px; font-size: 1.2rem; color: #9ca3af; background: transparent; border-radius: 0; }
-        .kds-tab.active { color: white; box-shadow: inset 0 -4px 0 var(--primary); }
-        .kds-content { padding: 20px; display: none; flex-grow: 1; overflow-y: auto; }
-        .kds-content.active { display: block; }
+        .kds-tab { padding: 20px 30px; font-size: 1.2rem; color: white; background: transparent; border-radius: 0; box-shadow: inset 0 -4px 0 var(--primary); }
+        
+        .kds-content { padding: 20px; display: block; flex-grow: 1; overflow-y: auto; }
         .kds-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 20px; }
         .kds-card { background: #1f2937; border-radius: var(--radius-xl); display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
         .kds-header { padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; font-weight: 800; font-size: 1.1rem; color: #111827; }
@@ -115,8 +119,6 @@
         .mod-line { font-size: 0.95rem; color: #9ca3af; display: block; margin-top: 5px; font-weight: 400; padding-left: 15px; border-left: 2px solid #4b5563; }
         .kds-action { width: 100%; padding: 20px; font-size: 1.2rem; background: #374151; color: white; border-radius: 0; text-transform: uppercase; letter-spacing: 1px;}
         .kds-action:hover { background: #4b5563; }
-        .cooking-guide { color: white; max-width: 800px; margin: 0 auto; background: #1f2937; padding: 40px; border-radius: var(--radius-xl); box-shadow: var(--shadow-lg); font-size: 1.1rem; line-height: 1.8;}
-        .cooking-guide h2 { color: var(--primary); margin-bottom: 20px; font-size: 2rem; border-bottom: 2px solid #374151; padding-bottom: 10px; }
 
         /* ---- [ CUSTOMER DISPLAY ] ---- */
         #cust-view { background: #1f2937; color: white; align-items: center; justify-content: center;}
@@ -162,7 +164,7 @@
     <!-- Call Badge -->
     <div id="station-call-alert">⚠️ CALL INBOUND: <span id="call-msg"></span> <button onclick="clearCall()" style="margin-left: 15px; padding: 8px; border-radius: 6px; background: rgba(0,0,0,0.1);">Clear</button></div>
 
-    <!-- Website Standard Popups (Replacing alert/confirm/prompt) -->
+    <!-- Website Standard Popups -->
     <div id="overlay-alert" class="overlay">
         <div class="modal" style="text-align:center;">
             <div class="modal-header" id="alert-title">Notice</div>
@@ -288,19 +290,10 @@
     <!-- 2. KDS VIEW -->
     <main id="kds-view" class="view-container">
         <div class="kds-nav">
-            <button class="kds-tab active" onclick="switchKdsTab('active')">Active Orders</button>
-            <button class="kds-tab" onclick="switchKdsTab('guide')">Cooking Guide</button>
+            <button class="kds-tab active">Active Orders Dispatch</button>
         </div>
         <div id="kds-active" class="kds-content active">
             <div class="kds-grid" id="kds-grid"></div>
-        </div>
-        <div id="kds-guide" class="kds-content">
-            <div class="cooking-guide">
-                <h2>Base44 Ingredient Matrix</h2>
-                <p><strong>DIRT:</strong> Requires 4 minutes per 50g. Always sift twice.</p><br>
-                <p><strong>WOOD CHIPS:</strong> Only use hickory. Soak for 30 seconds max.</p><br>
-                <p><strong>3D PRINTED MEAT:</strong> Defrost calibration sequence 9. Cook to internal 155°F.</p>
-            </div>
         </div>
     </main>
 
@@ -368,17 +361,66 @@
         </div>
     </main>
 
-    <!-- 6 & 7. MOCKS: CUSTOMER & EMPLOYEE MGMT -->
-    <main id="cust-mgmt-view" class="view-container" style="justify-content:center; align-items:center;">
-        <div style="text-align:center;">
-            <h1 style="font-size:3rem; margin-bottom:10px;">👥 Customer Management</h1>
-            <p style="font-size:1.2rem; color:#6b7280;">(Database Connection Required)</p>
+    <!-- 6. FIREBASE CUSTOMER CRM -->
+    <main id="cust-mgmt-view" class="view-container">
+        <div class="mgmt-wrapper">
+            <div class="mgmt-header">Customer CRM Database</div>
+            
+            <div class="mgmt-panel" style="display:flex; gap:15px; margin-bottom:20px;">
+                <input type="text" id="cust-name-input" placeholder="Customer Name">
+                <input type="text" id="cust-phone-input" placeholder="Phone Number">
+                <button style="background:var(--primary); color:white; padding:15px; border-radius:8px; min-width:150px; font-weight:bold;" onclick="addCustomer()">Add Customer</button>
+            </div>
+            
+            <div class="mgmt-panel">
+                <h3 style="margin-bottom:15px; font-size:1.5rem;">Registered Base44 Customers</h3>
+                <table style="width:100%; text-align:left; border-collapse:collapse; margin-top:15px;" id="cust-table">
+                    <thead>
+                        <tr style="border-bottom:1px solid #e5e7eb; color:var(--text-gray);">
+                            <th style="padding:10px 0;">Name</th>
+                            <th>Phone Number</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cust-list">
+                        <tr><td colspan="3" style="padding:15px 0;">Connecting to Firebase...</td></tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </main>
-    <main id="emp-mgmt-view" class="view-container" style="justify-content:center; align-items:center;">
-        <div style="text-align:center;">
-            <h1 style="font-size:3rem; margin-bottom:10px;">👨‍🍳 Employee Management</h1>
-            <p style="font-size:1.2rem; color:#6b7280;">(Database Connection Required)</p>
+
+    <!-- 7. FIREBASE EMPLOYEE MGMT -->
+    <main id="emp-mgmt-view" class="view-container">
+        <div class="mgmt-wrapper">
+            <div class="mgmt-header">Employee Directory</div>
+            
+            <div class="mgmt-panel" style="display:flex; gap:15px; margin-bottom:20px;">
+                <input type="text" id="emp-name-input" placeholder="Employee Name">
+                <select id="emp-role-input">
+                    <option value="Cashier">Cashier</option>
+                    <option value="Line Cook">Line Cook</option>
+                    <option value="Manager">Manager</option>
+                    <option value="Janitor">Janitor</option>
+                </select>
+                <button style="background:var(--primary); color:white; padding:15px; border-radius:8px; min-width:150px; font-weight:bold;" onclick="addEmployee()">Add Staff</button>
+            </div>
+            
+            <div class="mgmt-panel">
+                <h3 style="margin-bottom:15px; font-size:1.5rem;">Active Employees</h3>
+                <table style="width:100%; text-align:left; border-collapse:collapse; margin-top:15px;" id="emp-table">
+                    <thead>
+                        <tr style="border-bottom:1px solid #e5e7eb; color:var(--text-gray);">
+                            <th style="padding:10px 0;">Name</th>
+                            <th>Role</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="emp-list">
+                        <tr><td colspan="3" style="padding:15px 0;">Connecting to Firebase...</td></tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </main>
 
@@ -429,6 +471,26 @@
 
 
     <script>
+        // ---- FIREBASE SDK INIT ---- //
+        const firebaseConfig = {
+          apiKey: "AIzaSyCDCnCn53HqVdIyTe-OcoITQ6mIuVn-eg4",
+          authDomain: "crazy-burgers-fa20a.firebaseapp.com",
+          projectId: "crazy-burgers-fa20a",
+          storageBucket: "crazy-burgers-fa20a.firebasestorage.app",
+          messagingSenderId: "908213507838",
+          appId: "1:908213507838:web:0f719ff0398ffa0b3e37af",
+          measurementId: "G-DDZZ1TR47D"
+        };
+        
+        let db;
+        try {
+            if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+            db = firebase.firestore();
+        } catch(e) {
+            console.error("Firebase Init Failed", e);
+        }
+
+        // Base Logic
         const socket = io();
         let menu = JSON.parse(localStorage.getItem('b44_menu')) || [
             { id: 1, name: "Crazy Burger", price: 8.99, cat: "Burgers", prep: "5 min" },
@@ -441,13 +503,11 @@
         let activeOrders = [];
         let trackedTable = null; 
         
-        // Pin logic fixes
         let pinTarget = null;
         let pinTargetBtn = null;
         let pinVal = "";
         const VIP_PIN = "2018"; 
 
-        // Alert UI Logic fixes
         let confirmCallback = null;
         function customAlert(title, msg) {
             document.getElementById('alert-title').innerText = title;
@@ -467,7 +527,6 @@
             if(passed && confirmCallback) confirmCallback();
         }
 
-        // Voice Utility
         function speakVoice(text) {
             try {
                 let speech = new SpeechSynthesisUtterance(text);
@@ -499,6 +558,7 @@
             }
         });
 
+        function clearCall() { document.getElementById('station-call-alert').style.display = 'none'; }
         function sendStationCall() { emitCall("Assistance Required at POS"); }
         function emitCall(msg) {
             socket.emit('station-call', { id: Date.now(), type: msg });
@@ -559,14 +619,7 @@
         function confirmMod() {
             let sauce = document.getElementById('mod-sauce').value;
             let note = document.getElementById('mod-instruction').value;
-            
-            cart.push({
-                cartId: Date.now(),
-                ...tempItem,
-                modSauce: sauce !== "None" ? sauce : null,
-                modNote: note || null
-            });
-            
+            cart.push({ cartId: Date.now(), ...tempItem, modSauce: sauce !== "None" ? sauce : null, modNote: note || null });
             closeModModal();
             renderCart();
         }
@@ -629,18 +682,6 @@
 
 
         // ---- KDS LOGIC ---- //
-        function switchKdsTab(tab) {
-            document.querySelectorAll('.kds-tab').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('.kds-content').forEach(c => c.classList.remove('active'));
-            if(tab==='active') {
-                document.querySelectorAll('.kds-tab')[0].classList.add('active');
-                document.getElementById('kds-active').classList.add('active');
-            } else {
-                document.querySelectorAll('.kds-tab')[1].classList.add('active');
-                document.getElementById('kds-guide').classList.add('active');
-            }
-        }
-
         function updateKdsRender() {
             let grid = document.getElementById('kds-grid');
             let pendingAndPrep = activeOrders.filter(o => o.status !== 'completed'); 
@@ -673,16 +714,20 @@
             }).join('');
         }
 
-        // Voice Synthesized KDS Button Click
+        // Voice Synthesized KDS Adjustments
         function cycKdsStatus(id, newStatus, table) {
             socket.emit('update-order-status', { id, status: newStatus });
             
-            // Text to speech local logic as requested by user
             let phrase = "";
-            if(newStatus === "preparing") phrase = `Now preparing order ${id} for ${table}`;
-            if(newStatus === "ready") phrase = `Order ${id} is ready for pick up`;
-            if(newStatus === "completed") phrase = `Order ${id} cleared`;
-            speakVoice(phrase);
+            if (newStatus === "preparing") phrase = `Now preparing order ${id}`;
+            if (newStatus === "ready") {
+                if (table.toLowerCase() === "takeout") {
+                    phrase = `Order ${id} is ready for pick up`;
+                } else {
+                    phrase = `Now serving order ${id} at ${table}`;
+                }
+            }
+            if(phrase) speakVoice(phrase);
         }
 
 
@@ -724,7 +769,6 @@
             }
         }
 
-
         // ---- PIN / SECURITY LOGIC ---- //
         function reqPin(tgt, btnObj) {
             pinTarget = tgt;
@@ -750,7 +794,6 @@
             }
         }
 
-
         // ---- MANAGER LOGIC ---- //
         function statRecalculate() {
             totalOrd = activeOrders.length;
@@ -761,8 +804,7 @@
             document.getElementById('kpi-avg').innerText = `$${avg.toFixed(2)}`;
         }
 
-
-        // ---- MENU MGMT LOGIC ---- //
+        // ---- MENU MGMT ---- //
         function addMenuItem() {
             let n = document.getElementById('new-item-name').value;
             let p = parseFloat(document.getElementById('new-item-price').value);
@@ -770,7 +812,6 @@
             let t = document.getElementById('new-item-prep').value;
 
             if(!n || isNaN(p)) return customAlert("Error", "Please fill out the name and provide a valid price.");
-
             menu.push({ id: Date.now(), name: n, price: p, cat: c, prep: t || "5 min" });
             localStorage.setItem('b44_menu', JSON.stringify(menu));
             customAlert("Saved", `${n} has been securely added to the local JSON configuration.`);
@@ -782,14 +823,88 @@
         }
 
         function resetMenu() {
-            customConfirm("Wipe System Memory?", "This will delete all custom menu items and restore factory defaults.", () => {
+            customConfirm("Wipe System Memory?", "This will restore factory defaults.", () => {
                 localStorage.removeItem('b44_menu');
                 location.reload();
             });
         }
 
-        // Init
+        // ============================================
+        // FIREBASE CRM SYSTEM
+        // ============================================
+        
+        // CUSTOMERS
+        function loadCustomers() {
+            if(!db) return;
+            db.collection('customers').onSnapshot(snap => {
+                const tgt = document.getElementById('cust-list');
+                if(snap.empty) { tgt.innerHTML = '<tr><td colspan="3" style="padding:15px 0;">No customers found.</td></tr>'; return; }
+                
+                let h = '';
+                snap.forEach(doc => {
+                    let d = doc.data();
+                    h += `<tr>
+                        <td style="padding:15px 0; font-weight:bold;">${d.name}</td>
+                        <td>${d.phone}</td>
+                        <td><button style="color:var(--primary); background:transparent; border:1px solid var(--primary); padding:6px 12px; border-radius:6px;" onclick="deleteDoc('customers', '${doc.id}')">Remove</button></td>
+                    </tr>`;
+                });
+                tgt.innerHTML = h;
+            });
+        }
+
+        function addCustomer() {
+            if(!db) return customAlert("Error", "Database not connected");
+            let name = document.getElementById('cust-name-input').value;
+            let phone = document.getElementById('cust-phone-input').value;
+            if(!name || !phone) return customAlert('Missing Data', 'Please fill name and phone.');
+            
+            db.collection('customers').add({ name, phone, joined: new Date().toISOString() });
+            document.getElementById('cust-name-input').value = '';
+            document.getElementById('cust-phone-input').value = '';
+        }
+
+        // EMPLOYEES
+        function loadEmployees() {
+            if(!db) return;
+            db.collection('employees').onSnapshot(snap => {
+                const tgt = document.getElementById('emp-list');
+                if(snap.empty) { tgt.innerHTML = '<tr><td colspan="3" style="padding:15px 0;">No employees found.</td></tr>'; return; }
+                
+                let h = '';
+                snap.forEach(doc => {
+                    let d = doc.data();
+                    h += `<tr>
+                        <td style="padding:15px 0; font-weight:bold;">${d.name}</td>
+                        <td><span style="background:#e5e7eb; padding:6px 12px; border-radius:6px; font-size:0.9rem; font-weight:600;">${d.role}</span></td>
+                        <td><button style="color:var(--primary); background:transparent; border:1px solid var(--primary); padding:6px 12px; border-radius:6px;" onclick="deleteDoc('employees', '${doc.id}')">Terminate</button></td>
+                    </tr>`;
+                });
+                tgt.innerHTML = h;
+            });
+        }
+
+        function addEmployee() {
+            if(!db) return customAlert("Error", "Database not connected");
+            let name = document.getElementById('emp-name-input').value;
+            let role = document.getElementById('emp-role-input').value;
+            if(!name) return customAlert('Missing Data', 'Please provide an employee name.');
+            
+            db.collection('employees').add({ name, role, hired: new Date().toISOString() });
+            document.getElementById('emp-name-input').value = '';
+        }
+
+        function deleteDoc(coll, id) {
+            customConfirm('Delete Record?', 'This action cannot be undone.', () => {  db.collection(coll).doc(id).delete(); });
+        }
+
+
+        // INITIALIZATION
         renderMenu();
+        if(db) {
+            loadCustomers();
+            loadEmployees();
+        }
 
     </script>
 </body>
