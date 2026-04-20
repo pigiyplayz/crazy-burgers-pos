@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Crazy Burgers POS | Cloud</title>
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+    <style>
+        :root {
+            --primary: #DC2626; /* Base44 Red */
+            --primary-hover: #b91c1c;
+            --secondary: #f3f4f6; /* Light gray background */
+            --dark: #111827; /* Dark Navy for KDS / Sidebar */
+            --dark-light: #1f2937;
+            --accent: #3b82f6; /* Blue for highlights */
+            --success: #22C55E; /* Green for checkouts/finish */
+            --success-hover: #16a34a;
+            --warning: #f59e0b; /* Yellow/Orange */
+            
+            --text-dark: #111827;
+            --text-gray: #4b5563;
+            --text-light: #f9fafb;
+            
+            --radius-md: 8px;
+            --radius-lg: 12px;
+            --radius-xl: 16px;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            margin: 0; padding: 0; 
+            background-color: var(--secondary); 
+            color: var(--text-dark);
+            overflow: hidden; /* Prevent body scrolling so internal areas scroll */
+            display: flex;
+            height: 100vh;
+            touch-action: manipulation;
+        }
+
+        /* Common Styles */
+        h1, h2, h3, h4, h5, p { margin: 0; }
+        
+        button {
+            cursor: pointer; font-weight: 600; border: none; outline: none;
+            transition: all 0.2s ease;
+        }
+        
+        button:active { transform: scale(0.97); }
+
+        .view-container { display: none; width: 100%; height: 100%; }
+        .view-container.active { display: flex; animation: fade-in 0.3s ease; }
+        
+        @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+
+        /* Left Sidebar (Global Nav) */
+        .sidebar {
+            width: 90px;
+            background-color: var(--dark);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px 0;
+            flex-shrink: 0;
+        }
+
+        .sidebar-logo {
+            width: 50px; height: 50px;
+            background: var(--primary);
+            color: white; font-weight: 800; font-size: 1.2rem;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: var(--radius-lg); margin-bottom: 30px;
+        }
+
+        .nav-button {
+            width: 70px; height: 70px; margin-bottom: 10px;
+            background: transparent; color: var(--text-gray);
+            border-radius: var(--radius-lg);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            font-size: 0.75rem; gap: 5px;
+        }
+
+        .nav-button:hover { background: var(--dark-light); color: var(--text-light); }
+        .nav-button.active-nav { background: var(--primary); color: white; }
+        .nav-icon { font-size: 1.5rem; }
+
+        /* POS VIEW */
+        #pos-view, #manager-view, #customer-view { flex-direction: row; flex: 1; }
+        
+        .main-content {
+            flex: 1; display: flex; flex-direction: column; overflow: hidden;
+            background: var(--secondary); padding: 15px;
+        }
+
+        /* Top Header Area in Main Content */
+        .top-header {
+            display: flex; justify-content: space-between; align-items: center;
+            background: white; padding: 15px 24px; border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-sm); margin-bottom: 15px;
+        }
+
+        .category-tabs {
+            display: flex; gap: 10px; overflow-x: auto; scrollbar-width: none;
+        }
+
+        .category-tab {
+            padding: 10px 20px; background: var(--secondary); border-radius: 999px;
+            color: var(--text-gray); font-weight: 600; white-space: nowrap;
+        }
+        .category-tab.active { background: var(--dark); color: white; }
+
+        .menu-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 15px; overflow-y: auto; padding-right: 10px; padding-bottom: 20px;
+        }
+
+        .menu-item {
+            background: white; border-radius: var(--radius-xl);
+            padding: 20px 15px; text-align: center;
+            box-shadow: var(--shadow-sm); border: 2px solid transparent;
+            display: flex; flex-direction: column; justify-content: center;
+            min-height: 140px; position: relative; overflow: hidden;
+        }
+
+        .menu-item:hover { border-color: var(--primary); box-shadow: var(--shadow-md); transform: translateY(-2px); }
+        .menu-item .price { color: var(--text-gray); font-weight: 500; margin-top: 8px; font-size: 0.95rem; }
+        .menu-item h3 { font-size: 1.1rem; color: var(--text-dark); }
+
+        /* Right Cart Sidebar */
+        .cart-sidebar {
+            width: 380px; background: white; border-left: 1px solid #e5e7eb;
+            display: flex; flex-direction: column; box-shadow: var(--shadow-lg);
+            z-index: 10;
+        }
+        
+        .cart-header { padding: 20px; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center; }
+        .cart-header h2 { font-size: 1.4rem; color: var(--text-dark); }
+        
+        .table-selector {
+            background: var(--secondary); color: var(--text-dark); padding: 8px 15px;
+            border-radius: var(--radius-md); border: none; font-weight: 600; font-size: 0.9rem;
+            cursor: pointer;
+        }
+
+        .cart-items { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; }
+        
+        .cart-item {
+            display: flex; justify-content: space-between; align-items: center;
+            background: var(--secondary); padding: 15px; border-radius: var(--radius-lg);
+        }
+
+        .cart-item-info strong { font-size: 1.05rem; display: block; margin-bottom: 4px; }
+        .cart-item-price { font-weight: 700; color: var(--primary); }
+
+        .cart-footer { padding: 20px; border-top: 1px solid #e5e7eb; background: #fafafa; }
+        .totals-row { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 1rem; color: var(--text-gray); }
+        .totals-row.grand-total { font-size: 1.5rem; font-weight: 800; color: var(--text-dark); margin-bottom: 20px; margin-top: 15px; border-top: 2px dashed #d1d5db; padding-top: 15px; }
+        
+        .btn-checkout {
+            background: var(--success); color: white; width: 100%; border-radius: var(--radius-xl);
+            padding: 18px; font-size: 1.25rem; box-shadow: 0 4px 10px rgba(34, 197, 94, 0.4);
+            display: flex; justify-content: center; align-items: center; gap: 10px;
+        }
+        .btn-checkout:hover { background: var(--success-hover); }
+
+        /* KITCHEN DISPLAY (KDS) */
+        #kitchen-view { background: var(--dark); flex-direction: column; position: fixed; inset:0; z-index: 100; overflow-y: auto; padding: 20px;}
+        .kds-header { display: flex; justify-content: space-between; align-items: center; color: white; margin-bottom: 25px; border-bottom: 1px solid var(--dark-light); padding-bottom: 15px; }
+        .kds-header button { background: var(--dark-light); color: white; padding: 10px 20px; border-radius: var(--radius-md); }
+        
+        .kds-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; }
+        .ticket { background: #1f2937; color: white; border-radius: var(--radius-xl); padding: 20px; box-shadow: var(--shadow-lg); border-top: 6px solid var(--warning); display: flex; flex-direction: column; position: relative; }
+        .ticket.completed { border-top-color: var(--success); opacity: 0.8; }
+        .ticket.cooking { border-top-color: var(--accent); }
+        .ticket-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #374151; }
+        .ticket-id { font-size: 1.6rem; font-weight: 800; color: white; }
+        .ticket-time { color: #9ca3af; font-size: 0.9rem; }
+        .ticket-table { background: var(--primary); padding: 4px 10px; border-radius: 999px; font-size: 0.85rem; font-weight: bold; }
+        .ticket-items { list-style: none; padding: 0; margin: 0; flex-grow: 1; margin-bottom: 20px; font-size: 1.2rem; }
+        .ticket-items li { margin-bottom: 10px; display: flex; align-items: center; gap: 10px; }
+        .ticket-items li::before { content: "•"; color: var(--primary); }
+        .ticket-actions { display: flex; gap: 10px; margin-top: auto; }
+        .ticket-actions button { flex: 1; padding: 12px; border-radius: var(--radius-md); font-size: 1rem; }
+        .btn-kds-start { background: var(--accent); color: white; }
+        .btn-kds-finish { background: var(--success); color: white; }
+        
+        .cleanup-alert { background: var(--warning); color: var(--text-dark); padding: 15px; border-radius: var(--radius-lg); margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; font-weight: bold; font-size: 1.2rem;}
+
+        /* KIOSK MODE */
+        #kiosk-view { background: white; flex-direction: column; position: fixed; inset: 0; z-index: 100; overflow-y: auto; }
+        .kiosk-header { background: var(--primary); color: white; padding: 20px; text-align: center; font-size: 2rem; font-weight: 900; position: fixed; top: 0; left: 0; right: 0; z-index: 10; box-shadow: var(--shadow-md); display: flex; justify-content: space-between; align-items: center; }
+        .kiosk-header button { background: rgba(0,0,0,0.2); color: white; padding: 10px 20px; border-radius: 8px; font-size: 1rem; }
+        .kiosk-content { margin-top: 100px; padding: 20px; }
+        .kiosk-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; }
+        .kiosk-item { background: white; padding: 30px; border-radius: var(--radius-xl); box-shadow: var(--shadow-md); text-align: center; border: 2px solid #f3f4f6; cursor: pointer; transition: all 0.2s; }
+        .kiosk-item:hover { border-color: var(--primary); transform: translateY(-5px); }
+        .kiosk-item h3 { font-size: 1.5rem; margin-bottom: 10px; }
+        .kiosk-item .price { font-size: 1.3rem; color: var(--primary); font-weight: bold; }
+        .fab-cart { position: fixed; bottom: 30px; right: 30px; width: 80px; height: 80px; background: var(--primary); border-radius: 50%; color: white; font-size: 2rem; box-shadow: var(--shadow-lg); display: flex; justify-content: center; align-items: center; border: 4px solid white; cursor: pointer; z-index: 150; }
+        .fab-badge { position: absolute; top: -5px; right: -5px; background: var(--warning); color: white; border-radius: 50%; width: 25px; height: 25px; font-size: 1rem; font-weight: bold; display: flex; justify-content: center; align-items: center; }
+
+        /* KIOSK CART MODAL */
+        #kiosk-cart-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 200; justify-content: center; align-items: center; }
+        .kiosk-cart-box { background: white; width: 90%; max-width: 600px; border-radius: var(--radius-xl); padding: 30px; max-height: 80vh; display: flex; flex-direction: column; }
+        .kiosk-cart-list { flex-grow: 1; overflow-y: auto; margin: 20px 0; border-top: 1px solid #ddd; border-bottom: 1px solid #ddd; padding: 20px 0; }
+        .kiosk-cart-total { font-size: 2rem; font-weight: 800; text-align: right; margin-bottom: 20px; }
+        .kiosk-checkout-btn { background: var(--success); color: white; padding: 20px; font-size: 1.5rem; border-radius: var(--radius-lg); width: 100%; box-shadow: 0 4px 10px rgba(34, 197, 94, 0.3); }
+
+        /* PIN PAD / MANAGER MODAL */
+        #pin-overlay {
+            position: fixed; inset: 0; background: rgba(17, 24, 39, 0.95);
+            display: none; align-items: center; justify-content: center; z-index: 1000;
+        }
+        .pin-box { background: white; padding: 40px; border-radius: 24px; box-shadow: var(--shadow-lg); text-align: center; width: 340px; }
+        .pin-box h2 { margin-bottom: 20px; color: var(--text-dark); }
+        .pin-display { font-size: 3rem; letter-spacing: 15px; margin-bottom: 30px; height: 60px; color: var(--primary); font-weight: 900; background: var(--secondary); border-radius: 12px; display: flex; align-items: center; justify-content: center; }
+        .pin-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px; }
+        .pin-key { background: var(--secondary); color: var(--text-dark); font-size: 1.5rem; font-weight: 700; height: 75px; border-radius: 12px; display: flex; justify-content: center; align-items: center; }
+        .pin-key:hover { background: #e5e7eb; }
+        .pin-key:active { background: #d1d5db; transform: scale(0.95); }
+        .pin-actions { display: flex; gap: 10px; }
+        .btn-cancel { background: #9ca3af; color: white; flex: 1; padding: 15px; border-radius: 12px; font-size: 1.1rem; }
+        .btn-unlock { background: var(--success); color: white; flex: 2; padding: 15px; border-radius: 12px; font-size: 1.2rem; }
+
+        /* CUSTOMER VIEW & MANAGER VIEW */
+        .generic-card { background: white; padding: 30px; border-radius: var(--radius-xl); box-shadow: var(--shadow-md); max-width: 600px; margin: 40px auto; text-align: center; }
+        .form-input { width: 100%; padding: 15px; border: 2px solid #e5e7eb; border-radius: 10px; margin-bottom: 15px; font-size: 1.1rem; outline: none; transition: border 0.2s; }
+        .form-input:focus { border-color: var(--primary); }
+        .btn-action { background: var(--primary); color: white; padding: 15px 25px; border-radius: 10px; font-size: 1.1rem; cursor: pointer; width: 100%; margin-bottom: 10px; }
+        .btn-warning { background: var(--warning); color: white; }
+
+        /* Utility */
+        #clock { color: var(--text-gray); font-weight: 600; font-variant-numeric: tabular-nums; }
+    </style>
+</head>
+<body>
+
+    <!-- GLOBAL SIDEBAR NAVIGATION -->
+    <nav class="sidebar">
+        <div class="sidebar-logo">CB</div>
+        
+        <button class="nav-button active-nav" onclick="showView('pos-view', this)">
+            <span class="nav-icon">🍔</span>
+            POS
+        </button>
+        <button class="nav-button" onclick="showView('kiosk-view', this)">
+            <span class="nav-icon">📱</span>
+            Kiosk
+        </button>
+        <button class="nav-button" onclick="showView('kitchen-view', this)">
+            <span class="nav-icon">🍳</span>
+            KDS
+        </button>
+        <button class="nav-button" onclick="showView('customer-view', this)">
+            <span class="nav-icon">🙋‍♂️</span>
+            Client
+        </button>
+        <button class="nav-button" onclick="askManagerPin()">
+            <span class="nav-icon">⚙️</span>
+            Manager
+        </button>
+    </nav>
+
+    <!-- POINT OF SALE (POS) -->
+    <main id="pos-view" class="view-container active">
+        <!-- Main Content -->
+        <div class="main-content">
+            <header class="top-header">
+                <div class="category-tabs">
+                    <button class="category-tab active">All Items</button>
+                    <button class="category-tab">Burgers</button>
+                    <button class="category-tab">Sides & Fries</button>
+                    <button class="category-tab">Drinks</button>
+                </div>
+                <div id="clock">12:00 PM</div>
+            </header>
+
+            <div class="menu-grid" id="pos-menu-items">
+                <!-- Javascript will inject items here -->
+            </div>
+        </div>
+
+        <!-- Right Cart Sidebar -->
+        <aside class="cart-sidebar">
+            <div class="cart-header">
+                <h2>Current Order</h2>
+                <button class="table-selector" id="table-btn" onclick="setTable()">🍽️ Set Table</button>
+            </div>
+            
+            <div class="cart-items" id="pos-cart">
+                <div style="text-align:center; padding: 40px 0; color: #9ca3af;">Cart is empty</div>
+            </div>
+
+            <div class="cart-footer">
+                <div class="totals-row">
+                    <span>Subtotal</span>
+                    $<span id="pos-subtotal">0.00</span>
+                </div>
+                <div class="totals-row">
+                    <span>Tax (8%)</span>
+                    $<span id="pos-tax">0.00</span>
+                </div>
+                <div class="totals-row grand-total">
+                    <span>Total</span>
+                    $<span id="pos-total">0.00</span>
+                </div>
+                
+                <button class="btn-checkout" onclick="checkout('pos')">
+                    Process Payment
+                </button>
+            </div>
+        </aside>
+    </main>
+
+    <!-- KITCHEN DISPLAY SYSTEM (KDS) -->
+    <main id="kitchen-view" class="view-container">
+        <div class="kds-header">
+            <div>
+                <h1 style="font-size:2rem;">Kitchen Display System</h1>
+                <p style="color:#9ca3af; margin-top:5px;">Real-time Order Sync Active</p>
+            </div>
+            <button onclick="showView('pos-view', document.querySelectorAll('.nav-button')[0])">← Exit KDS</button>
+        </div>
+        <div id="kitchen-cleanups"></div>
+        <div class="kds-grid" id="kitchen-orders"></div>
+    </main>
+
+    <!-- KIOSK (SELF-SERVE) MODE -->
+    <main id="kiosk-view" class="view-container">
+        <header class="kiosk-header">
+            Crazy Burgers Self-Service
+            <button onclick="showView('pos-view', document.querySelectorAll('.nav-button')[0])">Exit Kiosk</button>
+        </header>
+        <div class="kiosk-content">
+            <div class="kiosk-grid" id="kiosk-menu-items"></div>
+        </div>
+        <div class="fab-cart" onclick="openKioskCart()">
+            🛒
+            <div class="fab-badge" id="kiosk-cart-badge">0</div>
+        </div>
+    </main>
+
+    <!-- KIOSK CART MODAL -->
+    <div id="kiosk-cart-modal">
+        <div class="kiosk-cart-box">
+            <h2>Your Order</h2>
+            <div class="kiosk-cart-list" id="kiosk-cart-list"></div>
+            <div class="kiosk-cart-total">Total: $<span id="kiosk-total">0.00</span></div>
+            <div style="display:flex; gap: 15px;">
+                <button class="btn-checkout" style="background:#e5e7eb; color:#374151;" onclick="closeKioskCart()">Close</button>
+                <button class="kiosk-checkout-btn" onclick="checkout('kiosk')">Pay Now</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CUSTOMER SATISFACTION / DISPLAY -->
+    <main id="customer-view" class="view-container" style="justify-content: center; align-items: center; width: 100%;">
+        <div class="generic-card">
+            <h2 style="font-size:2rem; margin-bottom: 10px; color:var(--primary);">Welcome to Crazy Burgers!</h2>
+            <p style="color:var(--text-gray); margin-bottom: 30px; font-size:1.1rem;">Let us know when you are finished dining.</p>
+            
+            <input type="text" id="cust-table" class="form-input" placeholder="Enter Your Table Number (e.g. 1)">
+            
+            <button class="btn-action btn-warning" style="font-size:1.3rem; padding: 20px;" onclick="requestCleanup()">Request Staff / Table Cleanup</button>
+        </div>
+    </main>
+
+    <!-- MANAGER DASHBOARD -->
+    <main id="manager-view" class="view-container" style="justify-content: center; width: 100%; overflow-y:auto;">
+        <div class="generic-card" style="max-width: 800px; width: 100%;">
+            <div style="display:flex; justify-content: space-between; align-items:center; margin-bottom: 30px;">
+                <h2 style="font-size:2rem; color:var(--text-dark);">Manager Backoffice</h2>
+                <button style="padding:10px 20px; background:#e5e7eb; border-radius:8px;" onclick="showView('pos-view', document.querySelectorAll('.nav-button')[0])">Back to POS</button>
+            </div>
+            
+            <div style="background:#f9fafb; padding:20px; border-radius:12px; text-align:left; margin-bottom: 20px;">
+                <h3 style="margin-bottom:15px;">Add New Menu Item</h3>
+                <input type="text" id="new-item-name" class="form-input" placeholder="Item Name (e.g., Bacon Burger)">
+                <input type="number" id="new-item-price" class="form-input" placeholder="Price ($)">
+                <button class="btn-action" onclick="addNewItem()">+ Add to Local Terminal Menu</button>
+            </div>
+
+            <button class="btn-action" style="background:#111827; margin-top:20px;" onclick="resetSystem()">⚠️ Factory Reset Terminal (Wipe Cache)</button>
+        </div>
+    </main>
+
+    <!-- MANAGER STRICT PIN PAD MODAL -->
+    <div id="pin-overlay">
+        <div class="pin-box">
+            <h2>Enter Security PIN</h2>
+            <div class="pin-display" id="pin-display-text"></div>
+            
+            <div class="pin-grid">
+                <button class="pin-key" onclick="appendPin('1')">1</button>
+                <button class="pin-key" onclick="appendPin('2')">2</button>
+                <button class="pin-key" onclick="appendPin('3')">3</button>
+                <button class="pin-key" onclick="appendPin('4')">4</button>
+                <button class="pin-key" onclick="appendPin('5')">5</button>
+                <button class="pin-key" onclick="appendPin('6')">6</button>
+                <button class="pin-key" onclick="appendPin('7')">7</button>
+                <button class="pin-key" onclick="appendPin('8')">8</button>
+                <button class="pin-key" onclick="appendPin('9')">9</button>
+                <button class="pin-key" onclick="clearPin()" style="background:#fecaca; color:#dc2626;">C</button>
+                <button class="pin-key" onclick="appendPin('0')">0</button>
+                <button class="pin-key" onclick="verifyPin()" style="background:#bbf7d0; color:#16a34a;">✔</button>
+            </div>
+
+            <div class="pin-actions">
+                <button class="btn-cancel" onclick="closePin()">Cancel Access</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Audio for KDS notifications -->
+    <audio id="ding" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3"></audio>
+
+    <script>
+        const socket = io();
+        let currentCart = [];
+        let localOrders = [];
+        let localCleanups = [];
+        
+        let currentPin = "";
+        let selectedTable = "To Go";
+
+        // Initializing Menu
+        let menu = JSON.parse(localStorage.getItem('cb_menu')) || [
+            { id: 1, name: "Crazy Burger", price: 8.99 },
+            { id: 2, name: "Cheese Frenzy", price: 9.99 },
+            { id: 3, name: "Wild Fries", price: 3.49 },
+            { id: 4, name: "Vanilla Shake", price: 4.49 },
+            { id: 5, name: "Fountain Drink", price: 2.49 }
+        ];
+
+        // --- Core Socket Listeners ---
+        socket.on('initial-data', (data) => {
+            localOrders = data.orders;
+            localCleanups = data.cleanups;
+            refreshKitchen();
+        });
+
+        socket.on('order-update', (orders) => {
+            localOrders = orders;
+            // Play sound if looking at Kitchen
+            if (document.getElementById('kitchen-view').classList.contains('active')) {
+                document.getElementById('ding').play().catch(()=>{});
+            }
+            refreshKitchen();
+        });
+
+        socket.on('cleanup-update', (cleanups) => {
+            localCleanups = cleanups;
+            refreshKitchen();
+        });
+
+        socket.on('announcement', ({ id, status }) => {
+            const msg = status === 'cooking' ? `Now preparing order ${id}` : `Order ${id} is ready for pickup`;
+            const speech = new SpeechSynthesisUtterance(msg);
+            window.speechSynthesis.speak(speech);
+        });
+
+        // --- Navigation Logic ---
+        function showView(id, btnElement) {
+            // Setup active viewing state
+            document.querySelectorAll('.view-container').forEach(v => v.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            
+            // Adjust Sidebar buttons (if btnElement provided)
+            if(btnElement && btnElement.classList.contains('nav-button')) {
+                document.querySelectorAll('.nav-button').forEach(b => b.classList.remove('active-nav'));
+                btnElement.classList.add('active-nav');
+            }
+
+            if (id === 'kitchen-view') refreshKitchen();
+        }
+
+        function setTable() {
+            let t = prompt("Enter Table Number or 'To Go':", selectedTable);
+            if(t) {
+                selectedTable = t;
+                document.getElementById('table-btn').innerText = `🍽️ Table: ${t}`;
+            }
+        }
+
+        // --- POS Logic ---
+        function renderMenu() {
+            const posContainer = document.getElementById('pos-menu-items');
+            const kioskContainer = document.getElementById('kiosk-menu-items');
+            
+            const html = menu.map(item => `
+                <div class="menu-item" onclick="addToCart(${item.id})">
+                    <h3>${item.name}</h3>
+                    <div class="price">$${item.price.toFixed(2)}</div>
+                </div>
+            `).join('');
+
+            const kioskHtml = menu.map(item => `
+                <div class="kiosk-item" onclick="addToCart(${item.id})">
+                    <h3>${item.name}</h3>
+                    <div class="price">$${item.price.toFixed(2)}</div>
+                    <button style="margin-top:15px; background:var(--primary); color:white; width:100%; padding: 10px; border-radius: 8px;">Add</button>
+                </div>
+            `).join('');
+
+            posContainer.innerHTML = html;
+            kioskContainer.innerHTML = kioskHtml;
+        }
+
+        function addToCart(id) {
+            const item = menu.find(i => i.id === id);
+            currentCart.push({ ...item, cartId: Date.now() + Math.random() });
+            updateCartUI();
+        }
+
+        function removeFromCart(cartId) {
+            currentCart = currentCart.filter(i => i.cartId !== cartId);
+            updateCartUI();
+        }
+
+        function updateCartUI() {
+            const posContainer = document.getElementById('pos-cart');
+            const kioskContainer = document.getElementById('kiosk-cart-list');
+            
+            let subtotal = 0;
+            let listHtml = '';
+            
+            if (currentCart.length === 0) {
+                listHtml = '<div style="text-align:center; padding: 40px 0; color: #9ca3af;">Cart is empty</div>';
+            } else {
+                listHtml = currentCart.map(i => {
+                    subtotal += i.price;
+                    return `
+                    <div class="cart-item">
+                        <div class="cart-item-info">
+                            <strong>${i.name}</strong>
+                            <div class="cart-item-price">$${i.price.toFixed(2)}</div>
+                        </div>
+                        <button onclick="removeFromCart(${i.cartId})" style="background:#fee2e2; color:var(--primary); padding: 8px 12px; border-radius: 8px;">✕</button>
+                    </div>`;
+                }).join('');
+            }
+
+            posContainer.innerHTML = listHtml;
+            kioskContainer.innerHTML = listHtml;
+
+            const tax = subtotal * 0.08;
+            const total = subtotal + tax;
+
+            document.getElementById('pos-subtotal').innerText = subtotal.toFixed(2);
+            document.getElementById('pos-tax').innerText = tax.toFixed(2);
+            document.getElementById('pos-total').innerText = total.toFixed(2);
+            document.getElementById('kiosk-total').innerText = total.toFixed(2);
+            document.getElementById('kiosk-cart-badge').innerText = currentCart.length;
+        }
+
+        function checkout(source) {
+            if (currentCart.length === 0) return alert("Cart is empty!");
+            
+            let table = selectedTable;
+            if (source === 'kiosk') table = 'Kiosk Order';
+
+            const order = {
+                id: Math.floor(1000 + Math.random() * 9000),
+                items: [...currentCart],
+                table: table,
+                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                status: 'pending'
+            };
+
+            socket.emit('new-order', order);
+            currentCart = [];
+            updateCartUI();
+            selectedTable = "To Go";
+            document.getElementById('table-btn').innerText = `🍽️ Set Table`;
+            
+            if(source === 'kiosk') closeKioskCart();
+            
+            alert(`Order #${order.id} transmitted to kitchen successfully!`);
+        }
+
+        // --- Kiosk Specific ---
+        function openKioskCart() { document.getElementById('kiosk-cart-modal').style.display = 'flex'; }
+        function closeKioskCart() { document.getElementById('kiosk-cart-modal').style.display = 'none'; }
+
+        // --- Kitchen (KDS) Logic ---
+        function refreshKitchen() {
+            // Render Cleanups
+            const cleanupContainer = document.getElementById('kitchen-cleanups');
+            cleanupContainer.innerHTML = localCleanups.map(c => `
+                <div class="cleanup-alert">
+                    <span>🧹 SERVICE / CLEANUP REQUESTED: <strong>Table ${c.table}</strong></span>
+                    <button onclick="socket.emit('clear-cleanup', ${c.id})" style="background:white; color:var(--text-dark); padding: 8px 15px; border-radius:8px;">Acknowledge & Clear</button>
+                </div>
+            `).join('');
+
+            // Render Orders
+            const orderContainer = document.getElementById('kitchen-orders');
+            orderContainer.innerHTML = localOrders.filter(o => o.status !== 'completed').map(o => {
+                let statusClass = o.status === 'cooking' ? 'cooking' : '';
+                return `
+                <div class="ticket ${statusClass}">
+                    <div class="ticket-header">
+                        <div>
+                            <div class="ticket-id">#${o.id}</div>
+                            <span class="ticket-time">${o.time}</span>
+                        </div>
+                        <span class="ticket-table">${o.table}</span>
+                    </div>
+                    <ul class="ticket-items">
+                        ${o.items.map(i => `<li>${i.name}</li>`).join('')}
+                    </ul>
+                    <div class="ticket-actions">
+                        ${o.status === 'pending' 
+                            ? `<button class="btn-kds-start" onclick="updateStatus(${o.id}, 'cooking')">Start Prep</button>`
+                            : `<button class="btn-kds-finish" onclick="updateStatus(${o.id}, 'completed')">Mark Done</button>`
+                        }
+                    </div>
+                </div>
+            `}).join('');
+        }
+
+        function updateStatus(id, status) {
+            socket.emit('update-order-status', { id, status });
+        }
+
+        function requestCleanup() {
+            const table = document.getElementById('cust-table').value;
+            if (!table) return alert("Please enter a valid table number.");
+            socket.emit('new-cleanup', { id: Date.now(), table });
+            alert("Staff notified successfully. Thank you!");
+            document.getElementById('cust-table').value = '';
+        }
+
+        // --- Manager Security (Base44 PIN Pad Style) ---
+        function askManagerPin() {
+            currentPin = "";
+            updatePinDisplay();
+            document.getElementById('pin-overlay').style.display = 'flex';
+        }
+
+        function appendPin(num) {
+            if (currentPin.length < 4) {
+                currentPin += num;
+                updatePinDisplay();
+            }
+        }
+        function clearPin() {
+            currentPin = "";
+            updatePinDisplay();
+        }
+        function updatePinDisplay() {
+            document.getElementById('pin-display-text').innerText = "•".repeat(currentPin.length);
+        }
+
+        function verifyPin() {
+            // THE PASSWORD IS 2018 (as requested by USER)
+            if (currentPin === '2018') {
+                closePin();
+                showView('manager-view');
+                // Remove active sidebar state visually since we are in manager
+                document.querySelectorAll('.nav-button').forEach(b => b.classList.remove('active-nav'));
+            } else {
+                alert("Incorrect Security PIN");
+                clearPin();
+            }
+        }
+
+        function closePin() {
+            document.getElementById('pin-overlay').style.display = 'none';
+            currentPin = "";
+        }
+
+        function addNewItem() {
+            const name = document.getElementById('new-item-name').value;
+            const price = parseFloat(document.getElementById('new-item-price').value);
+            if (name && price && !isNaN(price)) {
+                menu.push({ id: Date.now(), name, price });
+                localStorage.setItem('cb_menu', JSON.stringify(menu));
+                renderMenu();
+                alert(`${name} added to menu database!`);
+                document.getElementById('new-item-name').value = '';
+                document.getElementById('new-item-price').value = '';
+            }
+        }
+
+        function resetSystem() {
+            if(confirm("DANGER: Are you sure you want to completely wipe local caches and reload?")) {
+                localStorage.clear();
+                location.reload();
+            }
+        }
+
+        // --- Clock logic ---
+        setInterval(() => {
+            const now = new Date();
+            document.getElementById('clock').innerText = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        }, 1000);
+
+        renderMenu();
+    </script>
+</body>
+</html>
