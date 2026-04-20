@@ -7,14 +7,14 @@
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
     <style>
         :root {
-            --primary: #DC2626; /* Base44 Red */
+            --primary: #DC2626;
             --primary-hover: #b91c1c;
-            --secondary: #f3f4f6; /* App Background */
-            --dark: #111827; /* Dark Mode Navy */
+            --secondary: #f3f4f6;
+            --dark: #111827;
             --dark-light: #1f2937;
-            --accent: #3b82f6; /* Blue Preparing */
-            --success: #22C55E; /* Green Ready/Checkout */
-            --warning: #f59e0b; /* Orange Pending */
+            --accent: #3b82f6;
+            --success: #22C55E;
+            --warning: #f59e0b;
             
             --text-dark: #111827;
             --text-gray: #4b5563;
@@ -28,96 +28,57 @@
             --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1);
         }
 
-        * {
-            box-sizing: border-box;
-            font-family: 'Inter', system-ui, sans-serif;
-            margin: 0; padding: 0;
-            user-select: none;
-        }
-
-        body {
-            background-color: var(--secondary); 
-            color: var(--text-dark);
-            overflow: hidden; 
-            display: flex;
-            height: 100vh;
-            touch-action: manipulation;
-        }
-
+        * { box-sizing: border-box; font-family: 'Inter', system-ui, sans-serif; margin: 0; padding: 0; user-select: none; }
+        body { background-color: var(--secondary); color: var(--text-dark); overflow: hidden; display: flex; height: 100vh; touch-action: manipulation; }
         button { cursor: pointer; border: none; font-weight: 600; outline: none; transition: transform 0.1s; }
         button:active { transform: scale(0.96); }
 
         .view-container { display: none; width: 100%; height: 100%; flex-direction: column; overflow-y: auto;}
         .view-container.active { display: flex; animation: fadeIn 0.2s ease; }
-        
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
         /* Left Glob Navigation */
-        .sidebar {
-            width: 110px; background-color: var(--dark);
-            display: flex; flex-direction: column; align-items: center;
-            padding: 20px 0; overflow-y: auto; flex-shrink: 0;
-            scrollbar-width: none;
-        }
-
-        .sidebar-logo {
-            width: 60px; height: 60px; background: var(--primary);
-            color: white; font-weight: 800; font-size: 1.5rem;
-            display: flex; align-items: center; justify-content: center;
-            border-radius: var(--radius-lg); margin-bottom: 25px;
-        }
-
-        .nav-button {
-            width: 90px; height: 80px; margin-bottom: 8px;
-            background: transparent; color: #9ca3af;
-            border-radius: var(--radius-md); font-size: 0.7rem; gap: 5px;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            text-align: center; line-height: 1.2;
-        }
-
+        .sidebar { width: 110px; background-color: var(--dark); display: flex; flex-direction: column; align-items: center; padding: 20px 0; overflow-y: auto; flex-shrink: 0; scrollbar-width: none; }
+        .sidebar-logo { width: 60px; height: 60px; background: var(--primary); color: white; font-weight: 800; font-size: 1.5rem; display: flex; align-items: center; justify-content: center; border-radius: var(--radius-lg); margin-bottom: 25px; }
+        .nav-button { width: 90px; height: 80px; margin-bottom: 8px; background: transparent; color: #9ca3af; border-radius: var(--radius-md); font-size: 0.7rem; gap: 5px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; line-height: 1.2; }
         .nav-button:hover { background: var(--dark-light); color: white; }
         .nav-button.active-nav { background: var(--primary); color: white; }
         .nav-icon { font-size: 1.6rem; margin-bottom: 2px; }
 
-        /* General Inputs */
-        input, select, textarea {
-            width: 100%; padding: 12px 15px; border: 1px solid #d1d5db;
-            border-radius: var(--radius-md); font-size: 1rem;
-            margin-bottom: 15px; background: white; color: var(--text-dark);
-        }
+        input, select, textarea { width: 100%; padding: 12px 15px; border: 1px solid #d1d5db; border-radius: var(--radius-md); font-size: 1rem; margin-bottom: 15px; background: white; color: var(--text-dark); }
         input:focus, select:focus, textarea:focus { outline: 2px solid var(--primary); }
 
         /* ---- [ POS VIEW ] ---- */
         #pos-view { flex-direction: row; }
         .pos-main { flex: 1; display: flex; flex-direction: column; background: var(--secondary); padding: 15px;}
-        
         .cat-tabs { display: flex; gap: 10px; overflow-x: auto; margin-bottom: 20px; }
         .cat-tab { padding: 12px 24px; background: white; border-radius: 99px; font-weight: 600; color: var(--text-gray); box-shadow: var(--shadow-sm); }
         .cat-tab.active { background: var(--dark); color: white; }
-
         .menu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; overflow-y: auto; padding-bottom: 20px; }
-        .menu-card {
-            background: white; border-radius: var(--radius-xl); padding: 20px;
-            box-shadow: var(--shadow-sm); border: 2px solid transparent; 
-            display: flex; flex-direction: column; cursor: pointer;
-        }
+        .menu-card { background: white; border-radius: var(--radius-xl); padding: 20px; box-shadow: var(--shadow-sm); border: 2px solid transparent; display: flex; flex-direction: column; cursor: pointer; }
         .menu-card:hover { border-color: var(--primary); transform: translateY(-3px); box-shadow: var(--shadow-md); }
         .menu-badge { font-size: 0.7rem; font-weight: 800; background: #e5e7eb; padding: 4px 8px; border-radius: 4px; width: fit-content; margin-bottom: 10px; color: var(--text-gray); text-transform: uppercase;}
         .menu-title { font-size: 1.2rem; font-weight: 700; margin-bottom: 5px; }
         .menu-price { font-size: 1.1rem; color: var(--text-gray); margin-bottom: 15px; flex-grow: 1; }
-        .add-btn { background: var(--primary); color: white; width: 100%; padding: 10px; border-radius: var(--radius-md); }
 
-        /* Modification Modal */
-        #item-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; z-index: 1000; }
-        .item-modal { background: white; width: 450px; border-radius: var(--radius-xl); padding: 25px; box-shadow: var(--shadow-lg); }
-        .item-modal-header { font-size: 1.5rem; font-weight: 800; margin-bottom: 5px; display: flex; justify-content: space-between; }
-        .item-modal-price { color: var(--text-gray); font-size: 1.1rem; margin-bottom: 20px; }
+        /* Moder Modal & Popups */
+        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; z-index: 2000; }
+        .modal { background: white; width: 450px; border-radius: var(--radius-xl); padding: 25px; box-shadow: var(--shadow-lg); text-align: left; }
+        .modal-header { font-size: 1.5rem; font-weight: 800; margin-bottom: 20px; }
+        .btn-flex { display: flex; gap: 10px; margin-top: 20px; }
+        .btn-cancel { flex: 1; padding: 15px; background: #e5e7eb; color: var(--text-dark); border-radius: var(--radius-md); font-size: 1.1rem; }
+        .btn-confirm { flex: 2; padding: 15px; background: var(--primary); color: white; border-radius: var(--radius-md); font-size: 1.1rem; }
+        .btn-green { flex: 2; padding: 15px; background: var(--success); color: white; border-radius: var(--radius-md); font-size: 1.1rem; }
+        .btn-blue { flex: 2; padding: 15px; background: var(--accent); color: white; border-radius: var(--radius-md); font-size: 1.1rem; }
 
-        /* Order Panel (Right) */
-        .order-panel { width: 400px; background: white; border-left: 1px solid #e5e7eb; display: flex; flex-direction: column; z-index: 10; box-shadow: -4px 0 15px rgba(0,0,0,0.03); }
+        .table-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
+        .table-btn { padding: 20px; font-size: 1.2rem; background: var(--secondary); border: 2px solid #e5e7eb; border-radius: var(--radius-md); }
+        .table-btn:hover { border-color: var(--primary); }
+
+        /* Order Panel */
+        .order-panel { width: 400px; background: white; border-left: 1px solid #e5e7eb; display: flex; flex-direction: column; z-index: 10; padding-bottom: env(safe-area-inset-bottom); }
         .op-header { padding: 20px; border-bottom: 1px solid #e5e7eb; }
         .op-title { font-size: 1.4rem; font-weight: 800; display: flex; justify-content: space-between; align-items: center;}
-        
         .order-type-tabs { display: flex; background: #e5e7eb; border-radius: var(--radius-md); padding: 5px; margin-top: 15px; }
         .order-type-btn { flex: 1; padding: 10px; background: transparent; border-radius: 6px; color: var(--text-gray); font-size: 0.9rem;}
         .order-type-btn.active { background: white; color: var(--text-dark); box-shadow: var(--shadow-sm); }
@@ -140,14 +101,11 @@
         .kds-nav { display: flex; background: #1f2937; padding: 0 20px; border-bottom: 1px solid #374151; }
         .kds-tab { padding: 20px 30px; font-size: 1.2rem; color: #9ca3af; background: transparent; border-radius: 0; }
         .kds-tab.active { color: white; box-shadow: inset 0 -4px 0 var(--primary); }
-        
         .kds-content { padding: 20px; display: none; flex-grow: 1; overflow-y: auto; }
         .kds-content.active { display: block; }
-        
         .kds-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 20px; }
         .kds-card { background: #1f2937; border-radius: var(--radius-xl); display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
         .kds-header { padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; font-weight: 800; font-size: 1.1rem; color: #111827; }
-        /* KDS Status Colors */
         .status-pending .kds-header { background: var(--warning); }
         .status-preparing .kds-header { background: var(--accent); color: white; }
         .status-ready .kds-header { background: var(--success); color: white; }
@@ -157,7 +115,6 @@
         .mod-line { font-size: 0.95rem; color: #9ca3af; display: block; margin-top: 5px; font-weight: 400; padding-left: 15px; border-left: 2px solid #4b5563; }
         .kds-action { width: 100%; padding: 20px; font-size: 1.2rem; background: #374151; color: white; border-radius: 0; text-transform: uppercase; letter-spacing: 1px;}
         .kds-action:hover { background: #4b5563; }
-
         .cooking-guide { color: white; max-width: 800px; margin: 0 auto; background: #1f2937; padding: 40px; border-radius: var(--radius-xl); box-shadow: var(--shadow-lg); font-size: 1.1rem; line-height: 1.8;}
         .cooking-guide h2 { color: var(--primary); margin-bottom: 20px; font-size: 2rem; border-bottom: 2px solid #374151; padding-bottom: 10px; }
 
@@ -165,43 +122,39 @@
         #cust-view { background: #1f2937; color: white; align-items: center; justify-content: center;}
         .cust-setup { background: white; padding: 40px; border-radius: var(--radius-xl); text-align: center; color: var(--text-dark); max-width: 500px; box-shadow: var(--shadow-lg); }
         .cust-table-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 20px; }
-        .btn-table { padding: 20px; font-size: 1.5rem; background: var(--secondary); border: 2px solid #e5e7eb; border-radius: var(--radius-lg); }
+        .btn-table { padding: 20px; font-size: 1.5rem; background: var(--secondary); border: 2px solid #e5e7eb; border-radius: var(--radius-lg); color: var(--text-dark); font-weight: 700;  }
         .btn-table:hover { border-color: var(--primary); }
-
         .cust-active { display: none; width: 100%; max-width: 800px; text-align: center; }
-        .cust-table-badge { font-size: 1.5rem; background: rgba(255,255,255,0.1); padding: 10px 30px; border-radius: 99px; display: inline-block; margin-bottom: 40px; }
+        .cust-table-badge { font-size: 1.5rem; background: rgba(255,255,255,0.1); padding: 10px 30px; border-radius: 99px; display: inline-block; margin-bottom: 40px; cursor: pointer;}
+        .cust-table-badge:hover { background: rgba(255,255,255,0.2); }
         .cust-status-main { font-size: 6rem; font-weight: 900; text-transform: uppercase; margin-bottom: 40px; letter-spacing: -2px; }
         .status-text-pending { color: var(--warning); }
         .status-text-preparing { color: var(--accent); }
         .status-text-ready { color: var(--success); }
         .cust-list { background: rgba(0,0,0,0.3); border-radius: var(--radius-xl); padding: 30px; font-size: 1.5rem; text-align: left; }
 
-        /* ---- [ MANAGER VIEWS (Generic) ] ---- */
+        /* ---- [ MANAGER VIEWS ] ---- */
         .mgmt-wrapper { padding: 40px; max-width: 1000px; margin: 0 auto; width: 100%;}
         .mgmt-header { font-size: 2.5rem; font-weight: 800; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center; }
         .kpi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 40px; }
         .kpi-card { background: white; padding: 30px; border-radius: var(--radius-xl); box-shadow: var(--shadow-sm); border-top: 6px solid var(--primary); }
         .kpi-label { color: var(--text-gray); font-size: 1.1rem; font-weight: 600; margin-bottom: 10px; }
         .kpi-val { font-size: 2.5rem; font-weight: 900; }
-        
         .mgmt-panel { background: white; padding: 30px; border-radius: var(--radius-xl); box-shadow: var(--shadow-sm); margin-bottom: 20px; }
         
         /* PIN Pad Overlay */
-        #pin-overlay { position: fixed; inset: 0; background: rgba(17,24,39,0.95); display: none; align-items: center; justify-content: center; z-index: 2000; }
+        #pin-overlay { position: fixed; inset: 0; background: rgba(17,24,39,0.95); display: none; align-items: center; justify-content: center; z-index: 2500; }
         .pin-box { background: white; padding: 40px; border-radius: 24px; text-align: center; width: 340px; }
         .pin-display { font-size: 3rem; letter-spacing: 15px; margin: 20px 0 30px 0; height: 60px; color: var(--primary); font-weight: 900; background: var(--secondary); border-radius: 12px; display: flex; align-items: center; justify-content: center; }
         .pin-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px; }
-        .pin-key { background: #f3f4f6; font-size: 1.5rem; height: 75px; border-radius: 12px; }
+        .pin-key { background: #f3f4f6; font-size: 1.5rem; height: 75px; border-radius: 12px; color: var(--text-dark); }
         .pin-key:active { background: #e5e7eb; }
-        .btn-cancel { background: var(--text-gray); color: white; width: 100%; padding: 15px; border-radius: 12px; font-size: 1.1rem; }
 
-        /* Floating Nav Button for Fullscreen Views */
         .fab-nav { display: none; position: fixed; right: -25px; top: 50%; width: 60px; height: 100px; background: var(--primary); color: white; align-items: center; padding-left: 10px; border-radius: 50px 0 0 50px; font-size: 1.5rem; cursor: pointer; z-index: 500; transition: right 0.2s; box-shadow: var(--shadow-lg); }
         .fab-nav:hover { right: 0; }
 
-        /* Calls Alert Badge */
-        #station-call-alert { position: fixed; top: 20px; right: 20px; background: var(--warning); color: var(--dark); padding: 15px 25px; border-radius: var(--radius-lg); font-weight: 800; font-size: 1.2rem; box-shadow: var(--shadow-lg); z-index: 3000; display: none; animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        @keyframes popIn { from { transform: scale(0.8) translateY(-20px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
+        #station-call-alert { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: var(--warning); color: var(--dark); padding: 15px 25px; border-radius: var(--radius-lg); font-weight: 800; font-size: 1.2rem; box-shadow: var(--shadow-lg); z-index: 3000; display: none; animation: popDown 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        @keyframes popDown { from { transform: translate(-50%, -20px); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
     </style>
 </head>
 <body>
@@ -209,10 +162,47 @@
     <!-- Call Badge -->
     <div id="station-call-alert">⚠️ CALL INBOUND: <span id="call-msg"></span> <button onclick="clearCall()" style="margin-left: 15px; padding: 8px; border-radius: 6px; background: rgba(0,0,0,0.1);">Clear</button></div>
 
+    <!-- Website Standard Popups (Replacing alert/confirm/prompt) -->
+    <div id="overlay-alert" class="overlay">
+        <div class="modal" style="text-align:center;">
+            <div class="modal-header" id="alert-title">Notice</div>
+            <p id="alert-body" style="font-size:1.1rem; color:var(--text-gray); margin-bottom: 25px;"></p>
+            <button class="btn-confirm" style="width:100%;" onclick="closeAlert()">Okay</button>
+        </div>
+    </div>
+
+    <div id="overlay-confirm" class="overlay">
+        <div class="modal" style="text-align:center;">
+            <div class="modal-header" id="confirm-title">Are you sure?</div>
+            <p id="confirm-body" style="font-size:1.1rem; color:var(--text-gray); margin-bottom: 25px;"></p>
+            <div class="btn-flex">
+                <button class="btn-cancel" onclick="closeConfirm(false)">Cancel</button>
+                <button class="btn-confirm" onclick="closeConfirm(true)">Yes, Proceed</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Table Selector Modal for checkout -->
+    <div id="overlay-table" class="overlay">
+        <div class="modal" style="width: 500px;">
+            <div class="modal-header">Select Assignment</div>
+            <p style="color:var(--text-gray); margin-bottom: 15px;">Send this order to:</p>
+            <div class="table-grid">
+                <button class="table-btn" onclick="checkoutTable('Takeout')">Takeout</button>
+                <button class="table-btn" onclick="checkoutTable('Table 1')">Table 1</button>
+                <button class="table-btn" onclick="checkoutTable('Table 2')">Table 2</button>
+                <button class="table-btn" onclick="checkoutTable('Table 3')">Table 3</button>
+                <button class="table-btn" onclick="checkoutTable('Table 4')">Table 4</button>
+                <button class="table-btn" onclick="checkoutTable('Table 5')">Table 5</button>
+            </div>
+            <button class="btn-cancel" style="width:100%; margin-top:10px;" onclick="document.getElementById('overlay-table').style.display='none'">Cancel List</button>
+        </div>
+    </div>
+
+
     <!-- GLOB SIDEBAR -->
     <nav class="sidebar" id="global-sidebar">
         <div class="sidebar-logo">B44</div>
-        
         <button class="nav-button active-nav" onclick="navTo('pos-view', this)">
             <span class="nav-icon">🍔</span> Point of Sale
         </button>
@@ -225,16 +215,16 @@
         <button class="nav-button" onclick="navTo('kds-view', this)">
             <span class="nav-icon">🍳</span> Kitchen Display
         </button>
-        <button class="nav-button" onclick="reqPin('manager-view')">
+        <button class="nav-button" onclick="reqPin('manager-view', this)">
             <span class="nav-icon">📊</span> Manager Dash
         </button>
-        <button class="nav-button" onclick="reqPin('menu-view')">
+        <button class="nav-button" onclick="reqPin('menu-view', this)">
             <span class="nav-icon">📋</span> Menu Mgmt
         </button>
-        <button class="nav-button" onclick="reqPin('cust-mgmt-view')">
+        <button class="nav-button" onclick="reqPin('cust-mgmt-view', this)">
             <span class="nav-icon">👥</span> Customer Mgmt
         </button>
-        <button class="nav-button" onclick="reqPin('emp-mgmt-view')">
+        <button class="nav-button" onclick="reqPin('emp-mgmt-view', this)">
             <span class="nav-icon">👨‍🍳</span> Employee Mgmt
         </button>
         <button class="nav-button" onclick="navTo('calls-view', this)">
@@ -252,40 +242,29 @@
                 <h1 style="font-size: 2rem;">Menu</h1>
                 <button onclick="sendStationCall()" style="background:var(--warning); color:#111827; padding: 10px 20px; border-radius: 8px;">🔔 Call Manager</button>
             </div>
-            
-            <div class="cat-tabs" id="pos-cats">
-                <!-- Javascript injected categories -->
-            </div>
-            <div class="menu-grid" id="pos-grid">
-                <!-- Javascript injected items -->
-            </div>
+            <div class="cat-tabs" id="pos-cats"><button class="cat-tab active">All</button></div>
+            <div class="menu-grid" id="pos-grid"></div>
         </div>
 
         <aside class="order-panel">
             <div class="op-header">
                 <div class="op-title">Current Order <button onclick="clearCart()" style="font-size: 0.9rem; color: var(--primary); background: transparent;">Clear All</button></div>
-                <div class="order-type-tabs">
-                    <button class="order-type-btn active" id="type-dinein" onclick="setOrderType('Dine-In')">Dine-In</button>
-                    <button class="order-type-btn" id="type-takeout" onclick="setOrderType('Takeout')">Takeout</button>
-                </div>
             </div>
-            <div class="op-items" id="op-items">
-                <!-- Cart rows injected here -->
-            </div>
+            <div class="op-items" id="op-items"></div>
             <div class="op-footer">
                 <div class="calc-row"><span>Subtotal</span> $<span id="pos-subtotal">0.00</span></div>
                 <div class="calc-row"><span>Tax (8%)</span> $<span id="pos-tax">0.00</span></div>
                 <div class="calc-total"><span>Total</span> $<span id="pos-total">0.00</span></div>
-                <button class="pay-btn" onclick="processPayment()">Process Payment</button>
+                <button class="pay-btn" onclick="startPaymentFlow()">Process Payment</button>
             </div>
         </aside>
     </main>
 
     <!-- ITEM MODIFICATION MODAL -->
-    <div id="item-modal-overlay">
-        <div class="item-modal">
-            <div class="item-modal-header"><span id="mod-item-name">Item Name</span></div>
-            <div class="item-modal-price" id="mod-item-price">$0.00</div>
+    <div id="item-modal-overlay" class="overlay">
+        <div class="modal">
+            <div class="modal-header"><span id="mod-item-name">Item Name</span></div>
+            <div class="item-modal-price" id="mod-item-price" style="margin-top:-15px; color:var(--text-gray); margin-bottom:20px;">$0.00</div>
             
             <label style="font-weight: 600; display:block; margin-bottom: 8px;">Select Sauces / Preps</label>
             <select id="mod-sauce">
@@ -295,13 +274,12 @@
                 <option value="Extra Ketchup">Extra Ketchup</option>
                 <option value="Ranch">Ranch</option>
             </select>
-
-            <label style="font-weight: 600; display:block; margin-bottom: 8px;">Special Instructions</label>
+            <label style="font-weight: 600; display:block; margin-bottom: 8px; margin-top: 10px;">Special Instructions</label>
             <textarea id="mod-instruction" rows="3" placeholder="e.g. No onions, allergy to dairy..."></textarea>
             
-            <div style="display:flex; gap: 10px; margin-top: 20px;">
-                <button style="flex:1; padding:15px; border-radius:8px; background:#e5e7eb; color:var(--text-dark);" onclick="closeModModal()">Cancel</button>
-                <button style="flex:2; padding:15px; border-radius:8px; background:var(--primary); color:white;" onclick="confirmMod()">Add to Order</button>
+            <div class="btn-flex">
+                <button class="btn-cancel" onclick="closeModModal()">Cancel</button>
+                <button class="btn-confirm" onclick="confirmMod()">Add to Order</button>
             </div>
         </div>
     </div>
@@ -313,20 +291,15 @@
             <button class="kds-tab active" onclick="switchKdsTab('active')">Active Orders</button>
             <button class="kds-tab" onclick="switchKdsTab('guide')">Cooking Guide</button>
         </div>
-        
         <div id="kds-active" class="kds-content active">
-            <div class="kds-grid" id="kds-grid">
-                <!-- Injected via Socket.io -->
-            </div>
+            <div class="kds-grid" id="kds-grid"></div>
         </div>
-
         <div id="kds-guide" class="kds-content">
             <div class="cooking-guide">
                 <h2>Base44 Ingredient Matrix</h2>
                 <p><strong>DIRT:</strong> Requires 4 minutes per 50g. Always sift twice.</p><br>
                 <p><strong>WOOD CHIPS:</strong> Only use hickory. Soak for 30 seconds max.</p><br>
-                <p><strong>3D PRINTED MEAT:</strong> Defrost calibration sequence 9. Cook to internal 155°F.</p><br>
-                <p style="color:var(--warning); margin-top:20px; font-weight:bold;">Pro Tip: Never cross-contaminate wood chips with the 3D printer nozzle!</p>
+                <p><strong>3D PRINTED MEAT:</strong> Defrost calibration sequence 9. Cook to internal 155°F.</p>
             </div>
         </div>
     </main>
@@ -337,17 +310,17 @@
             <h2>Select Display Station</h2>
             <p style="color:#6b7280; margin-bottom: 20px;">Which table is this display located at?</p>
             <div class="cust-table-grid">
-                <button class="btn-table" onclick="bindCustomerDisplay('Takeout')">Pickup</button>
-                <button class="btn-table" onclick="bindCustomerDisplay('Table 1')">1</button>
-                <button class="btn-table" onclick="bindCustomerDisplay('Table 2')">2</button>
-                <button class="btn-table" onclick="bindCustomerDisplay('Table 3')">3</button>
-                <button class="btn-table" onclick="bindCustomerDisplay('Table 4')">4</button>
-                <button class="btn-table" onclick="bindCustomerDisplay('Table 5')">5</button>
+                <button class="btn-table" onclick="bindCustomerDisplay('Takeout')">Takeout</button>
+                <button class="btn-table" onclick="bindCustomerDisplay('Table 1')">Table 1</button>
+                <button class="btn-table" onclick="bindCustomerDisplay('Table 2')">Table 2</button>
+                <button class="btn-table" onclick="bindCustomerDisplay('Table 3')">Table 3</button>
+                <button class="btn-table" onclick="bindCustomerDisplay('Table 4')">Table 4</button>
+                <button class="btn-table" onclick="bindCustomerDisplay('Table 5')">Table 5</button>
             </div>
         </div>
 
         <div class="cust-active" id="cust-active">
-            <div class="cust-table-badge" id="cd-id">Station Bound</div>
+            <div class="cust-table-badge" id="cd-id" onclick="resetCustomerDisplay()" title="Click to Change Display Station">Station Bound</div>
             <div class="cust-status-main" id="cd-status">AWAITING</div>
             <div class="cust-list" id="cd-items">Waiting for order data...</div>
         </div>
@@ -356,16 +329,11 @@
     <!-- 4. MANAGER DASHBOARD -->
     <main id="manager-view" class="view-container">
         <div class="mgmt-wrapper">
-            <div class="mgmt-header">Manager Dashboard <span style="font-size:1.2rem; background:#e5e7eb; padding: 8px 15px; border-radius:8px;">Live Data</span></div>
+            <div class="mgmt-header">Manager Dashboard</div>
             <div class="kpi-grid">
                 <div class="kpi-card"><div class="kpi-label">Today's Revenue</div><div class="kpi-val" id="kpi-rev">$0.00</div></div>
                 <div class="kpi-card"><div class="kpi-label">Total Orders</div><div class="kpi-val" id="kpi-orders">0</div></div>
                 <div class="kpi-card"><div class="kpi-label">Avg Ticket</div><div class="kpi-val" id="kpi-avg">$0.00</div></div>
-            </div>
-            <div class="mgmt-panel">
-                <h2>System Health</h2>
-                <p style="margin-top:10px; color:#6b7280;">Socket.IO Connected: <strong style="color:var(--success)">Yes</strong></p>
-                <p style="color:#6b7280;">Terminal Version: 2.1.0-Base44Clone</p>
             </div>
         </div>
     </main>
@@ -379,13 +347,13 @@
                     <h2>Database Integrity</h2>
                     <p style="color:#6b7280;">Modify the local instance menu payload directly.</p>
                 </div>
-                <button style="background:var(--dark); color:white; padding:15px; border-radius:8px;" onclick="resetMenu()">Restore Default Menu</button>
+                <button style="background:var(--dark); color:white; padding:15px; border-radius:8px; font-weight:bold;" onclick="resetMenu()">Restore Default Menu</button>
             </div>
 
             <div class="mgmt-panel">
                 <h2 style="margin-bottom: 20px;">Add New Menu Item</h2>
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px;">
-                    <input type="text" id="new-item-name" placeholder="Item Name (e.g., Triple Smash Burger)">
+                    <input type="text" id="new-item-name" placeholder="Item Name (e.g., Triple Smash)">
                     <input type="number" id="new-item-price" placeholder="Price ($)">
                     <select id="new-item-cat">
                         <option value="Burgers">Burgers</option>
@@ -395,7 +363,7 @@
                     </select>
                     <input type="text" id="new-item-prep" placeholder="Prep Time (e.g., 5 min)">
                 </div>
-                <button class="add-btn" style="margin-top:10px; font-size:1.1rem; padding: 15px;" onclick="addMenuItem()">+ Publish to Menu</button>
+                <button style="background:var(--primary); color:white; padding:15px; border-radius:8px; font-weight:bold; width:100%; font-size:1.1rem; margin-top:10px;" onclick="addMenuItem()">+ Publish to Menu</button>
             </div>
         </div>
     </main>
@@ -404,13 +372,13 @@
     <main id="cust-mgmt-view" class="view-container" style="justify-content:center; align-items:center;">
         <div style="text-align:center;">
             <h1 style="font-size:3rem; margin-bottom:10px;">👥 Customer Management</h1>
-            <p style="font-size:1.2rem; color:#6b7280;">(Database Connection Required for CRM features)</p>
+            <p style="font-size:1.2rem; color:#6b7280;">(Database Connection Required)</p>
         </div>
     </main>
     <main id="emp-mgmt-view" class="view-container" style="justify-content:center; align-items:center;">
         <div style="text-align:center;">
             <h1 style="font-size:3rem; margin-bottom:10px;">👨‍🍳 Employee Management</h1>
-            <p style="font-size:1.2rem; color:#6b7280;">(Database Connection Required for Scheduling)</p>
+            <p style="font-size:1.2rem; color:#6b7280;">(Database Connection Required)</p>
         </div>
     </main>
 
@@ -421,8 +389,8 @@
             <div class="mgmt-panel">
                 <p style="margin-bottom:20px; font-size:1.1rem;">Broadcast alerts directly to connected terminals.</p>
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px;">
-                    <button class="add-btn" style="background:var(--warning); color:#111827; height:100px; font-size:1.2rem;" onclick="emitCall('Manager Needed at POS')">Call Manager</button>
-                    <button class="add-btn" style="background:var(--accent); height:100px; font-size:1.2rem;" onclick="emitCall('Kitchen Requires Assistance')">Kitchen Assistance</button>
+                    <button style="background:var(--warning); color:#111827; height:100px; font-size:1.2rem; font-weight:bold; border-radius:12px;" onclick="emitCall('Manager Needed at POS')">Call Manager</button>
+                    <button style="background:var(--accent); color:white; height:100px; font-size:1.2rem; font-weight:bold; border-radius:12px;" onclick="emitCall('Kitchen Requires Assistance')">Kitchen Assistance</button>
                 </div>
             </div>
         </div>
@@ -437,11 +405,10 @@
 
 
     <!-- SECURITY PIN PAD -->
-    <div id="pin-overlay">
+    <div id="pin-overlay" class="overlay">
         <div class="pin-box">
-            <h2>Enter Valid Passcode</h2>
+            <h2 style="margin-bottom:10px;">Enter Manager Passcode</h2>
             <div class="pin-display" id="pin-display-text"></div>
-            
             <div class="pin-grid">
                 <button class="pin-key" onclick="appPin('1')">1</button>
                 <button class="pin-key" onclick="appPin('2')">2</button>
@@ -456,7 +423,6 @@
                 <button class="pin-key" onclick="appPin('0')">0</button>
                 <button class="pin-key" onclick="verPin()" style="background:#bbf7d0; color:#16a34a;">✔</button>
             </div>
-
             <button class="btn-cancel" onclick="clsPin()">Cancel</button>
         </div>
     </div>
@@ -472,17 +438,44 @@
         ];
 
         let cart = [];
-        let curOrderType = "Dine-In";
         let activeOrders = [];
-        let trackedTable = null; // for customer display
+        let trackedTable = null; 
         
+        // Pin logic fixes
         let pinTarget = null;
+        let pinTargetBtn = null;
         let pinVal = "";
-        const VIP_PIN = "2018"; // AS REQUESTED 
+        const VIP_PIN = "2018"; 
 
-        // KPI Tracking
-        let totalRev = 0;
-        let totalOrd = 0;
+        // Alert UI Logic fixes
+        let confirmCallback = null;
+        function customAlert(title, msg) {
+            document.getElementById('alert-title').innerText = title;
+            document.getElementById('alert-body').innerText = msg;
+            document.getElementById('overlay-alert').style.display = 'flex';
+        }
+        function closeAlert() { document.getElementById('overlay-alert').style.display = 'none'; }
+        
+        function customConfirm(title, msg, callback) {
+            document.getElementById('confirm-title').innerText = title;
+            document.getElementById('confirm-body').innerText = msg;
+            confirmCallback = callback;
+            document.getElementById('overlay-confirm').style.display = 'flex';
+        }
+        function closeConfirm(passed) {
+            document.getElementById('overlay-confirm').style.display = 'none';
+            if(passed && confirmCallback) confirmCallback();
+        }
+
+        // Voice Utility
+        function speakVoice(text) {
+            try {
+                let speech = new SpeechSynthesisUtterance(text);
+                speech.rate = 1.0;
+                window.speechSynthesis.speak(speech);
+            } catch(e) {}
+        }
+
 
         // ---- SOCKET BINDINGS ---- //
         socket.on('initial-data', (data) => {
@@ -509,7 +502,7 @@
         function sendStationCall() { emitCall("Assistance Required at POS"); }
         function emitCall(msg) {
             socket.emit('station-call', { id: Date.now(), type: msg });
-            alert("Station successfully alerted!");
+            customAlert("Broadcast Sent", "Station successfully alerted!");
         }
 
         // ---- NAVIGATION LOGIC ---- //
@@ -522,7 +515,6 @@
                 btnObj.classList.add('active-nav');
             }
 
-            // Fullscreen modes hide the sidebar
             if(['kds-view', 'kiosk-view', 'cust-view'].includes(id)) {
                 document.getElementById('global-sidebar').style.display = 'none';
                 document.getElementById('fab-nav').style.display = 'flex';
@@ -547,7 +539,7 @@
                     <span class="menu-badge">${m.cat} • ${m.prep}</span>
                     <div class="menu-title">${m.name}</div>
                     <div class="menu-price">$${m.price.toFixed(2)}</div>
-                    <button class="add-btn">Configure</button>
+                    <button style="background:var(--primary); color:white; width:100%; padding:10px; border-radius:8px; font-weight:bold;">CONFIGURE</button>
                 </div>
             `).join('');
         }
@@ -583,7 +575,7 @@
             let sum = 0;
             const container = document.getElementById('op-items');
             if(cart.length === 0) {
-                container.innerHTML = `<div style="text-align:center; margin-top:50px; color:#9ca3af;">Begin by adding items</div>`;
+                container.innerHTML = `<div style="text-align:center; padding-top:40px; color:#9ca3af;">Cart is Empty</div>`;
             } else {
                 container.innerHTML = cart.map(c => {
                     sum += c.price;
@@ -597,14 +589,13 @@
                             <div class="cart-name">${c.name}</div>
                             ${mods.length ? `<div class="cart-mods">${mods.join('<br>')}</div>` : ''}
                         </div>
-                        <div style="display:flex; flex-direction:column; align-items:flex-end;">
+                        <div style="text-align:right;">
                             <div class="cart-price">$${c.price.toFixed(2)}</div>
                             <button class="cart-del" style="margin-top:5px;" onclick="removeCart(${c.cartId})">X</button>
                         </div>
                     </div>`;
                 }).join('');
             }
-
             let tax = sum * 0.08;
             let total = sum + tax;
             document.getElementById('pos-subtotal').innerText = sum.toFixed(2);
@@ -615,34 +606,27 @@
         function removeCart(cid) { cart = cart.filter(c => c.cartId !== cid); renderCart(); }
         function clearCart() { cart = []; renderCart(); }
 
-        function setOrderType(t) {
-            curOrderType = t;
-            document.getElementById('type-dinein').classList.remove('active');
-            document.getElementById('type-takeout').classList.remove('active');
-            if(t === 'Dine-In') document.getElementById('type-dinein').classList.add('active');
-            else document.getElementById('type-takeout').classList.add('active');
+        // Checkout Modal Flow
+        function startPaymentFlow() {
+            if(cart.length === 0) return customAlert("Error", "Your cart is empty. Please add items.");
+            document.getElementById('overlay-table').style.display = 'flex';
         }
 
-        function processPayment() {
-            if(cart.length === 0) return alert("Cart is empty");
-            
-            let tableStr = curOrderType === "Takeout" ? "Takeout" : prompt("Enter Table # (e.g. Table 1):");
-            if(curOrderType === "Dine-In" && !tableStr) return; // cancelled
-
+        function checkoutTable(tbl) {
+            document.getElementById('overlay-table').style.display = 'none';
             let order = {
                 id: Math.floor(1000 + Math.random() * 9000),
-                type: curOrderType,
-                table: tableStr,
+                table: tbl,
                 items: [...cart],
                 status: 'pending',
                 time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
                 totalCost: parseFloat(document.getElementById('pos-total').innerText)
             };
-
             socket.emit('new-order', order);
             clearCart();
-            alert(`Payment Approved! Order #${order.id} sent to KDS.`);
+            customAlert("Payment Success", `Order #${order.id} sent to KDS successfully.`);
         }
+
 
         // ---- KDS LOGIC ---- //
         function switchKdsTab(tab) {
@@ -659,7 +643,7 @@
 
         function updateKdsRender() {
             let grid = document.getElementById('kds-grid');
-            let pendingAndPrep = activeOrders.filter(o => o.status !== 'completed'); // Keep ready on screen until "completed" out
+            let pendingAndPrep = activeOrders.filter(o => o.status !== 'completed'); 
             
             grid.innerHTML = pendingAndPrep.map(o => {
                 let badgeTxt = "PENDING";
@@ -672,7 +656,7 @@
                 let lis = o.items.map(i => {
                     let res = `<li>${i.name}`;
                     if(i.modSauce) res += `<span class="mod-line">↳ ${i.modSauce}</span>`;
-                    if(i.modNote) res += `<span class="mod-line">↳ MSG: ${i.modNote}</span>`;
+                    if(i.modNote) res += `<span class="mod-line">↳ ${i.modNote}</span>`;
                     res += `</li>`;
                     return res;
                 }).join('');
@@ -684,13 +668,21 @@
                         <span style="font-size:0.8rem;">${badgeTxt}</span>
                     </div>
                     <div class="kds-body"><ul>${lis}</ul></div>
-                    <button class="kds-action" onclick="cycStatus(${o.id}, '${nextStat}')">${toggleAction}</button>
+                    <button class="kds-action" onclick="cycKdsStatus(${o.id}, '${nextStat}', '${o.table}')">${toggleAction}</button>
                 </div>`;
             }).join('');
         }
 
-        function cycStatus(id, newStatus) {
+        // Voice Synthesized KDS Button Click
+        function cycKdsStatus(id, newStatus, table) {
             socket.emit('update-order-status', { id, status: newStatus });
+            
+            // Text to speech local logic as requested by user
+            let phrase = "";
+            if(newStatus === "preparing") phrase = `Now preparing order ${id} for ${table}`;
+            if(newStatus === "ready") phrase = `Order ${id} is ready for pick up`;
+            if(newStatus === "completed") phrase = `Order ${id} cleared`;
+            speakVoice(phrase);
         }
 
 
@@ -703,9 +695,16 @@
             updateCustomerDisplayRender();
         }
 
+        function resetCustomerDisplay() {
+            customConfirm("Change Display Station?", "Do you want to re-assign this customer display to a new table?", () => {
+                trackedTable = null;
+                document.getElementById('cust-active').style.display = 'none';
+                document.getElementById('cust-setup').style.display = 'block';
+            });
+        }
+
         function updateCustomerDisplayRender() {
             if(!trackedTable) return;
-            // Find active order for this table
             let ord = activeOrders.find(o => o.table === trackedTable && o.status !== 'completed');
             const statDom = document.getElementById('cd-status');
             const itemDom = document.getElementById('cd-items');
@@ -727,8 +726,9 @@
 
 
         // ---- PIN / SECURITY LOGIC ---- //
-        function reqPin(targetView) {
-            pinTarget = targetView;
+        function reqPin(tgt, btnObj) {
+            pinTarget = tgt;
+            pinTargetBtn = btnObj;
             pinVal = "";
             renderPin();
             document.getElementById('pin-overlay').style.display = 'flex';
@@ -736,14 +736,16 @@
         function appPin(n) { if(pinVal.length<4) { pinVal+=n; renderPin(); } }
         function clrPin() { pinVal = ""; renderPin(); }
         function renderPin() { document.getElementById('pin-display-text').innerText = "•".repeat(pinVal.length); }
-        function clsPin() { document.getElementById('pin-overlay').style.display = 'none'; pinTarget = null; }
+        function clsPin() { document.getElementById('pin-overlay').style.display = 'none'; pinTarget = null; pinTargetBtn = null; }
         
         function verPin() {
             if(pinVal === VIP_PIN) {
+                let tgt = pinTarget;
+                let btn = pinTargetBtn;
                 clsPin();
-                navTo(pinTarget); // Move to protected tab
+                navTo(tgt, btn); 
             } else {
-                alert("ACCESS DENIED");
+                customAlert("Authentication Failed", "Incorrect manager passcode entered.");
                 clrPin();
             }
         }
@@ -767,23 +769,23 @@
             let c = document.getElementById('new-item-cat').value;
             let t = document.getElementById('new-item-prep').value;
 
-            if(n && !isNaN(p)) {
-                menu.push({ id: Date.now(), name: n, price: p, cat: c, prep: t || "5 min" });
-                localStorage.setItem('b44_menu', JSON.stringify(menu));
-                alert("Successfully saved to database!");
-                renderMenu();
-                // clear
-                document.getElementById('new-item-name').value = '';
-                document.getElementById('new-item-price').value = '';
-                document.getElementById('new-item-prep').value = '';
-            }
+            if(!n || isNaN(p)) return customAlert("Error", "Please fill out the name and provide a valid price.");
+
+            menu.push({ id: Date.now(), name: n, price: p, cat: c, prep: t || "5 min" });
+            localStorage.setItem('b44_menu', JSON.stringify(menu));
+            customAlert("Saved", `${n} has been securely added to the local JSON configuration.`);
+            renderMenu();
+            
+            document.getElementById('new-item-name').value = '';
+            document.getElementById('new-item-price').value = '';
+            document.getElementById('new-item-prep').value = '';
         }
 
         function resetMenu() {
-            if(confirm("Factory wipe menu to defaults?")) {
+            customConfirm("Wipe System Memory?", "This will delete all custom menu items and restore factory defaults.", () => {
                 localStorage.removeItem('b44_menu');
                 location.reload();
-            }
+            });
         }
 
         // Init
