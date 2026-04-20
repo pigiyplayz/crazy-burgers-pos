@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Base44 POS | Crazy Burgers Production</title>
+    <title>Base44 Production | Crazy Burgers</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -32,14 +32,13 @@
 
         * { box-sizing: border-box; font-family: 'Inter', sans-serif; margin: 0; padding: 0; user-select: none; -webkit-tap-highlight-color: transparent; }
         body { background-color: var(--secondary); color: var(--text-dark); overflow: hidden; display: flex; height: 100vh; touch-action: manipulation; }
-        button { cursor: pointer; border: none; font-weight: 800; outline: none; transition: all 0.1s; }
+        button { cursor: pointer; border: none; font-weight: 800; outline: none; transition: 0.1s; }
         button:active { transform: scale(0.96); opacity: 0.9; }
 
-        .view-container { display: none; width: 100%; height: 100%; flex-direction: column; overflow: hidden;}
-        .view-container.active { display: flex; animation: fadeIn 0.15s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: scale(0.995); } to { opacity: 1; transform: scale(1); } }
+        .view-container { display: none; width: 100%; height: 100%; flex-direction: column; overflow: hidden; background: #fff;}
+        .view-container.active { display: flex; animation: fadeIn 0.1s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        /* ---- [ SIDEBAR ] ---- */
         .sidebar { width: 110px; background-color: var(--dark); display: flex; flex-direction: column; align-items: center; padding: 25px 0; overflow-y: auto; flex-shrink: 0; scrollbar-width: none; border-right: 1px solid rgba(255,255,255,0.05); z-index: 50; }
         .sidebar-logo { width: 65px; height: 65px; background: linear-gradient(135deg, var(--primary), #b91c1c); color: white; font-weight: 900; font-size: 1.8rem; display: flex; align-items: center; justify-content: center; border-radius: 16px; margin-bottom: 30px; box-shadow: 0 8px 16px rgba(220, 38, 38, 0.4); }
         .nav-button { width: 90px; height: 80px; margin-bottom: 10px; background: transparent; color: #94a3b8; border-radius: 12px; font-size: 0.7rem; gap: 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
@@ -47,7 +46,6 @@
         .nav-button.active-nav { background: var(--primary); color: white; }
         .nav-icon { width: 24px; height: 24px; stroke-width: 2.5px; }
 
-        /* ---- [ POS ] ---- */
         #pos-view { flex-direction: row; }
         .pos-main { flex: 1; display: flex; flex-direction: column; padding: 20px; overflow-y: auto; background: #f8fafc; }
         .menu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
@@ -58,20 +56,17 @@
         .menu-title { font-size: 1.1rem; font-weight: 900; margin-bottom: 4px; color: var(--dark); }
         .menu-price { font-size: 1rem; font-weight: 900; color: var(--primary); }
 
-        .order-panel { width: 400px; background: white; border-left: 1px solid #e2e8f0; display: flex; flex-direction: column; z-index: 10; }
+        .order-panel { width: 380px; background: white; border-left: 1px solid #e2e8f0; display: flex; flex-direction: column; z-index: 10; }
         .op-items { flex: 1; overflow-y: auto; padding: 20px; }
         .cart-row { display: flex; justify-content: space-between; background: #f8fafc; padding: 15px; border-radius: 12px; margin-bottom: 12px; border-left: 4px solid var(--primary); align-items: center; }
         .op-footer { padding: 25px; background: #fdfdfd; border-top: 1px solid #f1f5f9; }
-        .pay-btn { background: var(--success); color: white; width: 100%; padding: 20px; font-size: 1.3rem; border-radius: 16px; margin-top: 15px; font-weight: 900; box-shadow: 0 4px 0 rgba(0,0,0,0.1); }
-        .pay-btn:active { transform: translateY(2px); box-shadow: none; }
+        .pay-btn { background: var(--success); color: white; width: 100%; padding: 20px; font-size: 1.3rem; border-radius: 16px; margin-top: 15px; font-weight: 900; }
 
-        /* ---- [ MODALS ] ---- */
         .overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(10px); display: none; align-items: center; justify-content: center; z-index: 10000; padding: 20px; }
         .modal { background: white; width: 100%; max-width: 500px; border-radius: var(--radius-lg); padding: 30px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); overflow: hidden; }
         .pin-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
         #station-call-alert { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: var(--warning); color: var(--dark); padding: 18px 35px; border-radius: 99px; font-weight: 900; font-size: 1.1rem; box-shadow: 0 10px 15px rgba(0,0,0,0.2); z-index: 20000; display: none; border: 3px solid white; }
 
-        /* PRINTING */
         #receipt-area { display: none; }
         @media print {
             body * { visibility: hidden; }
@@ -81,10 +76,9 @@
             .item { display: flex; justify-content: space-between; margin: 4px 0; text-align: left; }
         }
 
-        /* MASTER */
         input, select, textarea { width: 100%; padding: 14px; border: 2px solid #e2e8f0; border-radius: 12px; font-size: 1.1rem; margin-bottom: 12px; outline: none; background: #fff; font-weight: 600; }
         .master-tab { border-radius: 10px; cursor: pointer; padding: 12px; font-weight: 800; border: none; background: transparent; color: var(--text-gray); }
-        .master-tab.active { background: white; color: var(--primary); box-shadow: var(--shadow-md); }
+        .master-tab.active { background: #f1f5f9; color: var(--primary); }
         .master-content { display: none; }
         .master-content.active { display: block; }
     </style>
@@ -93,6 +87,7 @@
 
     <div id="station-call-alert">⚠️ ALERT: <span id="call-msg"></span> <button onclick="clearCall()" style="margin-left: 15px; padding: 8px 20px; border-radius: 30px; background: rgba(0,0,0,0.1); font-weight:900;">CLEAR</button></div>
 
+    <!-- UI Overlay Modals -->
     <div id="overlay-alert" class="overlay"><div class="modal" style="text-align:center;"><div id="alert-title" style="font-size:1.8rem; font-weight:900; margin-bottom:15px;">Notice</div><p id="alert-body" style="font-size:1.2rem; color:var(--text-gray); margin-bottom: 25px;"></p><button class="pay-btn" style="margin:0;" onclick="closeAlert()">Okay</button></div></div>
     <div id="overlay-confirm" class="overlay"><div class="modal" style="text-align:center;"><div id="confirm-title" style="font-size:1.8rem; font-weight:900; margin-bottom:15px;">Confirm?</div><p id="confirm-body" style="font-size:1.1rem; color:var(--text-gray); margin-bottom: 25px;"></p><div style="display:flex; gap:15px;"><button class="pay-btn" style="background:#f1f5f9; color:var(--dark); margin:0;" onclick="closeConfirm(false)">Cancel</button><button class="pay-btn" style="margin:0;" onclick="closeConfirm(true)">Confirm</button></div></div></div>
 
@@ -286,8 +281,8 @@
         </div>
     </main>
 
-    <main id="kiosk-view" class="view-container" style="align-items:center; justify-content:center; background:linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('https://images.unsplash.com/photo-1571091718767-18b5b1457add?auto=format&fit=crop&w=1920&q=80'); background-size:cover;">
-        <h1 style="font-size:5rem; font-weight:900; color:white; text-align:center;">CRAZY BURGERS</h1>
+    <main id="kiosk-view" class="view-container" style="align-items:center; justify-content:center;">
+        <h1 style="font-size:5rem; font-weight:900;">CRAZY BURGERS</h1>
         <button class="pay-btn" style="padding: 30px 80px; font-size:2.5rem; width:auto;" onclick="navTo('pos-view')">TAP TO ORDER</button>
     </main>
 
@@ -329,7 +324,6 @@
         }
         function remC(id) { cart = cart.filter(i=>i.cid!==id); renderCart(); }
 
-        // LOYALTY
         function loyS(s) { document.getElementById('loyalty-init').style.display = s==='init'?'grid':'none'; document.getElementById('loyalty-find').style.display = s==='search'?'block':'none'; document.getElementById('loyalty-create').style.display = s==='create'?'block':'none'; }
         function findMember() {
             let n = document.getElementById('loy-q').value;
@@ -339,12 +333,12 @@
                 curM = m; document.getElementById('overlay-loyalty').style.display='none';
                 if(m.points >= 10) { ptsToRedeem = Math.floor(m.points/10)*10; discAmt = ptsToRedeem/10; document.getElementById('r-bal').innerText = m.points; document.getElementById('r-disc').innerText = discAmt.toFixed(2); document.getElementById('overlay-redeem').style.display='flex'; }
                 else setM(m);
-            }).catch(e => customAlert("Firebase Error", e.message));
+            }).catch(e => customAlert("Save Error", "Please ensure Firestore API is enabled in your Google Console."));
         }
         function createMember() {
             let n = document.getElementById('loy-n').value; if(!n) return;
             let m = { name: n, joined: new Date().toISOString(), points: 0 };
-            db.collection('customers').add(m).then(ref => { m.docId = ref.id; curM = m; document.getElementById('overlay-loyalty').style.display='none'; setM(m); }).catch(e => customAlert("API Blocked", "Enable Firestore API in Console"));
+            db.collection('customers').add(m).then(ref => { m.docId = ref.id; curM = m; document.getElementById('overlay-loyalty').style.display='none'; setM(m); }).catch(e => customAlert("Save Error", "Firestore API not enabled. Visit Google Console."));
         }
         function setM(m) { document.getElementById('member-tag').innerText = m.name; document.getElementById('cart-loyalty-info').style.display='block'; renderCart(); document.getElementById('overlay-table').style.display='flex'; }
         function redeemPoints(yes) { if(!yes) { ptsToRedeem=0; discAmt=0; } document.getElementById('overlay-redeem').style.display='none'; setM(curM); }
@@ -352,28 +346,25 @@
 
         function finishOrder(tbl) {
             let tot = parseFloat(document.getElementById('pos-total').innerText);
-            let o = { id: Math.floor(Math.random()*9000), table: tbl, items: [...cart], total: tot, status: 'Preparing', time: new Date().toLocaleTimeString() };
+            let o = { id: Math.floor(Math.random()*9000), table: tbl, items: [...cart], total: tot, status: 'preparing', time: new Date().toLocaleTimeString() };
             if(curM) db.collection('customers').doc(curM.docId).update({ points: curM.points + Math.floor(tot) - ptsToRedeem });
             socket.emit('new-order', o);
             printRec(o);
-            customAlert("Order Complete", "Ticket sent to kitchen and printed.");
+            customAlert("Order Complete", "Kitchen notified.");
             cart=[]; curM=null; ptsToRedeem=0; discAmt=0; document.getElementById('cart-loyalty-info').style.display='none'; renderCart();
             document.getElementById('overlay-table').style.display='none';
         }
 
-        // PRINTING logic
         function printRec(o) {
             let h = `<h1>${rConfig.head}</h1><p>${o.time}</p><div class="sep"></div><h2>TABLE: ${o.table}</h2><div class="sep"></div>`;
             o.items.forEach(i => h += `<div class="item"><span>${i.name}</span><span>$${i.price.toFixed(2)}</span></div>`);
-            h += `<div class="sep"></div><h2 style="display:flex; justify-content:space-between;"><span>Total</span><span>$${o.total.toFixed(2)}</span></h2><div class="sep"></div><p>${rConfig.foot}</p>`;
+            h += `<div class="sep"></div><h2>Total: $${o.total.toFixed(2)}</h2><div class="sep"></div><p>${rConfig.foot}</p>`;
             document.getElementById('receipt-area').innerHTML = h; window.print();
         }
 
-        // KDS Status Cycling
-        function cyc(id, s) { socket.emit('update-order', { id, status: s }); }
+        // SYNCED KDS BUTTONS
+        function cyc(id, s) { socket.emit('update-order-status', { id: Number(id), status: s }); }
 
-        // STAFF
-        let shiftInt = null;
         function sP(n) { if(sPIN.length<4) { sPIN+=n; document.getElementById('s-pin-dot').innerText = "•".repeat(sPIN.length); } }
         function sC() { sPIN=""; document.getElementById('s-pin-dot').innerText=""; }
         function sV() { 
@@ -397,42 +388,42 @@
         }
         function shift(t) {
             let data = { status: t }; if(t==='in') data.lastClockIn = new Date().toISOString();
-            db.collection('employees').doc(sID).update(data).then(() => { sData.status = t; if(t==='in') sData.lastClockIn = data.lastClockIn; updatePortal(); });
+            db.collection('employees').doc(sID).update(data).then(() => { sData.status = t; if(t==='in') sData.lastClockIn = data.lastClockIn; updatePortal(); }).catch(e => customAlert("Save Error", "Firestore API not enabled."));
         }
         function logOffStaff() { sPIN=""; sID=null; sData=null; if(shiftInt) clearInterval(shiftInt); document.getElementById('s-portal').style.display='none'; document.getElementById('s-login').style.display='block'; sC(); }
 
-        // CDS logic
+        // SYNCED CDS
         function bindC(tbl) { cID=tbl; document.getElementById('cds-setup').style.display='none'; document.getElementById('cds-active').style.display='block'; renderC(); }
         function resetC() { cID=null; document.getElementById('cds-setup').style.display='block'; document.getElementById('cds-active').style.display='none'; }
         function renderC() {
             if(!cID) return;
             let o = activeOrders.find(x => x.table === cID);
             if(o) { document.getElementById('cds-status').innerText = o.status.toUpperCase(); document.getElementById('cds-items').innerText = o.items.map(i=>i.name).join(', '); }
-            else { document.getElementById('cds-status').innerText = "WELCOME"; document.getElementById('cds-items').innerText = "Ready for order..."; }
+            else { document.getElementById('cds-status').innerText = "WELCOME"; document.getElementById('cds-items').innerText = "Please wait..."; }
         }
 
-        // MASTER logic
+        // SYNCED ALERTS
+        function bC(m) { socket.emit('station-call', { type: m, timestamp: Date.now() }); }
+
         function saveCfg() { rConfig = { head: document.getElementById('cfg-header').value, foot: document.getElementById('cfg-footer').value }; localStorage.setItem('b44_rcfg', JSON.stringify(rConfig)); customAlert("Settings", "Receipt config saved."); }
         function addSt() { 
             let n = document.getElementById('n-emp-n').value; let p = document.getElementById('n-emp-p').value; let r = document.getElementById('n-emp-r').value; 
-            if(n&&p) db.collection('employees').add({ name: n, pin: String(p), role: r, status: 'out' }).then(() => { loadSt(); customAlert("Success", "Staff added."); }).catch(e => customAlert("Error", "Check API Connection")); 
+            if(n&&p) db.collection('employees').add({ name: n, pin: String(p), role: r, status: 'out' }).then(() => { loadSt(); customAlert("Success", "Staff member added."); }).catch(e => customAlert("Save Error", "Firestore API is disabled. You must enable it in the Google Console.")); 
         }
         function loadSt() { db.collection('employees').get().then(s => { let h = ''; s.forEach(d => { let a = d.data(); h += `<div style="padding:15px; border-bottom:1px solid #eee; display:flex; justify-content:space-between;"><span>${a.name} [${a.role}]</span><span>${a.status.toUpperCase()}</span></div>`; }); document.getElementById('m-staff-list').innerHTML = h; }); }
-        function switchM(id, b) { document.querySelectorAll('.master-tab').forEach(x=>x.classList.remove('active')); document.querySelectorAll('.master-content').forEach(x=>x.classList.remove('active')); b.classList.add('active'); document.getElementById(id).classList.add('active'); if(id==='s-staff') loadSt(); if(id==='s-config') { document.getElementById('cfg-header').value = rConfig.head; document.getElementById('cfg-footer').value = rConfig.foot; } }
+        function switchM(id, b) { document.querySelectorAll('.master-tab').forEach(x=>x.classList.remove('active')); document.querySelectorAll('.master-content').forEach(x=>x.classList.remove('active')); b.classList.add('active'); document.getElementById(id).classList.add('active'); if(id==='s-staff') loadSt(); }
 
-        // PINS
         function mP(n) { if(mPIN.length<4) { mPIN+=n; document.getElementById('master-pin-dot').innerText = "•".repeat(mPIN.length); } }
         function mC() { mPIN=""; document.getElementById('master-pin-dot').innerText=""; }
         function clsPin() { document.getElementById('pin-overlay').style.display='none'; }
-        function mV() { if(mPIN === "2018") { clsPin(); navTo(pinTarget, pBtn); } else { customAlert("Security", "Incorrect Manager PIN"); mC(); } }
+        function mV() { if(mPIN === "2018") { clsPin(); navTo(pinTarget, pBtn); } else { customAlert("Security", "Wrong Manager PIN"); mC(); } }
         function reqPin(t, b) { pinTarget=t; pBtn=b; mPIN=""; document.getElementById('pin-overlay').style.display='flex'; }
         function validateManager(id, b) { if(sData && sData.role === 'Manager') navTo(id, b); else reqPin(id, b); }
 
-        // CORE
         function startCheckout() { if(cart.length) { loyS('init'); document.getElementById('overlay-loyalty').style.display='flex'; } }
-        function renderK() { let g = document.getElementById('kds-grid'); if(g) g.innerHTML = activeOrders.map(o => `<div style="padding:20px; background:white; border-radius:15px; border-top:8px solid ${o.status==='Ready'?'var(--success)':'var(--primary)'}; opacity:${o.status==='Complete'?0.5:1};"><div style="display:flex; justify-content:space-between; font-weight:900;"><span>#${o.id} - ${o.table}</span><span style="color:var(--text-gray);">${o.time}</span></div><hr style="margin:12px 0;">${o.items.map(i=>`<div style="margin-bottom:4px;">• ${i.name}</div>`).join('')}<div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-top:15px;"><button class="pay-btn" style="margin:0; font-size:0.8rem; background:var(--accent);" onclick="cyc(${o.id}, 'Preparing')">Cook</button><button class="pay-btn" style="margin:0; font-size:0.8rem; background:var(--success);" onclick="cyc(${o.id}, 'Ready')">Ready</button></div></div>`).join(''); }
-        function bC(m) { socket.emit('broadcast', m); }
-        socket.on('broadcast-all', m => { document.getElementById('call-msg').innerText = m; document.getElementById('station-call-alert').style.display='block'; let a = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3'); a.play().catch(()=>{}); });
+        function renderK() { let g = document.getElementById('kds-grid'); if(g) g.innerHTML = activeOrders.map(o => `<div style="padding:20px; background:white; border-radius:15px; border-top:8px solid ${o.status==='ready'?'var(--success)':'var(--primary)'};"><div style="display:flex; justify-content:space-between; font-weight:900;"><span>#${o.id} - ${o.table}</span></div><hr style="margin:12px 0;">${o.items.map(i=>`<div style="margin-bottom:4px;">• ${i.name}</div>`).join('')}<div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-top:15px;"><button class="pay-btn" style="margin:0; font-size:0.8rem; background:var(--accent);" onclick="cyc(${o.id}, 'preparing')">Cook</button><button class="pay-btn" style="margin:0; font-size:0.8rem; background:var(--success);" onclick="cyc(${o.id}, 'ready')">Ready</button></div></div>`).join(''); }
+        
+        socket.on('announcement', d => { document.getElementById('call-msg').innerText = d.message; document.getElementById('station-call-alert').style.display='block'; let a = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3'); a.play().catch(()=>{}); });
         function clearCall() { document.getElementById('station-call-alert').style.display='none'; }
         socket.on('initial-data', d => { activeOrders = d.orders; renderK(); renderC(); });
         socket.on('order-update', o => { activeOrders = o; renderK(); renderC(); });
