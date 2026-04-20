@@ -57,16 +57,11 @@
         /* ---- [ POS ] ---- */
         #pos-view { flex-direction: row; }
         .pos-main { flex: 1; display: flex; flex-direction: column; padding: 15px; overflow-y: auto; background: #f8fafc; }
-        .cat-tabs { display: flex; gap: 10px; margin-bottom: 20px; overflow-x: auto; scrollbar-width: none; }
-        .cat-tab { padding: 10px 24px; background: white; border-radius: 99px; font-weight: 800; color: var(--text-gray); box-shadow: var(--shadow-sm); cursor: pointer; border: 2px solid transparent; white-space: nowrap; font-size: 0.9rem; }
-        .cat-tab.active { background: var(--dark); color: white; border-color: var(--dark); }
-        
         .menu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 15px; }
         .menu-card { background: white; border-radius: var(--radius-md); padding: 0; box-shadow: var(--shadow-sm); border: 2px solid transparent; display: flex; flex-direction: column; cursor: pointer; overflow: hidden; transition: all 0.2s ease; }
         .menu-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-md); border-color: var(--primary); }
         .menu-img { width: 100%; height: 140px; background-color: #f1f5f9; background-size: cover; background-position: center; }
         .menu-content { padding: 15px; flex-grow: 1; }
-        .menu-badge { font-size: 0.65rem; font-weight: 900; background: #f1f5f9; padding: 4px 8px; border-radius: 6px; width: fit-content; margin-bottom: 8px; color: var(--text-gray); text-transform: uppercase; }
         .menu-title { font-size: 1.1rem; font-weight: 900; margin-bottom: 5px; color: var(--dark); }
         .menu-price { font-size: 1rem; font-weight: 900; color: var(--primary); }
 
@@ -74,15 +69,13 @@
         .op-items { flex: 1; overflow-y: auto; padding: 20px; }
         .cart-row { display: flex; justify-content: space-between; background: #f8fafc; padding: 15px; border-radius: 12px; margin-bottom: 12px; border-left: 4px solid var(--primary); align-items: center; }
         .op-footer { padding: 20px; background: #fdfdfd; border-top: 1px solid #f1f5f9; }
-        .calc-total { font-size: 2rem; font-weight: 900; color: var(--dark); margin-top: 15px; padding-top: 15px; border-top: 3px dashed #e2e8f0; display: flex; justify-content: space-between; }
         .pay-btn { background: var(--success); color: white; width: 100%; padding: 20px; font-size: 1.3rem; border-radius: 14px; margin-top: 20px; font-weight: 900; }
 
-        /* ---- [ MODALS ] ---- */
+        /* ---- [ MODALS & PINS ] ---- */
         .overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; z-index: 10000; padding: 20px; }
         .modal { background: white; width: 100%; max-width: 480px; border-radius: var(--radius-xl); padding: 30px; box-shadow: var(--shadow-lg); overflow: hidden; }
-        #station-call-alert { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: var(--warning); color: var(--dark); padding: 15px 30px; border-radius: 99px; font-weight: 900; font-size: 1.1rem; box-shadow: var(--shadow-lg); z-index: 20000; display: none; }
-
         .pin-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        #station-call-alert { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: var(--warning); color: var(--dark); padding: 15px 30px; border-radius: 99px; font-weight: 900; font-size: 1.1rem; box-shadow: var(--shadow-lg); z-index: 20000; display: none; }
 
         /* PRINTING */
         #receipt-area { display: none; }
@@ -95,7 +88,7 @@
             #receipt-area .total { font-weight: bold; font-size: 1.2rem; display: flex; justify-content: space-between; margin-top: 10px; }
         }
 
-        /* MASTER */
+        /* MASTER DASH */
         input, select, textarea { width: 100%; padding: 14px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 1.1rem; margin-bottom: 12px; outline: none; background: #fff; font-weight:600; }
         input:focus { border-color: var(--primary); }
     </style>
@@ -104,61 +97,39 @@
 
     <div id="station-call-alert">⚠️ CALL: <span id="call-msg"></span> <button onclick="clearCall()" style="margin-left: 15px; padding: 8px 18px; border-radius: 30px; background: rgba(0,0,0,0.1); font-weight:900;">OK</button></div>
 
-    <!-- UI Overlays -->
+    <!-- UI Overlay Modals -->
     <div id="overlay-alert" class="overlay"><div class="modal" style="text-align:center;"><div id="alert-title" style="font-size:1.8rem; font-weight:900; margin-bottom:15px;">Notice</div><p id="alert-body" style="font-size:1.2rem; color:var(--text-gray); margin-bottom: 25px;"></p><button class="pay-btn" style="margin:0;" onclick="closeAlert()">Continue</button></div></div>
-    <div id="overlay-confirm" class="overlay"><div class="modal" style="text-align:center;"><div id="confirm-title" style="font-size:1.8rem; font-weight:900; margin-bottom:15px;">Confirm?</div><p id="confirm-body" style="font-size:1.2rem; color:var(--text-gray); margin-bottom: 25px;"></p><div style="display:flex; gap:15px;"><button class="pay-btn" style="background:#f1f5f9; color:var(--dark); margin:0;" onclick="closeConfirm(false)">Back</button><button class="pay-btn" style="margin:0;" onclick="closeConfirm(true)">Confirm</button></div></div></div>
+    <div id="overlay-confirm" class="overlay"><div class="modal" style="text-align:center;"><div id="confirm-title" style="font-size:1.8rem; font-weight:900; margin-bottom:15px;">Confirm?</div><p id="confirm-body" style="font-size:1.1rem; color:var(--text-gray); margin-bottom: 25px;"></p><div style="display:flex; gap:15px;"><button class="pay-btn" style="background:#f1f5f9; color:var(--dark); margin:0;" onclick="closeConfirm(false)">Back</button><button class="pay-btn" style="margin:0;" onclick="closeConfirm(true)">Confirm</button></div></div></div>
 
-    <!-- LOYALTY & CHECKOUT -->
+    <!-- REWARDS & CHECKOUT -->
     <div id="overlay-loyalty" class="overlay">
         <div class="modal">
-            <div style="font-size:1.8rem; font-weight:900; margin-bottom:20px; text-align:center;">Rewards</div>
+            <div style="font-size:1.8rem; font-weight:900; margin-bottom:20px; text-align:center;">User Rewards</div>
             <div id="loyalty-init" style="display:grid; grid-template-columns: 1fr; gap:10px;">
                 <button class="pay-btn" style="margin:0;" onclick="loyS('search')">Find Member</button>
-                <button class="pay-btn" style="margin:0; background:var(--success);" onclick="loyS('create')">Register Member</button>
+                <button class="pay-btn" style="margin:0; background:var(--success);" onclick="loyS('create')">Register New</button>
                 <button class="pay-btn" style="margin:0; background:#f1f5f9; color:var(--dark);" onclick="skipLoyalty()">Skip (No Rewards)</button>
             </div>
-            <div id="loyalty-find" style="display:none;">
-                <input type="text" id="loy-q" placeholder="Full Name">
-                <button class="pay-btn" style="width:100%;" onclick="findMember()">Lookup Account</button>
-                <button class="pay-btn" style="width:100%; background:none; color:var(--text-gray); margin-top:10px;" onclick="loyS('init')">Cancel</button>
-            </div>
-            <div id="loyalty-create" style="display:none;">
-                <input type="text" id="loy-n" placeholder="Customer Name">
-                <button class="pay-btn" style="width:100%;" onclick="createMember()">Join Rewards</button>
-                <button class="pay-btn" style="width:100%; background:none; color:var(--text-gray); margin-top:10px;" onclick="loyS('init')">Cancel</button>
-            </div>
+            <div id="loyalty-find" style="display:none;"><input type="text" id="loy-q" placeholder="Account Name"><button class="pay-btn" onclick="findMember()">Lookup</button><button class="pay-btn" style="background:none; color:gray;" onclick="loyS('init')">Back</button></div>
+            <div id="loyalty-create" style="display:none;"><input type="text" id="loy-n" placeholder="Customer Name"><button class="pay-btn" onclick="createMember()">Join</button><button class="pay-btn" style="background:none; color:gray;" onclick="loyS('init')">Back</button></div>
         </div>
     </div>
-
     <div id="overlay-redeem" class="overlay">
         <div class="modal" style="text-align:center;">
-            <div style="font-size:1.8rem; font-weight:900; margin-bottom:15px;">Redeem Points?</div>
-            <p style="font-size:1.3rem; margin-bottom:10px;">Balance: <span id="r-bal" style="font-weight:900; color:var(--success);">0</span> Points</p>
-            <p style="color:var(--text-gray); font-size:1.1rem; margin-bottom:25px;">Redeem <span id="r-max">0</span> points for a $<span id="r-disc">0.00</span> discount.</p>
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px;"><button class="pay-btn" style="margin:0; background:#f1f5f9; color:var(--dark);" onclick="redeemPoints(false)">No</button><button class="pay-btn" style="margin:0;" onclick="redeemPoints(true)">Yes</button></div>
+            <div style="font-size:1.8rem; font-weight:900; margin-bottom:15px;">Use Points?</div>
+            <p>Balance: <span id="r-bal" style="font-weight:900; color:var(--success);">0</span> Pts</p>
+            <p>You can get $<span id="r-disc">0.00</span> off.</p>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:20px;"><button class="pay-btn" style="margin:0; background:gray;" onclick="redeemPoints(false)">No</button><button class="pay-btn" style="margin:0;" onclick="redeemPoints(true)">Redeem</button></div>
         </div>
     </div>
-
     <div id="overlay-table" class="overlay">
-        <div class="modal" style="max-width:550px;">
-            <div style="font-size:1.8rem; font-weight:900; margin-bottom:20px; text-align:center;">Dispatch Ticket</div>
-            <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:10px;">
-                <button class="pay-btn" style="margin:0; font-size:0.9rem;" onclick="finishOrder('Takeout')">🥡 TAKEOUT</button>
-                <button class="pay-btn" style="margin:0; font-size:0.9rem; background:var(--dark);" onclick="finishOrder('Table 1')">🪑 T-1</button>
-                <button class="pay-btn" style="margin:0; font-size:0.9rem; background:var(--dark);" onclick="finishOrder('Table 2')">🪑 T-2</button>
-                <button class="pay-btn" style="margin:0; font-size:0.9rem; background:var(--dark);" onclick="finishOrder('Table 3')">🪑 T-3</button>
-                <button class="pay-btn" style="margin:0; font-size:0.9rem; background:var(--dark);" onclick="finishOrder('Table 4')">🪑 T-4</button>
-                <button class="pay-btn" style="margin:0; font-size:0.9rem; background:var(--dark);" onclick="finishOrder('Table 5')">🪑 T-5</button>
-                <button class="pay-btn" style="margin:0; font-size:0.9rem; background:var(--accent);" onclick="finishOrder('Bar')">🍷 BAR</button>
-            </div>
-            <button class="pay-btn" style="width:100%; background:#f1f5f9; color:var(--dark); margin-top:20px;" onclick="document.getElementById('overlay-table').style.display='none'">Cancel</button>
-        </div>
+        <div class="modal"><h2 style="text-align:center; margin-bottom:20px;">Destination</h2><div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;"><button class="pay-btn" onclick="finishOrder('Takeout')">Takeout</button><button class="pay-btn" onclick="finishOrder('Table 1')">T-1</button><button class="pay-btn" onclick="finishOrder('Table 2')">T-2</button><button class="pay-btn" onclick="finishOrder('Table 3')">T-3</button></div><button class="pay-btn" style="background:none; color:gray; width:100%;" onclick="document.getElementById('overlay-table').style.display='none'">Cancel</button></div>
     </div>
 
-    <!-- Manager PIN Pad -->
+    <!-- PIN PADS -->
     <div id="pin-overlay" class="overlay">
         <div class="modal" style="max-width:340px;">
-            <h1 style="text-align:center; font-size:1.5rem; margin-bottom:20px; font-weight:900;">Manager PIN Required</h1>
+            <h1 style="text-align:center; font-size:1.5rem; margin-bottom:20px;">Secure Entry</h1>
             <div id="master-pin-dot" style="font-size:2rem; height:60px; background:#f8fafc; border-radius:10px; display:flex; align-items:center; justify-content:center; font-weight:900; margin-bottom:20px; color:var(--primary);"></div>
             <div class="pin-grid">
                 <button class="pay-btn" style="background:#f1f5f9; color:var(--dark); margin:0;" onclick="mP('1')">1</button>
@@ -170,11 +141,11 @@
                 <button class="pay-btn" style="background:#f1f5f9; color:var(--dark); margin:0;" onclick="mP('7')">7</button>
                 <button class="pay-btn" style="background:#f1f5f9; color:var(--dark); margin:0;" onclick="mP('8')">8</button>
                 <button class="pay-btn" style="background:#f1f5f9; color:var(--dark); margin:0;" onclick="mP('9')">9</button>
-                <button class="pay-btn" style="background:#fee2e2; color:#ef4444; margin:0;" onclick="mC()">CLR</button>
+                <button class="pay-btn" style="background:#fee2e2; color:#ef4444; margin:0;" onclick="mC()">C</button>
                 <button class="pay-btn" style="background:#f1f5f9; color:var(--dark); margin:0;" onclick="mP('0')">0</button>
                 <button class="pay-btn" style="background:#dcfce7; color:#16a34a; margin:0;" onclick="mV()">OK</button>
             </div>
-            <button onclick="clsPin()" style="width:100%; margin-top:15px; background:none; color:var(--text-gray); font-weight:800;">Cancel</button>
+            <button onclick="clsPin()" style="width:100%; margin-top:15px; background:none; color:gray;">Cancel</button>
         </div>
     </div>
 
@@ -191,37 +162,31 @@
     </nav>
     <div class="fab-nav" id="fab-nav" onclick="toggleSidebar()">◀</div>
 
-    <!-- POS VIEW -->
+    <!-- MAIN VIEWS -->
     <main id="pos-view" class="view-container active">
         <div class="pos-main">
-            <h1 style="font-size: 2.2rem; font-weight: 900; margin-bottom:20px;">Crazy Burgers Terminal</h1>
+            <h1 style="font-size: 2rem; font-weight: 900; margin-bottom:20px;">Crazy Burgers Terminal</h1>
             <div class="menu-grid" id="pos-grid"></div>
         </div>
         <aside class="order-panel">
-            <div style="padding:20px; font-weight:900; border-bottom:1px solid #eee;">Order Details</div>
+            <div style="padding:20px; font-weight:900; border-bottom:1px solid #eee;">Tickets</div>
             <div class="op-items" id="op-items"></div>
             <div class="op-footer">
-                <div id="cart-loyalty-info" style="background:#f0faf2; padding:12px; border-radius:10px; margin-bottom:10px; display:none;">VIP: <span id="member-tag" style="font-weight:900;"></span></div>
-                <div id="cart-discount-row" style="display:none; color:var(--success); font-weight:800; justify-content:space-between; margin-bottom:8px;"><span>Discount</span> -$<span id="pos-disc">0.00</span></div>
-                <div style="display:flex; justify-content:space-between; font-weight:900; font-size:1.4rem;"><span>Total</span> $<span id="pos-total">0.00</span></div>
-                <button class="pay-btn" onclick="startCheckout()">Checkout</button>
+                <div id="cart-loyalty-info" style="background:#f0faf2; padding:10px; border-radius:10px; margin-bottom:10px; display:none;">VIP: <span id="member-tag" style="font-weight:900;"></span></div>
+                <div style="display:flex; justify-content:space-between; font-weight:900; font-size:1.5rem;"><span>Total</span> $<span id="pos-total">0.00</span></div>
+                <button class="pay-btn" onclick="startCheckout()">Assign Order</button>
             </div>
         </aside>
     </main>
 
-    <!-- KDS -->
     <main id="kds-view" class="view-container" style="background:#0f172a;">
-        <div style="padding:25px; border-bottom:1px solid rgba(255,255,255,0.1); color:white; display:flex; justify-content:space-between;">
-            <h2 style="font-weight:900;">Kitchen Board</h2>
-            <button onclick="enableVoice()" style="background:var(--accent); color:white; padding:10px 20px; border-radius:10px;">Sync Audio</button>
-        </div>
+        <div style="padding:20px; color:white; display:flex; justify-content:space-between; border-bottom:1px solid #1e293b;"><h2>KitchenBoard</h2><button onclick="enableVoice()" style="background:var(--accent); color:white; padding:10px 20px; border-radius:10px;">Audio Sync</button></div>
         <div style="padding:20px; flex:1; overflow-y:auto;"><div class="menu-grid" id="kds-grid"></div></div>
     </main>
 
-    <!-- STAFF -->
     <main id="staff-view" class="view-container" style="background:var(--dark); align-items:center; justify-content:center;">
         <div class="modal" id="s-login" style="max-width:340px;">
-            <h1 style="text-align:center; margin-bottom:15px; font-weight:900;">Staff Entry</h1>
+            <h1 style="text-align:center; margin-bottom:15px; font-weight:900;">Staff Auth</h1>
             <div id="s-pin-dot" style="font-size:2.5rem; height:70px; background:#f8fafc; border-radius:10px; display:flex; align-items:center; justify-content:center; color:var(--primary); font-weight:900; margin-bottom:20px;"></div>
             <div class="pin-grid">
                 <button class="pay-btn" style="background:#f1f5f9; color:var(--dark); margin:0;" onclick="sP('1')">1</button>
@@ -233,65 +198,49 @@
                 <button class="pay-btn" style="background:#f1f5f9; color:var(--dark); margin:0;" onclick="sP('7')">7</button>
                 <button class="pay-btn" style="background:#f1f5f9; color:var(--dark); margin:0;" onclick="sP('8')">8</button>
                 <button class="pay-btn" style="background:#f1f5f9; color:var(--dark); margin:0;" onclick="sP('9')">9</button>
-                <button class="pay-btn" style="background:#fee2e2; color:#ef4444; margin:0;" onclick="sC()">CLR</button>
+                <button class="pay-btn" style="background:#fee2e2; color:#ef4444; margin:0;" onclick="sC()">C</button>
                 <button class="pay-btn" style="background:#f1f5f9; color:var(--dark); margin:0;" onclick="sP('0')">0</button>
                 <button class="pay-btn" style="background:#dcfce7; color:#16a34a; margin:0;" onclick="sV()">OK</button>
             </div>
         </div>
         <div class="modal" id="s-portal" style="display:none; text-align:center;">
-            <p id="s-role-tag" style="background:var(--primary); color:white; padding:4px 12px; border-radius:99px; display:inline-block; font-size:0.8rem; font-weight:800; margin-bottom:10px;">ROLE</p>
+            <p id="s-role-tag" style="background:var(--primary); color:white; padding:4px 12px; border-radius:99px; font-size:0.8rem; font-weight:800; margin-bottom:10px;">ROLE</p>
             <h1 id="s-v-name" style="font-weight:900; margin-bottom:15px;">User</h1>
-            <div style="background:#f8fafc; padding:20px; border-radius:12px; border:2px solid #eee; margin-bottom:20px;">
-                <p style="color:var(--text-gray); font-weight:700;">Shift Time:</p>
-                <h2 id="s-v-timer" style="font-size:2rem; font-weight:900; color:var(--dark);">00:00:00</h2>
+            <div style="background:#f8fafc; padding:20px; border-radius:12px; margin-bottom:20px;">
+                <p>Shift Timer:</p><h2 id="s-v-timer" style="font-size:2rem; font-weight:900;">00:00:00</h2>
             </div>
             <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-                <button class="pay-btn" style="margin:0;" id="btn-clockin" onclick="shift('in')">Clock In</button>
-                <button class="pay-btn" style="margin:0; background:var(--dark);" id="btn-clockout" onclick="shift('out')">Clock Out</button>
+                <button class="pay-btn" id="btn-clockin" onclick="shift('in')">Clock In</button>
+                <button class="pay-btn" style="background:var(--dark);" id="btn-clockout" onclick="shift('out')">Clock Out</button>
             </div>
-            <button class="pay-btn" style="width:100%; background:none; color:var(--text-gray); margin-top:15px; font-size:1rem;" onclick="logOffStaff()">Sign Out</button>
+            <button class="pay-btn" style="width:100%; background:none; color:gray; margin-top:15px;" onclick="logOffStaff()">Sign Out</button>
         </div>
     </main>
 
-    <!-- ALERTS -->
-    <main id="calls-view" class="view-container">
-        <div class="master-dash-container" style="padding:40px; max-width:800px; margin:auto;">
-            <h1 style="font-weight:900; margin-bottom:30px;">Alert Station</h1>
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
-                <button class="pay-btn" style="height:120px; margin:0; background:var(--warning); color:var(--dark);" onclick="bC('Manager Request')">🛎️ MGR CALL</button>
-                <button class="pay-btn" style="height:120px; margin:0; background:var(--accent);" onclick="bC('Restock')">📦 RESTOCK</button>
-            </div>
-        </div>
-    </main>
-
-    <!-- MASTER -->
     <main id="manager-view" class="view-container">
-        <div class="master-dash-container" style="padding:40px; max-width:1000px; margin:auto;">
-            <div class="master-tabs" style="display:flex; background:#eee; padding:5px; border-radius:12px; margin-bottom:30px;">
+        <div style="padding:40px; max-width:1000px; margin:auto; width:100%;">
+            <div style="display:flex; background:#eee; padding:5px; border-radius:12px; margin-bottom:30px;">
                 <button class="master-tab active" style="flex:1; padding:10px; border-radius:8px;" onclick="switchM('s-kpi', this)">Stats</button>
                 <button class="master-tab" style="flex:1; padding:10px; border-radius:8px;" onclick="switchM('s-staff', this)">Staff</button>
                 <button class="master-tab" style="flex:1; padding:10px; border-radius:8px;" onclick="switchM('s-loyalty', this)">CRM</button>
             </div>
-            <div id="s-kpi" class="master-content active">Rev: <span id="m-rev">$0.00</span> | Tickets: <span id="m-ord">0</span></div>
-            <div id="s-staff" class="master-content"><div id="m-staff-list"></div></div>
+            <div id="s-kpi" class="master-content active">Rev: <span id="m-rev">$0.00</span> | Orders: <span id="m-ord">0</span></div>
+            <div id="s-staff" class="master-content">
+                <div style="background:white; padding:20px; border-radius:12px; margin-bottom:20px;">
+                    <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px;">
+                        <input type="text" id="n-emp-n" placeholder="Name"><input type="text" id="n-emp-p" placeholder="PIN"><select id="n-emp-r"><option value="Manager">Manager</option><option value="Chef">Chef</option></select>
+                    </div>
+                    <button class="pay-btn" onclick="addSt()">Add Staff</button>
+                </div>
+                <div id="m-staff-list"></div>
+            </div>
             <div id="s-loyalty" class="master-content"><div id="m-loy-list"></div></div>
         </div>
     </main>
 
-    <!-- CDS -->
-    <main id="cust-view" class="view-container" style="background:#0f172a; align-items:center; justify-content:center; color:white;">
-        <div id="cds-setup" style="text-align:center;"><button class="pay-btn" onclick="bindC('Takeout')">Takeout Mode</button></div>
-        <div id="cds-active" style="display:none; text-align:center;">
-            <h1 id="cds-status" style="font-size:5rem; font-weight:900;">WELCOME</h1>
-            <div id="cds-items" style="font-size:1.5rem; opacity:0.7;">Ready...</div>
-        </div>
-    </main>
-
-    <!-- KIOSK -->
-    <main id="kiosk-view" class="view-container" style="align-items:center; justify-content:center;">
-        <h1 style="font-size:4rem; font-weight:900; color:var(--primary);">CRAZY BURGERS</h1>
-        <button class="pay-btn" style="padding: 30px 60px; font-size:2rem;" onclick="navTo('pos-view')">TAP TO START</button>
-    </main>
+    <main id="calls-view" class="view-container"><div style="padding:40px;"><h1 style="margin-bottom:20px;">Alerts</h1><button class="pay-btn" style="height:100px; background:var(--warning); color:var(--dark);" onclick="bC('Manager Request')">CALL MANAGER</button></div></main>
+    <main id="cust-view" class="view-container" style="background:#0f172a; align-items:center; justify-content:center; color:white;"><div id="cds-setup"><button class="pay-btn" onclick="bindC('Takeout')">Takeout Console</button></div><div id="cds-active" style="display:none; text-align:center;"><h1 id="cds-status">WELCOME</h1><div id="cds-items">Ready...</div></div></main>
+    <main id="kiosk-view" class="view-container" style="align-items:center; justify-content:center;"><h1>CRAZY BURGERS</h1><button class="pay-btn" onclick="navTo('pos-view')">START ORDER</button></main>
 
     <div id="receipt-area"></div>
 
@@ -319,38 +268,28 @@
         }
 
         function renderP() {
-            let g = document.getElementById('pos-grid');
-            if(!g) return;
+            let g = document.getElementById('pos-grid'); if(!g) return;
             g.innerHTML = menu.map(m => `<div class="menu-card" onclick="openMod(${m.id})"><div class="menu-img" style="background-image:url('${m.image}')"></div><div class="menu-content"><div class="menu-title">${m.name}</div><div class="menu-price">$${m.price.toFixed(2)}</div></div></div>`).join('');
         }
-
-        function openMod(id) { 
-            let tI = menu.find(i=>i.id===id); 
-            customConfirm(tI.name, `Add to order?`, () => { cart.push({ cid: Date.now(), ...tI }); renderCart(); }); 
-        }
-
+        function openMod(id) { let tI = menu.find(i=>i.id===id); customConfirm(tI.name, `Add to order?`, () => { cart.push({ cid: Date.now(), ...tI }); renderCart(); }); }
         function renderCart() {
             let c = document.getElementById('op-items'); if(!c) return;
             let sum = cart.reduce((a,b)=>a+b.price,0);
             c.innerHTML = cart.map(i => `<div class="cart-row"><span>${i.name}</span> <button onclick="remC(${i.cid})" style="background:none; color:red;">X</button></div>`).join('');
-            let tot = Math.max(0, sum - discAmt);
-            document.getElementById('pos-total').innerText = tot.toFixed(2);
+            document.getElementById('pos-total').innerText = Math.max(0, sum - discAmt).toFixed(2);
         }
         function remC(id) { cart = cart.filter(i=>i.cid!==id); renderCart(); }
 
         // LOYALTY
         function loyS(s) { document.getElementById('loyalty-init').style.display = s==='init'?'grid':'none'; document.getElementById('loyalty-find').style.display = s==='search'?'block':'none'; document.getElementById('loyalty-create').style.display = s==='create'?'block':'none'; }
-        
         function findMember() {
             let n = document.getElementById('loy-q').value;
             db.collection('customers').where('name','==',n).get().then(s => {
-                if(s.empty) return customAlert("Not Found", "Name not in system.");
+                if(s.empty) return customAlert("Error", "Not Found");
                 let m = { docId: s.docs[0].id, ...s.docs[0].data() };
                 curM = m; document.getElementById('overlay-loyalty').style.display='none';
-                if(m.points >= 10) { 
-                    ptsToRedeem = Math.floor(m.points/10)*10; discAmt = ptsToRedeem/10;
-                    document.getElementById('r-bal').innerText = m.points; document.getElementById('overlay-redeem').style.display='flex';
-                } else { setM(m); }
+                if(m.points >= 10) { ptsToRedeem = Math.floor(m.points/10)*10; discAmt = ptsToRedeem/10; document.getElementById('r-bal').innerText = m.points; document.getElementById('r-disc').innerText = discAmt.toFixed(2); document.getElementById('overlay-redeem').style.display='flex'; }
+                else setM(m);
             });
         }
         function createMember() {
@@ -359,49 +298,73 @@
             db.collection('customers').add(m).then(ref => { m.docId = ref.id; curM = m; document.getElementById('overlay-loyalty').style.display='none'; setM(m); });
         }
         function setM(m) { document.getElementById('member-tag').innerText = m.name; document.getElementById('cart-loyalty-info').style.display='block'; renderCart(); document.getElementById('overlay-table').style.display='flex'; }
+        function redeemPoints(yes) { if(!yes) { ptsToRedeem=0; discAmt=0; } document.getElementById('overlay-redeem').style.display='none'; setM(curM); }
         function skipLoyalty() { document.getElementById('overlay-loyalty').style.display='none'; document.getElementById('overlay-table').style.display='flex'; }
 
         function finishOrder(tbl) {
             let tot = parseFloat(document.getElementById('pos-total').innerText);
             let o = { id: Math.floor(Math.random()*9000), table: tbl, items: [...cart], total: tot };
-            if(curM) {
-                let earned = Math.floor(tot);
-                db.collection('customers').doc(curM.docId).update({ points: curM.points + earned - ptsToRedeem });
-            }
+            if(curM) db.collection('customers').doc(curM.docId).update({ points: curM.points + Math.floor(tot) - ptsToRedeem });
             socket.emit('new-order', o);
-            customAlert("Done", "Order sent to kitchen.");
+            customAlert("Order Sent", "Kitchen notified.");
             cart=[]; curM=null; ptsToRedeem=0; discAmt=0; document.getElementById('cart-loyalty-info').style.display='none'; renderCart();
             document.getElementById('overlay-table').style.display='none';
         }
 
-        // KDS rendering
-        function renderK() {
-            let g = document.getElementById('kds-grid'); if(!g) return;
-            g.innerHTML = activeOrders.map(o => `<div class="menu-card" style="padding:15px; border-top:5px solid var(--primary);"><div style="font-weight:900;">#${o.id} - ${o.table}</div><hr>${o.items.map(i=>`<div>${i.name}</div>`).join('')}</div>`).join('');
-        }
-
-        // PIN LOGIC (Restored)
-        function mP(n) { if(mPIN.length<4) { mPIN+=n; document.getElementById('master-pin-dot').innerText = "•".repeat(mPIN.length); } }
-        function mC() { mPIN=""; document.getElementById('master-pin-dot').innerText=""; }
-        function clsPin() { document.getElementById('pin-overlay').style.display='none'; }
-        function mV() { if(mPIN === "2018") { clsPin(); navTo(pinTarget, pBtn); } else { customAlert("Error", "PIN Wrong"); mC(); } }
-        function reqPin(t, b) { pinTarget=t; pBtn=b; mPIN=""; let d = document.getElementById('pin-overlay'); if(d) d.style.display='flex'; }
-
+        // STAFF SESSION
+        let shiftInt = null;
         function sP(n) { if(sPIN.length<4) { sPIN+=n; document.getElementById('s-pin-dot').innerText = "•".repeat(sPIN.length); } }
         function sC() { sPIN=""; document.getElementById('s-pin-dot').innerText=""; }
         function sV() { 
             db.collection('employees').where('pin','==',String(sPIN)).get().then(s => { 
-                if(s.empty) return customAlert("Failed", "Wrong PIN");
+                if(s.empty) return customAlert("Access Denied", "Invalid PIN");
                 sID=s.docs[0].id; sData=s.docs[0].data();
                 document.getElementById('s-login').style.display='none'; document.getElementById('s-portal').style.display='block';
+                document.getElementById('s-v-name').innerText=sData.name; document.getElementById('s-role-tag').innerText=sData.role.toUpperCase();
+                updatePortal();
             });
         }
+        function updatePortal() {
+            if(shiftInt) clearInterval(shiftInt);
+            if(sData.status === 'in' && sData.lastClockIn) {
+                shiftInt = setInterval(() => {
+                    let diff = Date.now() - new Date(sData.lastClockIn).getTime();
+                    let h = Math.floor(diff/3600000); let m = Math.floor((diff%3600000)/60000); let s = Math.floor((diff%60000)/1000);
+                    document.getElementById('s-v-timer').innerText = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+                }, 1000);
+                document.getElementById('btn-clockin').disabled = true; document.getElementById('btn-clockout').disabled = false;
+            } else {
+                document.getElementById('s-v-timer').innerText = "00:00:00";
+                document.getElementById('btn-clockin').disabled = false; document.getElementById('btn-clockout').disabled = true;
+            }
+        }
+        function shift(t) {
+            let data = { status: t }; if(t==='in') data.lastClockIn = new Date().toISOString();
+            db.collection('employees').doc(sID).update(data).then(() => {
+                sData.status = t; if(t==='in') sData.lastClockIn = data.lastClockIn;
+                updatePortal();
+            });
+        }
+        function logOffStaff() { sPIN=""; sID=null; sData=null; if(shiftInt) clearInterval(shiftInt); document.getElementById('s-portal').style.display='none'; document.getElementById('s-login').style.display='block'; sC(); }
 
+        // MASTER
+        function addSt() { let n = document.getElementById('n-emp-n').value; let p = document.getElementById('n-emp-p').value; let r = document.getElementById('n-emp-r').value; if(n&&p) db.collection('employees').add({ name: n, pin: String(p), role: r, status: 'out' }).then(() => loadSt()); }
+        function loadSt() { db.collection('employees').get().then(s => { let h = ''; s.forEach(d => { let a = d.data(); h += `<div style="padding:10px; border-bottom:1px solid #eee;">${a.name} [${a.role}]</div>`; }); document.getElementById('m-staff-list').innerHTML = h; }); }
+        function switchM(id, b) { document.querySelectorAll('.master-tab').forEach(x=>x.classList.remove('active')); document.querySelectorAll('.master-content').forEach(x=>x.classList.remove('active')); b.classList.add('active'); if(document.getElementById(id)) document.getElementById(id).classList.add('active'); if(id==='s-staff') loadSt(); }
+
+        // PINS
+        function mP(n) { if(mPIN.length<4) { mPIN+=n; document.getElementById('master-pin-dot').innerText = "•".repeat(mPIN.length); } }
+        function mC() { mPIN=""; document.getElementById('master-pin-dot').innerText=""; }
+        function clsPin() { document.getElementById('pin-overlay').style.display='none'; }
+        function mV() { if(mPIN === "2018") { clsPin(); navTo(pinTarget, pBtn); } else { customAlert("Warning", "PIN Incorrect"); mC(); } }
+        function reqPin(t, b) { pinTarget=t; pBtn=b; mPIN=""; document.getElementById('pin-overlay').style.display='flex'; }
         function validateManager(id, b) { if(sData && sData.role === 'Manager') navTo(id, b); else reqPin(id, b); }
 
+        // CORE
+        function startCheckout() { if(cart.length) { loyS('init'); document.getElementById('overlay-loyalty').style.display='flex'; } }
+        function renderK() { let g = document.getElementById('kds-grid'); if(g) g.innerHTML = activeOrders.map(o => `<div style="padding:15px; background:white; border-radius:10px; border-top:8px solid var(--primary);"><div style="font-weight:900;">#${o.id} - ${o.table}</div><hr style="margin:10px 0;">${o.items.map(i=>`<div>${i.name}</div>`).join('')}</div>`).join(''); }
         socket.on('initial-data', d => { activeOrders = d.orders; renderK(); });
         socket.on('order-update', o => { activeOrders = o; renderK(); });
-
         function customAlert(t, m) { document.getElementById('alert-title').innerText=t; document.getElementById('alert-body').innerText=m; document.getElementById('overlay-alert').style.display='flex'; }
         function closeAlert() { document.getElementById('overlay-alert').style.display='none'; }
         let cB = null; function customConfirm(t,m,fn) { cB=fn; document.getElementById('confirm-title').innerText=t; document.getElementById('confirm-body').innerText=m; document.getElementById('overlay-confirm').style.display='flex'; }
