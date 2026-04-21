@@ -50,6 +50,7 @@ io.on('connection', (socket) => {
     // --- [ ALERTS ] ---
     socket.on('station-call', (d) => { calls.push(d); io.emit('announcement', { id: 'call', status: 'alert', message: d.type }); });
     socket.on('clear-call', (id) => { calls = calls.filter(c => c.id !== id); });
+    socket.on('clear-completed', () => { orders = orders.filter(o => o.status !== 'ready' && o.status !== 'Complete'); io.emit('order-update', orders); });
 
     // --- [ JUKEBOX ] ---
     socket.on('jukebox-action', (action) => {

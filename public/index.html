@@ -105,6 +105,18 @@
         
         .pickup-item { background: rgba(255,255,255,0.05); padding: 25px; border-radius: 20px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-left: 10px solid var(--primary); }
         .pickup-item.ready { border-left-color: var(--success); }
+
+        .carbon-bg { 
+            background: linear-gradient(27deg, #151515 5px, transparent 5px) 0 5px,
+                        linear-gradient(207deg, #151515 5px, transparent 5px) 10px 0,
+                        linear-gradient(27deg, #222 5px, transparent 5px) 0 10px,
+                        linear-gradient(207deg, #222 5px, transparent 5px) 10px 5px,
+                        linear-gradient(90deg, #1b1b1b 10px, transparent 10px),
+                        linear-gradient(#1d1d1d 25%, #1a1a1a 25%, #1a1a1a 50%, transparent 50%, transparent 75%, #242424 75%, #242424);
+            background-size: 20px 20px; background-color: #131313;
+        }
+        .hero-title { font-size: 4rem; font-weight: 900; letter-spacing: -2px; margin-bottom: 10px; color: white; text-shadow: 0 10px 20px rgba(0,0,0,0.5); }
+        .glass-card { background: rgba(255,255,255,0.08); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); border-radius: 30px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); }
     </style>
 </head>
 <body>
@@ -194,8 +206,11 @@
 
     <main id="kds-view" class="view-container" style="background:var(--dark);">
         <div style="padding:20px; color:white; display:flex; justify-content:space-between; border-bottom:1px solid #1e293b;">
-            <h2>Kitchen Board</h2>
-            <button onclick="enableVoice()" id="voice-lock" style="background:var(--accent); color:white; padding:10px 20px; border-radius:12px;">Enable Kitchen Audio</button>
+            <h2 style="display:flex; align-items:center; gap:10px;"><i data-lucide="chef-hat"></i> Kitchen Board</h2>
+            <div style="display:flex; gap:10px;">
+                <button class="pay-btn" style="margin:0; width:auto; padding:8px 25px; background:rgba(255,255,255,0.1); font-size:0.85rem;" onclick="clearReady()">Clear Screen</button>
+                <button onclick="enableVoice()" id="voice-lock" style="background:var(--accent); color:white; padding:10px 20px; border-radius:12px;">Audio Enabled</button>
+            </div>
         </div>
         <div style="padding:20px; flex:1; overflow-y:auto;"><div class="menu-grid" id="kds-grid"></div></div>
     </main>
@@ -262,37 +277,40 @@
         </div>
     </main>
 
-    <main id="cust-view" class="view-container" style="background:var(--dark); color:white;">
+    <main id="cust-view" class="view-container carbon-bg" style="color:white;">
         <div id="cds-setup" style="text-align:center; margin-top:20vh; padding:40px;">
-            <h1 style="font-size:3rem; margin-bottom:30px;">Initialize Display</h1>
+            <h1 class="hero-title">Initialize Terminal</h1>
             <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; max-width:800px; margin:auto;">
-                <button class="pay-btn" style="height:200px; background:var(--accent);" onclick="setCDSMode('table')"><i data-lucide="music" style="width:60px; height:60px;"></i><br>Table 1 Console</button>
-                <button class="pay-btn" style="height:200px; background:var(--primary);" onclick="setCDSMode('pickup')"><i data-lucide="shopping-bag" style="width:60px; height:60px;"></i><br>Takeout Tracker</button>
+                <button class="pay-btn glass-card" style="height:250px; flex-direction:column;" onclick="setCDSMode('table')"><i data-lucide="music" style="width:80px; height:80px;"></i><br>TABLE 1 CONSOLE</button>
+                <button class="pay-btn glass-card" style="height:250px; flex-direction:column;" onclick="setCDSMode('pickup')"><i data-lucide="shopping-bag" style="width:80px; height:80px;"></i><br>TAKEOUT TRACKER</button>
             </div>
         </div>
-        <div id="cds-table" style="display:none; padding:40px; text-align:center;">
-             <div class="jukebox-card" style="background:rgba(255,255,255,0.05); color:white; max-width:650px; margin:auto;">
-                <div class="now-playing-box">
-                    <div class="album-art" id="c-art"></div>
-                    <div class="song-info">
-                        <div class="song-title" id="c-title">No Track Playing</div>
-                        <div class="song-artist" id="c-artist">-</div>
-                        <div class="prog-wrap"><div class="prog-bar" id="c-prog" style="width:0%"></div></div>
-                        <div class="audio-ctrls">
-                            <div class="ctrl-icon" onclick="jAction('skip', { type: 'prev' })"><i data-lucide="skip-back"></i></div>
-                            <div class="ctrl-icon play-main" onclick="jAction('toggle', { play: !jState.playing })" id="c-toggle-btn"><i data-lucide="play"></i></div>
-                            <div class="ctrl-icon" onclick="jAction('skip', { type: 'next' })"><i data-lucide="skip-forward"></i></div>
+        <div id="cds-table" style="display:none; padding:40px; text-align:center; height:100%;">
+             <div style="margin-top:10vh;">
+                <h1 class="hero-title" style="margin-bottom:50px;">Welcome to Table 1</h1>
+                <div class="jukebox-card glass-card" style="max-width:800px; margin:auto; padding:40px;">
+                    <div class="now-playing-box">
+                        <div class="album-art" id="c-art" style="width:250px; height:250px;"></div>
+                        <div class="song-info">
+                            <div class="song-title" id="c-title" style="font-size:2.5rem;">No Track Playing</div>
+                            <div class="song-artist" id="c-artist" style="font-size:1.5rem;">Base44 Radio</div>
+                            <div class="prog-wrap" style="height:12px; margin-top:30px;"><div class="prog-bar" id="c-prog"></div></div>
+                            <div class="audio-ctrls" style="margin-top:40px; gap:30px;">
+                                <div class="ctrl-icon" style="width:70px; height:70px;" onclick="jAction('skip', { type: 'prev' })"><i data-lucide="skip-back" style="width:35px; height:35px;"></i></div>
+                                <div class="ctrl-icon play-main" style="width:100px; height:100px;" onclick="jAction('toggle', { play: !jState.playing })" id="c-toggle-btn"><i data-lucide="play" style="width:50px; height:50px;"></i></div>
+                                <div class="ctrl-icon" style="width:70px; height:70px;" onclick="jAction('skip', { type: 'next' })"><i data-lucide="skip-forward" style="width:35px; height:35px;"></i></div>
+                            </div>
+                            <div class="vol-wrap" style="margin-top:40px;"><i data-lucide="volume-2"></i><input type="range" id="c-vol" oninput="jAction('volume', { val: this.value })"></div>
                         </div>
-                        <div class="vol-wrap"><i data-lucide="volume-2"></i><input type="range" id="c-vol" min="0" max="100" value="50" oninput="jAction('volume', { val: this.value })"></div>
                     </div>
                 </div>
-            </div>
-            <button onclick="resetC()" style="margin-top:50px; opacity:0.3;">Reset Display</button>
+             </div>
+            <button onclick="resetC()" style="position:fixed; bottom:30px; right:30px; opacity:0.2;">RESET STATION</button>
         </div>
-        <div id="cds-pickup" style="display:none; padding:40px; max-width:1000px; margin:auto;">
-            <h1 style="font-size:3.5rem; font-weight:900; margin-bottom:40px; text-align:center;">Orders & Status</h1>
-            <div id="pickup-list"></div>
-            <button onclick="resetC()" style="margin-top:50px; opacity:0.3;">Reset Display</button>
+        <div id="cds-pickup" style="display:none; padding:40px; height:100%; display:flex; flex-direction:column;">
+            <h1 class="hero-title" style="text-align:center; margin-bottom:40px;">Orders & Status</h1>
+            <div id="pickup-list" style="flex:1; overflow-y:auto; padding-right:15px;"></div>
+            <button onclick="resetC()" style="align-self:center; margin-top:20px; opacity:0.2;">RESET STATION</button>
         </div>
         <audio id="global-player" onended="onTrackEnd()" ontimeupdate="onSeekChange()"></audio>
     </main>
@@ -507,17 +525,20 @@
         function logOffStaff() { sData=null; navTo('pos-view', document.querySelector('.nav-button')); }
         function renderKPI() { document.getElementById('m-rev').innerText = `$${activeOrders.reduce((a,b)=>a+(b.total||0),0).toFixed(2)}`; document.getElementById('m-ord').innerText = activeOrders.length; }
 
+        function clearReady() { if(confirm("Clear all completed orders from screen?")) socket.emit('clear-completed'); }
+        
         function printRec(o) {
             let h = '';
-            rSchema.forEach(item => {
+            let schema = (rSchema && rSchema.length) ? rSchema : [{type:'logo',val:''},{type:'text',val:'CRAZY BURGERS'},{type:'sep'},{type:'items'},{type:'total'}];
+            schema.forEach(item => {
                 switch(item.type) {
-                    case 'logo': h += `<img src="${item.val}" class="r-logo">`; break;
+                    case 'logo': h += `<div style="text-align:center;"><img src="${item.val || 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format'}" style="max-width:40mm; margin-bottom:10px;"></div>`; break;
                     case 'text': h += `<h1>${item.val}</h1>`; break;
                     case 'orderid': h += `<h2>ORDER #${o.id}</h2>`; break;
                     case 'table': h += `<h2>ZONE: ${o.table}</h2>`; break;
                     case 'items': o.items.forEach(i => h += `<div class="item"><span>${i.name}</span><span>$${i.price.toFixed(2)}</span></div>`); break;
                     case 'total': h += `<div class="sep"></div><h2 style="display:flex; justify-content:space-between;"><span>TOTAL</span><span>$${o.total.toFixed(2)}</span></h2>`; break;
-                    case 'date': h += `<p>${o.time}</p>`; break;
+                    case 'date': h += `<p>${new Date().toLocaleString()}</p>`; break;
                     case 'sep': h += `<div class="sep"></div>`; break;
                 }
             });
