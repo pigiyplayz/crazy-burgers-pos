@@ -158,6 +158,27 @@
         </div>
     </div>
 
+    <div id="pin-overlay" class="overlay">
+        <div class="modal" style="max-width:350px;">
+            <div id="pin-dot-view" class="pin-dot-area"></div>
+            <div class="pin-grid">
+                <button class="pay-btn" style="margin:0; background:#f1f5f9; color:var(--dark);" onclick="pinP('1')">1</button>
+                <button class="pay-btn" style="margin:0; background:#f1f5f9; color:var(--dark);" onclick="pinP('2')">2</button>
+                <button class="pay-btn" style="margin:0; background:#f1f5f9; color:var(--dark);" onclick="pinP('3')">3</button>
+                <button class="pay-btn" style="margin:0; background:#f1f5f9; color:var(--dark);" onclick="pinP('4')">4</button>
+                <button class="pay-btn" style="margin:0; background:#f1f5f9; color:var(--dark);" onclick="pinP('5')">5</button>
+                <button class="pay-btn" style="margin:0; background:#f1f5f9; color:var(--dark);" onclick="pinP('6')">6</button>
+                <button class="pay-btn" style="margin:0; background:#f1f5f9; color:var(--dark);" onclick="pinP('7')">7</button>
+                <button class="pay-btn" style="margin:0; background:#f1f5f9; color:var(--dark);" onclick="pinP('8')">8</button>
+                <button class="pay-btn" style="margin:0; background:#f1f5f9; color:var(--dark);" onclick="pinP('9')">9</button>
+                <button class="pay-btn" style="margin:0; background:none; color:gray;" onclick="closePin()">Exit</button>
+                <button class="pay-btn" style="margin:0; background:#f1f5f9; color:var(--dark);" onclick="pinP('0')">0</button>
+                <button class="pay-btn" style="margin:0;" onclick="pinV()">GO</button>
+            </div>
+            <button class="pay-btn" style="background:none; color:red; width:100%; font-size:0.8rem; margin-top:15px;" onclick="pinC()">Clear Entry</button>
+        </div>
+    </div>
+
     <!-- VIEWS -->
     <main id="pos-view" class="view-container active">
         <div class="pos-main"><h1 style="font-weight:900; margin-bottom:20px;">POS Terminal</h1><div class="menu-grid" id="pos-grid"></div></div>
@@ -328,7 +349,9 @@
             }
             document.getElementById('call-msg').innerText = d.message; 
             document.getElementById('station-call-alert').style.display='block'; 
+            setTimeout(() => { document.getElementById('station-call-alert').style.display='none'; }, 3000);
         });
+        function clearCall() { document.getElementById('station-call-alert').style.display='none'; }
         function enableVoice() { voiceActive = true; localStorage.setItem('b44_voice', true); document.getElementById('voice-lock').style.display='none'; }
         function say(msg) { if(voiceActive) { let u = new SpeechSynthesisUtterance(msg); window.speechSynthesis.speak(u); } }
 
@@ -402,7 +425,7 @@
         function cyc(id, s, silent = false) { 
             socket.emit('update-order-status', { id: Number(id), status: s }); 
         }
-        function customAlert(t, m) { document.getElementById('alert-title').innerText=t; document.getElementById('alert-body').innerText=m; document.getElementById('overlay-alert').style.display='flex'; setTimeout(()=>document.getElementById('overlay-alert').style.display='none', 4000); }
+        function customAlert(t, m) { document.getElementById('alert-title').innerText=t; document.getElementById('alert-body').innerText=m; document.getElementById('overlay-alert').style.display='flex'; setTimeout(()=>document.getElementById('overlay-alert').style.display='none', 3000); }
         function renderP() { document.getElementById('pos-grid').innerHTML = menu.map(m => `<div class="menu-card" onclick="openMod(${m.id})"><div class="menu-img" style="background-image:url('${m.image}')"></div><div class="menu-content"><b>${m.name}</b><br><span style="color:var(--primary)">$${m.price.toFixed(2)}</span></div></div>`).join(''); }
         function openMod(id) { let tI = menu.find(i=>i.id===id); cart.push({ cid: Date.now(), ...tI }); renderCart(); }
         function renderCart() { document.getElementById('op-items').innerHTML = cart.map(i => `<div class="cart-row"><span>${i.name}</span><button onclick="remC(${i.cid})" style="color:red; background:none;">×</button></div>`).join(''); document.getElementById('pos-total').innerText = cart.reduce((a,b)=>a+b.price,0).toFixed(2); }
