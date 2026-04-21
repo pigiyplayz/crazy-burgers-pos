@@ -350,17 +350,17 @@
             let c = document.getElementById('canvas'); if(!c) return;
             c.innerHTML = rSchema.map((item, idx) => `
                 <div class="canvas-row" id="row-${idx}">
-                    ${renderComponent(item.type, item.val)}
+                    ${renderComponent(item.type, item.val, idx)}
                     <div class="btn-rem-row" onclick="removeRow(${idx})">×</div>
                 </div>
             `).join('');
             if(rSchema.length) document.getElementById('empty-hint').style.display = 'none';
         }
 
-        function renderComponent(type, val) {
+        function renderComponent(type, val, idx) {
             switch(type) {
-                case 'logo': return `<img src="${val || 'https://via.placeholder.com/150x50?text=Logo+URL'}" style="max-width:100%;" onclick="editVal(this, 'logo')">`;
-                case 'text': return `<input class="row-text" style="font-weight:900; font-size:1.2rem;" value="${val}" onchange="updateVal(${rSchema.indexOf(rSchema.find(i=>i.val===val))}, this.value)">`;
+                case 'logo': return `<img src="${val || 'https://via.placeholder.com/150x50?text=Logo+URL'}" style="max-width:100%;" onclick="editVal(this, 'logo', ${idx})">`;
+                case 'text': return `<input class="row-text" style="font-weight:900; font-size:1.2rem;" value="${val}" onchange="updateVal(${idx}, this.value)">`;
                 case 'orderid': return `<p style="text-align:center; font-family:Courier;">ORDER #8888</p>`;
                 case 'table': return `<p style="text-align:center; font-family:Courier; font-weight:900;">TABLE 1 / BAR</p>`;
                 case 'items': return `<div style="font-family:Courier; border:1px dashed #ccc; padding:5px;">Item List Area</div>`;
@@ -381,8 +381,8 @@
             renderArchitect();
         }
         function removeRow(idx) { rSchema.splice(idx, 1); renderArchitect(); }
-        function updateVal(idx, val) { if(idx!==-1) rSchema[idx].val = val; }
-        function editVal(el, type) { if(type==='logo') { let n = prompt("Enter Logo Image URL:", el.src); if(n) { el.src = n; rSchema.find(i=>i.type==='logo').val = n; } } }
+        function updateVal(idx, val) { rSchema[idx].val = val; }
+        function editVal(el, type, idx) { if(type==='logo') { let n = prompt("Enter Logo Image URL:", el.src); if(n) { el.src = n; rSchema[idx].val = n; } } }
         function saveArchitect() { localStorage.setItem('b44_rSchema', JSON.stringify(rSchema)); customAlert("Architect", "Receipt design saved."); }
 
         // --- [ POS / ORDERING ] ---
