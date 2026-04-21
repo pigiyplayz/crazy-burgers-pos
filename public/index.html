@@ -220,6 +220,7 @@
                     <div style="display:flex; gap:10px; margin-top:25px;"><button class="pay-btn" style="margin:0;" onclick="jAction('toggle', { play: !jState.playing })">Sync Jukebox</button></div>
                 </div>
             </div>
+            <input type="file" id="logo-up" accept="image/*" style="display:none;" onchange="logoF(this.files[0])">
             <div id="s-config" class="master-content">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;"><p style="font-weight:700;">Design your receipt below.</p><button class="pay-btn" style="margin:0; width:auto; padding:10px 30px;" onclick="saveArchitect()">Save Layout</button></div>
                 <div class="architect-container" style="height: calc(100vh - 280px);">
@@ -382,8 +383,13 @@
             lucide.createIcons();
         }
         function move(idx, dir) { let to = idx+dir; if(to>=0 && to<rSchema.length) { [rSchema[idx], rSchema[to]] = [rSchema[to], rSchema[idx]]; renderArchitect(); } }
+        let curLogoIdx = -1;
         function renderComponent(type, val, idx) { switch(type) {
-            case 'logo': return `<img src="${val || 'https://via.placeholder.com/150x50'}" style="max-width:100%;">`;
+            case 'logo': return `
+                <div style="text-align:center; position:relative;" onclick="triggerLogoUp(${idx})">
+                    <img src="${val || 'https://via.placeholder.com/150x50'}" style="max-width:100%; cursor:pointer;">
+                    <div style="font-size:0.6rem; color:gray; margin-top:4px;">(Click to Change Logo)</div>
+                </div>`;
             case 'text': return `<input class="row-text" value="${val}" onchange="updateVal(${idx},this.value)" style="border:none; text-align:center; width:100%; font-weight:800;">`;
             case 'orderid': return `<p>ORDER #8888</p>`;
             case 'table': return `<p>ZONE: FRONT COUNTER</p>`;
@@ -395,7 +401,29 @@
         }}
         function drag(ev, t) { ev.dataTransfer.setData("type", t); } function allowDrop(ev) { ev.preventDefault(); }
         function drop(ev) { ev.preventDefault(); let t = ev.dataTransfer.getData("type"); rSchema.push({ type: t, val: t === 'text' ? 'New Header' : '' }); renderArchitect(); }
-        function fetchR() { db.collection('config').doc('receipt').get().then(s => { if(s.exists) { rSchema = s.data().layout; if(navID === 'manager-view') renderArchitect(); } }); }
+        
+        function triggerLogoUp(idx) { curLogoIdx = idx; document.getElementById('logo-up').click(); }
+        async function logoF(file) {
+            if(!file) return; customAlert("Uploading", "Sending logo to cloud...");
+            try {
+                let ref = storage.ref(`logos/${Date.now()}_${file.name}`);
+                await ref.put(file); let url = await ref.getDownloadURL();
+                rSchema[curLogoIdx].val = url; renderArchitect();
+                customAlert("Finished", "Logo Updated locally. Click Save to Sync.");
+            } catch(e) { customAlert("Failed", e.message); }
+        }
+
+        function fetchR() { 
+            db.collection('config').doc('receipt').get().then(s => { 
+                if(s.exists) { 
+                    rSchema = s.data().layout; 
+                } else {
+                    let old = localStorage.getItem('b44_rSchema');
+                    if(old) { rSchema = JSON.parse(old); saveArchitect(); }
+                }
+                if(navID === 'manager-view') renderArchitect(); 
+            }); 
+        }
         function saveArchitect() { db.collection('config').doc('receipt').set({ layout: rSchema }).then(() => { customAlert("Syncing", "Cloud Receipt Updated."); socket.emit('r-sync'); }); }
         socket.on('r-sync', () => { fetchR(); });
 
