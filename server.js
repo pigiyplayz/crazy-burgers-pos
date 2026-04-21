@@ -7,81 +7,73 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
-// Logging
-app.use((req, res, next) => {
-    console.log(`Request received for: ${req.url}`);
-    next();
-});
-
-// Serve everything inside the 'public' folder
 app.use(express.static(path.join(__dirname, 'public')));
+app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 
-// Default entry point
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
-// Real-time State
+// --- [ GLOBAL STATE ] ---
 let orders = [];
-let cleanups = [];
-let calls = []; // Tracks station-to-station active calls
+let calls = [];
+let jukebox = {
+    playlist: [], // { url, title, addedBy }
+    currentIndex: -1,
+    playing: false,
+    locked: false,
+    defaultQueue: [
+        { url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3", title: "Crazy Burgers Radio", addedBy: "System" }
+    ]
+};
 
 io.on('connection', (socket) => {
-    // Send initial state to newly connected client
-    socket.emit('initial-data', { orders, cleanups, calls });
+    socket.emit('initial-data', { orders, calls });
+    socket.emit('jukebox-update', jukebox);
 
-    // Handle New Order
+    // --- [ ORDERS ] ---
     socket.on('new-order', (order) => { 
         orders.push(order); 
         io.emit('order-update', orders); 
+        io.emit('kds-ding'); // Trigger sound on KDS
     });
 
-    // Handle Order Status Cycle (pending -> preparing -> ready -> completed)
     socket.on('update-order-status', ({ id, status }) => {
         const idx = orders.findIndex(o => o.id === id);
         if (idx !== -1) {
-            if (status === 'Complete') {
-                orders.splice(idx, 1);
-            } else {
-                orders[idx].status = status;
-            }
+            if (status === 'Complete') orders.splice(idx, 1);
+            else orders[idx].status = status;
             io.emit('order-update', orders);
             
-            // Trigger specific announcements via socket
             let announceMsg = '';
-            if (status === 'preparing') announceMsg = `Order ${id} is now being prepared.`;
-            if (status === 'ready') announceMsg = `Order ${id} is ready for pickup!`;
-            
-            if (announceMsg) {
-                io.emit('announcement', { id, status, message: announceMsg, timestamp: Date.now() });
-            }
+            if (status === 'preparing') announceMsg = `Order ${id} is being prepared.`;
+            if (status === 'ready') announceMsg = `Order ${id} is ready!`;
+            if (announceMsg) io.emit('announcement', { id, status, message: announceMsg });
         }
     });
 
-    // Cleanup System
-    socket.on('new-cleanup', (c) => { 
-        cleanups.push(c); 
-        io.emit('cleanup-update', cleanups); 
-    });
-    
-    socket.on('clear-cleanup', (id) => {
-        cleanups = cleanups.filter(c => c.id !== id);
-        io.emit('cleanup-update', cleanups);
-    });
+    // --- [ ALERTS ] ---
+    socket.on('station-call', (d) => { calls.push(d); io.emit('announcement', { id: 'call', status: 'alert', message: d.type }); });
+    socket.on('clear-call', (id) => { calls = calls.filter(c => c.id !== id); });
 
-    // Station Call System
-    socket.on('station-call', (callData) => {
-        // callData might be { id: 123, from: 'POS 1', type: 'Manager Needed' }
-        calls.push(callData);
-        io.emit('call-update', calls);
-        io.emit('announcement', { id: 'call', status: 'alert', message: callData.type });
-    });
+    // --- [ JUKEBOX ] ---
+    socket.on('jukebox-action', (action) => {
+        if (jukebox.locked && action.from !== 'Manager') return;
 
-    socket.on('clear-call', (id) => {
-        calls = calls.filter(c => c.id !== id);
-        io.emit('call-update', calls);
+        switch(action.type) {
+            case 'add': 
+                jukebox.playlist.push({ url: action.url, title: action.title || 'Unknown Track', addedBy: action.from });
+                if (jukebox.currentIndex === -1) jukebox.currentIndex = 0;
+                break;
+            case 'skip':
+                if (jukebox.playlist.length > 0) {
+                    jukebox.currentIndex = (jukebox.currentIndex + 1) % jukebox.playlist.length;
+                    if (jukebox.currentIndex === 0 && !action.loop) jukebox.currentIndex = -1; // End of list
+                }
+                break;
+            case 'toggle': jukebox.playing = action.play; break;
+            case 'lock': jukebox.locked = action.lock; break;
+            case 'clear': jukebox.playlist = []; jukebox.currentIndex = -1; jukebox.playing = false; break;
+        }
+        io.emit('jukebox-update', jukebox);
     });
 });
 
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => console.log(`Base44 Clone Server Active on Port ${PORT}`));
+server.listen(PORT, () => console.log(`Base44 Jukebox POS Active on Port ${PORT}`));
