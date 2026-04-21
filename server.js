@@ -14,13 +14,13 @@ app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.ht
 let orders = [];
 let calls = [];
 let jukebox = {
-    playlist: [], // { url, title, addedBy }
+    playlist: [], 
     currentIndex: -1,
     playing: false,
     locked: false,
-    defaultQueue: [
-        { url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3", title: "Crazy Burgers Radio", addedBy: "System" }
-    ]
+    volume: 50,
+    position: 0,
+    defaultQueue: []
 };
 
 io.on('connection', (socket) => {
@@ -69,6 +69,8 @@ io.on('connection', (socket) => {
                 break;
             case 'toggle': jukebox.playing = action.play; break;
             case 'lock': jukebox.locked = action.lock; break;
+            case 'volume': jukebox.volume = action.val; break;
+            case 'seek': jukebox.position = action.val; break;
             case 'clear': jukebox.playlist = []; jukebox.currentIndex = -1; jukebox.playing = false; break;
         }
         io.emit('jukebox-update', jukebox);

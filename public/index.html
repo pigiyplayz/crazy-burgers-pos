@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Base44 | Crazy Burgers Jukebox</title>
+    <title>Base44 | Crazy Burgers Audio</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -12,6 +12,8 @@
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsmediatags/3.9.5/jsmediatags.min.js"></script>
 
     <style>
         :root {
@@ -61,7 +63,6 @@
             #receipt-area { position: fixed; left: 0; top: 0; display: block; width: 72mm; padding: 2mm; font-family: 'Courier New', Courier, monospace; text-align: center; }
             .sep { border-bottom: 1px dashed #000; margin: 3mm 0; }
             .item { display: flex; justify-content: space-between; margin: 2mm 0; font-size: 10pt; }
-            .r-logo { width: 40mm; margin: auto; display: block; margin-bottom: 5mm; }
         }
 
         .pin-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
@@ -84,16 +85,28 @@
         .master-content { display: none; }
         .master-content.active { display: block; }
 
-        .jukebox-card { background: white; border-radius: 15px; padding: 20px; box-shadow: var(--shadow-md); border: 2px solid #e2e8f0; }
-        .track-item { padding: 12px; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; }
-        .track-item.now { background: #f0f9ff; border-left: 4px solid var(--accent); font-weight: 900; }
+        .jukebox-card { background: white; border-radius: 15px; padding: 25px; box-shadow: var(--shadow-md); border: 2px solid #e2e8f0; }
+        .now-playing-box { display: flex; gap: 25px; align-items: center; margin-bottom: 30px; }
+        .album-art { width: 150px; height: 150px; border-radius: 15px; background: var(--dark-light); background-size: cover; background-position: center; box-shadow: 0 10px 20px rgba(0,0,0,0.3); flex-shrink: 0; }
+        .song-info { flex: 1; text-align: left; }
+        .song-title { font-size: 1.8rem; font-weight: 900; margin-bottom: 5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .song-artist { font-size: 1.1rem; color: var(--text-gray); font-weight: 600; margin-bottom: 15px; }
+        
+        .prog-wrap { width: 100%; height: 6px; background: rgba(0,0,0,0.1); border-radius: 10px; margin-bottom: 25px; position: relative; }
+        .prog-bar { height: 100%; background: var(--accent); border-radius: 10px; transition: 0.1s; width: 0%; }
+        .audio-ctrls { display: flex; align-items: center; justify-content: center; gap: 20px; }
+        .ctrl-icon { width: 45px; height: 45px; background: #f1f5f9; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--dark); cursor: pointer; transition: 0.2s; }
+        .ctrl-icon:hover { background: var(--accent); color: white; transform: scale(1.1); }
+        .ctrl-icon.play-main { width: 65px; height: 65px; background: var(--dark); color: white; }
+        .vol-wrap { display: flex; align-items: center; gap: 10px; margin-top: 25px; }
+        input[type=range] { flex: 1; accent-color: var(--accent); }
     </style>
 </head>
 <body>
 
     <div id="station-call-alert">⚠️ ALERT: <span id="call-msg"></span> <button onclick="clearCall()" style="margin-left: 15px; padding: 8px 20px; border-radius: 30px; background: rgba(0,0,0,0.1); font-weight:900;">CLEAR</button></div>
 
-    <div id="overlay-alert" class="overlay"><div class="modal" style="text-align:center;"><div id="alert-title" style="font-size:1.8rem; font-weight:900; margin-bottom:15px;">Notice</div><p id="alert-body" style="font-size:1.2rem; color:var(--text-gray); margin-bottom: 25px;"></p><button class="pay-btn" style="margin:0;" onclick="closeAlert()">Okay</button></div></div>
+    <div id="overlay-alert" class="overlay"><div class="modal" style="text-align:center;"><div id="alert-title" style="font-size:1.8rem; font-weight:900; margin-bottom:15px;">Notice</div><p id="alert-body" style="font-size:1.2rem; color:var(--text-gray); margin-bottom: 25px;"></p></div></div>
     
     <div id="overlay-loyalty" class="overlay">
         <div class="modal">
@@ -105,45 +118,6 @@
             </div>
             <div id="loyalty-find" style="display:none;"><input type="text" id="loy-q" placeholder="Customer Name"><button class="pay-btn" onclick="findMember()">Lookup Account</button><button class="pay-btn" style="background:none; color:gray;" onclick="loyS('init')">Cancel</button></div>
             <div id="loyalty-create" style="display:none;"><input type="text" id="loy-n" placeholder="Customer Name"><button class="pay-btn" onclick="createMember()">Create Account</button><button class="pay-btn" style="background:none; color:gray;" onclick="loyS('init')">Cancel</button></div>
-        </div>
-    </div>
-
-    <div id="overlay-redeem" class="overlay">
-        <div class="modal" style="text-align:center;">
-            <h2 style="font-weight:900; margin-bottom:15px;">Redeem Points?</h2>
-            <p style="font-size:1.2rem;">Balance: <span id="r-bal" style="font-weight:900; color:var(--success);">0</span> Points</p>
-            <p style="color:var(--text-gray); margin-bottom:25px;">Enough for a $<span id="r-disc">0.00</span> discount!</p>
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px;"><button class="pay-btn" style="margin:0; background:gray;" onclick="redeemPoints(false)">No (Skip)</button><button class="pay-btn" style="margin:0;" onclick="redeemPoints(true)">Redeem</button></div>
-        </div>
-    </div>
-
-    <div id="overlay-table" class="overlay">
-        <div class="modal">
-            <h2 style="text-align:center; margin-bottom:25px;">Zone Assignment</h2>
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
-                <button class="pay-btn" onclick="finishOrder('Takeout')">Takeout</button>
-                <button class="pay-btn" onclick="finishOrder('Table 1')">Table 1</button>
-                <button class="pay-btn" onclick="finishOrder('Table 2')">Table 2</button>
-                <button class="pay-btn" onclick="finishOrder('Table 3')">Table 3</button>
-                <button class="pay-btn" onclick="finishOrder('Table 4')">Table 4</button>
-                <button class="pay-btn" onclick="finishOrder('Table 5')">Table 5</button>
-                <button class="pay-btn" style="background:var(--accent);" onclick="finishOrder('Bar')">Bar Area</button>
-            </div>
-            <button class="pay-btn" style="background:none; color:gray; width:100%; border:1px solid #eee;" onclick="document.getElementById('overlay-table').style.display='none'">Cancel</button>
-        </div>
-    </div>
-
-    <!-- UNIVERSAL NUMPAD -->
-    <div id="pin-overlay" class="overlay">
-        <div class="modal" style="max-width:340px;">
-            <h2 id="pin-title" style="text-align:center; margin-bottom:20px;">Enter PIN</h2>
-            <div id="pin-dot-view" class="pin-dot-area"></div>
-            <div class="pin-grid">
-                <button class="pay-btn" style="background:#f1f5f9; color:var(--dark); margin:0;" onclick="pinP('1')">1</button><button class="pay-btn" style="background:#f1f5f9; color:var(--dark); margin:0;" onclick="pinP('2')">2</button><button class="pay-btn" style="background:#f1f5f9; color:var(--dark); margin:0;" onclick="pinP('3')">3</button>
-                <button class="pay-btn" style="background:#f1f5f9; color:var(--dark); margin:0;" onclick="pinP('4')">4</button><button class="pay-btn" style="background:#f1f5f9; color:var(--dark); margin:0;" onclick="pinP('5')">5</button><button class="pay-btn" style="background:#f1f5f9; color:var(--dark); margin:0;" onclick="pinP('6')">6</button>
-                <button class="pay-btn" style="background:#f1f5f9; color:var(--dark); margin:0;" onclick="pinP('7')">7</button><button class="pay-btn" style="background:#f1f5f9; color:var(--dark); margin:0;" onclick="pinP('8')">8</button><button class="pay-btn" style="background:#f1f5f9; color:var(--dark); margin:0;" onclick="pinP('9')">9</button>
-                <button class="pay-btn" style="background:#fee2e2; color:#ef4444; margin:0;" onclick="pinC()">C</button><button class="pay-btn" style="background:#f1f5f9; color:var(--dark); margin:0;" onclick="pinP('0')">0</button><button class="pay-btn" style="background:#dcfce7; color:#16a34a; margin:0;" onclick="pinV()">OK</button>
-            </div>
         </div>
     </div>
 
@@ -163,7 +137,6 @@
     <main id="pos-view" class="view-container active">
         <div class="pos-main"><h1 style="font-weight:900; margin-bottom:20px;">POS Terminal</h1><div class="menu-grid" id="pos-grid"></div></div>
         <aside class="order-panel">
-            <div style="padding:20px; font-weight:900; border-bottom:1px solid #eee;">Current Order</div>
             <div class="op-items" id="op-items"></div>
             <div class="op-footer">
                 <div id="cart-loyalty-info" style="background:#f0faf2; padding:12px; border-radius:12px; margin-bottom:10px; display:none;">VIP: <span id="member-tag" style="font-weight:900;"></span></div>
@@ -176,7 +149,7 @@
     <main id="kds-view" class="view-container" style="background:var(--dark);">
         <div style="padding:20px; color:white; display:flex; justify-content:space-between; border-bottom:1px solid #1e293b;">
             <h2>Kitchen Board</h2>
-            <button onclick="enableVoice()" id="voice-lock" style="background:var(--accent); color:white; padding:10px 20px; border-radius:12px;">Enable Voice AI</button>
+            <button onclick="enableVoice()" id="voice-lock" style="background:var(--accent); color:white; padding:10px 20px; border-radius:12px;">Enable Kitchen Audio</button>
         </div>
         <div style="padding:20px; flex:1; overflow-y:auto;"><div class="menu-grid" id="kds-grid"></div></div>
     </main>
@@ -189,18 +162,16 @@
                 <button class="master-tab" onclick="switchM('s-config', this)">Architect</button>
                 <button class="master-tab" onclick="switchM('s-jukebox', this)">Jukebox</button>
             </div>
-            <div id="s-kpi" class="master-content active">Rev: <span id="m-rev">$0.00</span> | Orders: <span id="m-ord">0</span></div>
             <div id="s-jukebox" class="master-content">
                 <div class="jukebox-card">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-                        <h2 style="font-weight:900;">Restaurant Playlist</h2>
-                        <div style="display:flex; gap:10px;">
-                            <button class="pay-btn" style="margin:0; width:auto; background:var(--accent);" onclick="jAction('lock', { lock: !jState.locked })"><i data-lucide="${jState.locked?'lock':'unlock'}"></i> ${jState.locked?'Locked':'Unlocked'}</button>
-                            <button class="pay-btn" style="margin:0; width:auto; background:var(--primary);" onclick="jAction('clear')">Clear Playlist</button>
-                        </div>
+                    <h2 style="font-weight:900; margin-bottom:20px;">Master Cloud Jukebox</h2>
+                    <div style="background:#f8fafc; padding:20px; border-radius:15px; border:2px dashed #cbd5e1; text-align:center; margin-bottom:25px;">
+                        <input type="file" id="j-file" accept="audio/*" style="display:none;" onchange="uploadMusic(this.files[0])">
+                        <button class="pay-btn" style="margin:0; width:auto; padding:12px 40px;" onclick="document.getElementById('j-file').click()"><i data-lucide="upload-cloud"></i> Upload MP3</button>
+                        <p id="upload-status" style="margin-top:10px; font-size:0.85rem; color:var(--text-gray);"></p>
                     </div>
-                    <div id="m-jukebox-list" style="margin-bottom:20px;"></div>
-                    <div style="display:flex; gap:10px;"><input type="text" id="j-url" placeholder="Direct Audio Link (MP3)"><button class="pay-btn" style="margin:0; width:150px;" onclick="addT('Manager')">Add Track</button></div>
+                    <div id="m-jukebox-list"></div>
+                    <div style="display:flex; gap:10px; margin-top:25px;"><button class="pay-btn" style="margin:0;" onclick="jAction('toggle', { play: !jState.playing })">${jState.playing?'Pause':'Play All'}</button><button class="pay-btn" style="background:gray; margin:0;" onclick="jAction('clear')">Clear All</button></div>
                 </div>
             </div>
             <div id="s-config" class="master-content">
@@ -210,162 +181,147 @@
                         <div class="toolbox-item" draggable="true" ondragstart="drag(event, 'logo')"><i data-lucide="image"></i> Logo</div>
                         <div class="toolbox-item" draggable="true" ondragstart="drag(event, 'text')"><i data-lucide="type"></i> Header</div>
                         <div class="toolbox-item" draggable="true" ondragstart="drag(event, 'orderid')"><i data-lucide="hash"></i> Order #</div>
-                        <div class="toolbox-item" draggable="true" ondragstart="drag(event, 'table')"><i data-lucide="map-pin"></i> Table</div>
-                        <div class="toolbox-item" draggable="true" ondragstart="drag(event, 'items')"><i data-lucide="list"></i> Items</div>
-                        <div class="toolbox-item" draggable="true" ondragstart="drag(event, 'total')"><i data-lucide="dollar-sign"></i> Total</div>
-                        <div class="toolbox-item" draggable="true" ondragstart="drag(event, 'points')"><i data-lucide="star"></i> Points</div>
-                        <div class="toolbox-item" draggable="true" ondragstart="drag(event, 'date')"><i data-lucide="calendar"></i> Date</div>
                         <div class="toolbox-item" draggable="true" ondragstart="drag(event, 'sep')"><i data-lucide="minus"></i> Separator</div>
                     </div>
                     <div class="workspace"><div class="receipt-canvas" id="canvas" ondrop="drop(event)" ondragover="allowDrop(event)"></div></div>
                 </div>
             </div>
-            <div id="s-staff" class="master-content">
-                <div style="background:#f8fafc; padding:20px; border-radius:15px; margin-bottom:20px;"><div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px;"><input type="text" id="n-emp-n" placeholder="Name"><input type="text" id="n-emp-p" placeholder="PIN"><select id="n-emp-r"><option value="Manager">Manager</option><option value="Chef">Chef</option></select></div><button class="pay-btn" onclick="addSt()">Register</button></div>
-                <div id="m-staff-list"></div>
-            </div>
+            <div id="s-kpi" class="master-content active">Rev: <span id="m-rev">$0.00</span> | Orders: <span id="m-ord">0</span></div>
+            <div id="s-staff" class="master-content"><div id="m-staff-list"></div></div>
         </div>
     </main>
 
     <main id="cust-view" class="view-container" style="background:var(--dark); color:white;">
-        <div id="cds-setup" style="text-align:center; margin-top:20vh;">
-            <h1 style="font-size:3rem; margin-bottom:40px;">Select Station</h1>
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; max-width:600px; margin:auto;"><button class="pay-btn" onclick="bindC('Takeout')">Takeout</button><button class="pay-btn" onclick="bindC('Table 1')">Table 1</button></div>
-        </div>
+        <div id="cds-setup" style="text-align:center; margin-top:20vh;"><button class="pay-btn" onclick="bindC('Front Counter')">Activate Display</button></div>
         <div id="cds-active" style="display:none; padding:40px; text-align:center;">
-            <h1 id="cds-status" style="font-size:6rem; font-weight:900;">WELCOME</h1>
-            <div id="cds-items" style="font-size:2rem; opacity:0.8; margin-bottom:100px;">Waiting...</div>
-            <div class="jukebox-card" style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:white; max-width:600px; margin:auto;">
-                <h3 style="margin-bottom:20px;">Community Jukebox</h3>
-                <div id="c-jukebox-list" style="text-align:left; max-height:200px; overflow-y:auto; margin-bottom:20px;"></div>
-                <button class="pay-btn" style="margin:0; background:var(--accent);" onclick="jAction('skip')">Skip Song</button>
-                <div style="display:flex; gap:10px; margin-top:20px;"><input style="background:rgba(255,255,255,0.1); color:white; border:none;" type="text" id="cj-url" placeholder="Audio link (MP3)"><button class="pay-btn" style="margin:0; width:120px;" onclick="addT('Guest')">Add</button></div>
+            <div id="cds-order-view" style="margin-bottom:60px;">
+                <h1 id="cds-status" style="font-size:5rem; font-weight:900;">WELCOME</h1>
+                <div id="cds-items" style="font-size:2rem; opacity:0.7;">Ready to serve.</div>
             </div>
-            <audio id="global-player" onended="onTrackEnd()"></audio>
-            <button onclick="resetC()" style="margin-top:100px; background:none; color:gray;">Unbind Device</button>
+            <div class="jukebox-card" style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:white; max-width:650px; margin:auto;">
+                <div class="now-playing-box">
+                    <div class="album-art" id="c-art"></div>
+                    <div class="song-info">
+                        <div class="song-title" id="c-title">No Track Playing</div>
+                        <div class="song-artist" id="c-artist">-</div>
+                        <div class="prog-wrap"><div class="prog-bar" id="c-prog" style="width:0%"></div></div>
+                        <div class="audio-ctrls">
+                            <div class="ctrl-icon" onclick="jAction('skip', { type: 'prev' })"><i data-lucide="skip-back"></i></div>
+                            <div class="ctrl-icon play-main" onclick="jAction('toggle', { play: !jState.playing })" id="c-toggle-btn"><i data-lucide="play"></i></div>
+                            <div class="ctrl-icon" onclick="jAction('skip', { type: 'next' })"><i data-lucide="skip-forward"></i></div>
+                        </div>
+                        <div class="vol-wrap"><i data-lucide="volume-2"></i><input type="range" id="c-vol" min="0" max="100" value="50" oninput="jAction('volume', { val: this.value })"></div>
+                    </div>
+                </div>
+            </div>
+            <audio id="global-player" onended="onTrackEnd()" ontimeupdate="onSeekChange()"></audio>
+            <button onclick="resetC()" style="margin-top:50px; background:none; color:gray;">Unbind Device</button>
         </div>
     </main>
 
-    <main id="staff-view" class="view-container" style="background:var(--dark); align-items:center; justify-content:center;">
-        <div class="modal" id="s-portal" style="text-align:center; max-width:400px;">
-            <p id="s-role-tag" style="background:var(--primary); color:white; padding:5px 15px; border-radius:99px; display:inline-block; font-size:0.8rem; font-weight:800; margin-bottom:15px;">ROLE</p>
-            <h1 id="s-v-name" style="font-weight:900; margin-bottom:20px; font-size:2rem;">Staff Name</h1>
-            <button class="pay-btn" style="width:100%; background:none; color:gray; margin-top:20px;" onclick="logOffStaff()">Sign Out</button>
-        </div>
-    </main>
-
-    <!-- NEW ORDER DING -->
     <audio id="kds-ding-audio" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3"></audio>
-    <div id="receipt-area"></div>
 
     <script>
         lucide.createIcons();
-        const fC = { apiKey: "AIzaSyCDCnCn53HqVdIyTe-OcoITQ6mIuVn-eg4", authDomain: "crazy-burgers-fa20a.firebaseapp.com", projectId: "crazy-burgers-fa20a", storageBucket: "crazy-burgers-fa20a.firebasestorage.app", messagingSenderId: "908213507838", appId: "1:908213507838:web:0f719ff0398ffa0b3e37af", measurementId: "G-DDZZ1TR47D" };
-        firebase.initializeApp(fC); const db = firebase.firestore(); const socket = io();
+        const fC = { apiKey: "AIzaSyCDCnCn53HqVdIyTe-OcoITQ6mIuVn-eg4", authDomain: "crazy-burgers-fa20a.firebaseapp.com", projectId: "crazy-burgers-fa20a", storageBucket: "crazy-burgers-fa20a.appspot.com", messagingSenderId: "908213507838", appId: "1:908213507838:web:0f719ff0398ffa0b3e37af", measurementId: "G-DDZZ1TR47D" };
+        firebase.initializeApp(fC); const db = firebase.firestore(); const storage = firebase.storage(); const socket = io();
 
-        let menu = [{ id: 1, name: "Crazy Burger", price: 8.99, image: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=800&q=80" }, { id: 2, name: "Wild Fries", price: 3.49, image: "https://images.unsplash.com/photo-1630384066252-19e1ed95536a?auto=format&fit=crop&w=800&q=80" }];
+        let menu = [{ id: 1, name: "Crazy Burger", price: 8.99, image: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format" }];
         let localStaff = JSON.parse(localStorage.getItem('b44_staff')) || [];
-        let rSchema = JSON.parse(localStorage.getItem('b44_rSchema')) || [
-            { type: 'logo', val: '' }, { type: 'text', val: 'CRAZY BURGERS INC' }, { type: 'sep', val: '' },
-            { type: 'orderid', val: '' }, { type: 'table', val: '' }, { type: 'sep', val: '' }, { type: 'items', val: '' }, { type: 'total', val: '' }
-        ];
-
-        let cart = []; let activeOrders = []; let curM = null; let discAmt = 0; let ptsToRedeem = 0; let sData = null; let sPIN = ""; let mPIN = ""; let authTarget = null; let authBtn = null; let cID = null;
+        let rSchema = JSON.parse(localStorage.getItem('b44_rSchema')) || [{ type: 'logo', val: '' }, { type: 'text', val: 'CRAZY BURGERS' }];
+        let cart = []; let activeOrders = []; let curM = null; let discAmt = 0; let ptsToRedeem = 0; let sData = null; let sPIN = ""; let authTarget = null; let authBtn = null; let cID = null;
         let voiceActive = JSON.parse(localStorage.getItem('b44_voice')) || false;
-        let jState = { playlist: [], currentIndex: -1, locked: false, playing: false };
+        let jState = { playlist: [], currentIndex: -1, locked: false, playing: false, volume: 50, position: 0 };
+        let navID = 'pos-view';
 
-        function navTo(id, btn) { document.querySelectorAll('.view-container').forEach(c => c.classList.remove('active')); document.getElementById(id).classList.add('active'); if(btn) { document.querySelectorAll('.nav-button').forEach(b => b.classList.remove('active-nav')); btn.classList.add('active-nav'); } if(id === 'pos-view') renderP(); if(id === 'manager-view') renderArchitect(); }
-
-        // --- [ AUTH ] ---
-        function reqAuth(t, b) { authTarget = t; authBtn = b; sPIN = ""; if(t === 'staff-view' && sData) { navTo(t, b); return; } document.getElementById('pin-overlay').style.display = 'flex'; }
+        function navTo(id, btn) { navID=id; document.querySelectorAll('.view-container').forEach(c => c.classList.remove('active')); document.getElementById(id).classList.add('active'); if(btn) { document.querySelectorAll('.nav-button').forEach(b => b.classList.remove('active-nav')); btn.classList.add('active-nav'); } if(id === 'pos-view') renderP(); if(id === 'manager-view') renderArchitect(); }
+        function reqAuth(t, b) { authTarget = t; authBtn = b; sPIN = ""; document.getElementById('pin-overlay').style.display = 'flex'; }
         function pinP(n) { if(sPIN.length < 4) { sPIN += n; document.getElementById('pin-dot-view').innerText = "•".repeat(sPIN.length); } }
         function pinC() { sPIN = ""; document.getElementById('pin-dot-view').innerText = ""; }
         function closePin() { document.getElementById('pin-overlay').style.display = 'none'; }
         function pinV() { if(authTarget === 'manager-view' && sPIN === "2018") { closePin(); navTo(authTarget, authBtn); } else { let m = localStaff.find(e => e.pin === String(sPIN)); if(m) { sData = m; closePin(); navTo(authTarget, authBtn); } else { customAlert("Security", "Invalid PIN"); pinC(); } } }
 
-        // --- [ AUDIO / JUKEBOX ] ---
-        function enableVoice() { voiceActive = true; localStorage.setItem('b44_voice', true); document.getElementById('voice-lock').style.display='none'; say("Audio online."); }
-        function say(msg) { if(voiceActive) { let u = new SpeechSynthesisUtterance(msg); window.speechSynthesis.speak(u); } }
-        function addT(who) { let url = document.getElementById(who==='Manager'?'j-url':'cj-url').value; if(url) { jAction('add', { url, from: who }); document.getElementById(who==='Manager'?'j-url':'cj-url').value = ''; } }
+        // --- [ JUKEBOX ENGINE ] ---
+        async function uploadMusic(file) {
+            if(!file) return; document.getElementById('upload-status').innerText = "Reading tags...";
+            jsmediatags.read(file, {
+                onSuccess: async (tag) => {
+                    let art = ''; if(tag.tags.picture) { let { data, format } = tag.tags.picture; let base64 = data.map(b => String.fromCharCode(b)).join(''); art = `data:${format};base64,${btoa(base64)}`; }
+                    document.getElementById('upload-status').innerText = "Uploading to cloud...";
+                    let ref = storage.ref(`music/${Date.now()}_${file.name}`);
+                    await ref.put(file); let url = await ref.getDownloadURL();
+                    jAction('add', { url, title: tag.tags.title || file.name, artist: tag.tags.artist || 'Unknown', image: art, from: 'Manager' });
+                    document.getElementById('upload-status').innerText = "Upload Complete!";
+                },
+                onError: (e) => { alert("Tag Error: " + e.message); }
+            });
+        }
         function jAction(type, data = {}) { socket.emit('jukebox-action', { type, ...data }); }
-        function onTrackEnd() { jAction('skip', { loop: true }); }
+        function onTrackEnd() { jAction('skip', { next: true }); }
+        function onSeekChange() { let p = document.getElementById('global-player'); if(p && navID === 'cust-view') { document.getElementById('c-prog').style.width = (p.currentTime/p.duration*100) + '%'; } }
+
         socket.on('jukebox-update', d => {
-            jState = d; let list = d.playlist.map((t, i) => `<div class="track-item ${i===d.currentIndex?'now':''}">${t.title} [${t.addedBy}] ${i===d.currentIndex?'<i data-lucide="play-circle"></i>':''}</div>`).join('');
-            let mList = document.getElementById('m-jukebox-list'); if(mList) { mList.innerHTML = list; lucide.createIcons(); }
-            let cList = document.getElementById('c-jukebox-list'); if(cList) { cList.innerHTML = list; lucide.createIcons(); }
-            let p = document.getElementById('global-player');
-            if(p && d.currentIndex !== -1 && d.playlist[d.currentIndex]) {
-                if(p.src !== d.playlist[d.currentIndex].url) { p.src = d.playlist[d.currentIndex].url; p.play().catch(()=>{}); }
-            } else if(p) { p.pause(); p.src = ""; }
+            jState = d; let track = d.playlist[d.currentIndex];
+            if(track) {
+                document.getElementById('c-title').innerText = track.title; document.getElementById('c-artist').innerText = track.artist;
+                document.getElementById('c-art').style.backgroundImage = `url('${track.image || 'https://via.placeholder.com/150'}')`;
+                let p = document.getElementById('global-player');
+                if(p.src !== track.url) { p.src = track.url; if(d.playing) p.play(); }
+                p.volume = d.volume / 100; if(d.playing) p.play(); else p.pause();
+                document.getElementById('c-toggle-btn').innerHTML = `<i data-lucide="${d.playing?'pause':'play'}"></i>`;
+                document.getElementById('c-vol').value = d.volume; lucide.createIcons();
+            }
+            let mList = document.getElementById('m-jukebox-list');
+            if(mList) mList.innerHTML = d.playlist.map((t,i)=>`<div class="track-item ${i===d.currentIndex?'now':''}"><span>${t.title}</span><button onclick="jAction('skip',{index:${i}})" style="background:none;"><i data-lucide="play"></i></button></div>`).join('');
+            lucide.createIcons();
         });
-        socket.on('kds-ding', () => { if(voiceActive) document.getElementById('kds-ding-audio').play().catch(()=>{}); });
+
+        socket.on('kds-ding', () => { if(navID === 'kds-view') document.getElementById('kds-ding-audio').play().catch(()=>{}); });
+        function enableVoice() { voiceActive = true; localStorage.setItem('b44_voice', true); document.getElementById('voice-lock').style.display='none'; }
+        function say(msg) { if(voiceActive) { let u = new SpeechSynthesisUtterance(msg); window.speechSynthesis.speak(u); } }
 
         // --- [ ARCHITECT ] ---
         function renderArchitect() {
             let c = document.getElementById('canvas'); if(!c) return;
-            c.innerHTML = rSchema.map((item, idx) => `
-                <div class="canvas-row">
-                    ${renderComponent(item.type, item.val, idx)}
-                    <div class="row-ctrls">
-                        <button class="ctrl-btn" onclick="move(${idx}, -1)">↑</button>
-                        <button class="ctrl-btn" onclick="move(${idx}, 1)">↓</button>
-                        <button class="ctrl-btn rem" onclick="removeRow(${idx})">×</button>
-                    </div>
-                </div>`).join('');
+            c.innerHTML = rSchema.map((item, idx) => `<div class="canvas-row">${renderComponent(item.type, item.val, idx)}<div class="row-ctrls"><button class="ctrl-btn" onclick="move(${idx},-1)">↑</button><button class="ctrl-btn" onclick="move(${idx},1)">↓</button><button class="ctrl-btn rem" onclick="removeRow(${idx})">×</button></div></div>`).join('');
         }
-        function move(idx, dir) { let to = idx + dir; if(to >= 0 && to < rSchema.length) { [rSchema[idx], rSchema[to]] = [rSchema[to], rSchema[idx]]; renderArchitect(); } }
+        function move(idx, dir) { let to = idx+dir; if(to>=0 && to<rSchema.length) { [rSchema[idx], rSchema[to]] = [rSchema[to], rSchema[idx]]; renderArchitect(); } }
         function renderComponent(type, val, idx) { switch(type) {
-            case 'logo': return `<img src="${val || 'https://via.placeholder.com/150x50?text=Logo'}" style="max-width:100%;" onclick="editVal(this, 'logo', ${idx})">`;
-            case 'text': return `<input class="row-text" value="${val}" onchange="updateVal(${idx}, this.value)">`;
-            case 'orderid': return `<p>ORDER #8888</p>`; case 'table': return `<p style="font-weight:900;">TABLE 1</p>`;
-            case 'items': return `<div style="border:1px dashed #ccc; padding:5px;">Items</div>`; case 'total': return `<div style="display:flex; justify-content:space-between; font-weight:900;"><span>Total</span><span>$0.00</span></div>`;
-            case 'points': return `<p style="font-size:0.8rem;">Points: 10</p>`; case 'date': return `<p style="font-size:0.8rem;">04/20/26 21:04</p>`;
-            case 'sep': return `<div class="sep" style="border-bottom:1px dashed #000; margin:5px 0;"></div>`; default: return '';
+            case 'logo': return `<img src="${val || 'https://via.placeholder.com/150x50'}" style="max-width:100%;" onclick="editVal(this,'logo',${idx})">`;
+            case 'text': return `<input class="row-text" value="${val}" onchange="updateVal(${idx},this.value)">`;
+            case 'orderid': return `<p>ORDER #8888</p>`;
+            case 'sep': return `<div class="sep" style="border-bottom:1px dashed #000; width:100%; margin:5px 0;"></div>`;
+            default: return '';
         }}
-        function drag(ev, type) { ev.dataTransfer.setData("type", type); } function allowDrop(ev) { ev.preventDefault(); }
+        function drag(ev, t) { ev.dataTransfer.setData("type", t); } function allowDrop(ev) { ev.preventDefault(); }
         function drop(ev) { ev.preventDefault(); let t = ev.dataTransfer.getData("type"); rSchema.push({ type: t, val: t === 'text' ? 'New Header' : '' }); renderArchitect(); }
         function removeRow(idx) { rSchema.splice(idx, 1); renderArchitect(); } function updateVal(idx, v) { rSchema[idx].val = v; }
-        function editVal(el, type, idx) { if(type==='logo') { let n = prompt("Logo URL:", el.src); if(n) { el.src = n; rSchema[idx].val = n; } } }
-        function saveArchitect() { localStorage.setItem('b44_rSchema', JSON.stringify(rSchema)); customAlert("Saved", "Receipt Updated."); }
-
-        // --- [ POS FLOW ] ---
-        function startCheckout() { if(cart.length) { loyS('init'); document.getElementById('overlay-loyalty').style.display='flex'; } }
-        function loyS(s) { document.getElementById('loyalty-init').style.display = s==='init'?'grid':'none'; document.getElementById('loyalty-find').style.display = s==='search'?'block':'none'; document.getElementById('loyalty-create').style.display = s==='create'?'block':'none'; }
-        function skipLoyalty() { curM=null; document.getElementById('overlay-loyalty').style.display='none'; openTableSelect(); }
-        function redeemPoints(yes) { if(!yes) { ptsToRedeem=0; discAmt=0; } document.getElementById('overlay-redeem').style.display='none'; openTableSelect(); }
-        function openTableSelect() { document.getElementById('overlay-table').style.display='flex'; if(curM) { document.getElementById('member-tag').innerText = curM.name; document.getElementById('cart-loyalty-info').style.display='block'; renderCart(); } }
-        function finishOrder(tbl) {
-            let tot = parseFloat(document.getElementById('pos-total').innerText);
-            let o = { id: Math.floor(Math.random()*9000), table: tbl, items: [...cart], total: tot, status: 'preparing', time: new Date().toLocaleTimeString(), customer: curM ? curM.name : '' };
-            socket.emit('new-order', o); printRec(o); cart=[]; curM=null; document.getElementById('cart-loyalty-info').style.display='none'; renderCart(); document.getElementById('overlay-table').style.display='none';
-        }
+        function saveArchitect() { localStorage.setItem('b44_rSchema', JSON.stringify(rSchema)); customAlert("Saved", "Layout Updated."); }
 
         // --- [ SYSTEM ] ---
-        function customAlert(t, m) { document.getElementById('alert-title').innerText=t; document.getElementById('alert-body').innerText=m; document.getElementById('overlay-alert').style.display='flex'; setTimeout(closeAlert, 4000); }
-        function closeAlert() { document.getElementById('overlay-alert').style.display='none'; }
+        function startCheckout() { if(cart.length) { loyS('init'); document.getElementById('overlay-loyalty').style.display='flex'; } }
+        function loyS(s) { document.getElementById('loyalty-init').style.display=s==='init'?'grid':'none'; document.getElementById('loyalty-find').style.display=s==='search'?'block':'none'; document.getElementById('loyalty-create').style.display=s==='create'?'block':'none'; }
+        function skipLoyalty() { curM=null; document.getElementById('overlay-loyalty').style.display='none'; openTableSelect(); }
+        function openTableSelect() { document.getElementById('overlay-table').style.display='flex'; if(curM) document.getElementById('member-tag').innerText = curM.name; }
+        function finishOrder(tbl) {
+            let o = { id: Math.floor(Math.random()*9000), table: tbl, items: [...cart], total: cart.reduce((a,b)=>a+b.price,0), status: 'preparing', time: new Date().toLocaleTimeString(), customer: curM ? curM.name : '' };
+            socket.emit('new-order', o); cart=[]; curM=null; renderCart(); document.getElementById('overlay-table').style.display='none';
+        }
         function cyc(id, s, silent = false) { 
             socket.emit('update-order-status', { id: Number(id), status: s }); 
-            if(!silent && s === 'ready') {
-                let o = activeOrders.find(x => x.id === id);
-                if(o) { if(o.table === 'Takeout') say(`Order ready for pickup ${o.customer?'for '+o.customer:''}.`); else say(`Order for ${o.table} is now ready.`); }
-            }
+            if(!silent && s === 'ready') { let o = activeOrders.find(x => x.id === id); if(o) { if(o.table === 'Takeout') say(`Order ready for pickup ${o.customer?'for '+o.customer:''}.`); else say(`Order for ${o.table} is now ready.`); } }
         }
-        function renderP() { document.getElementById('pos-grid').innerHTML = menu.map(m => `<div class="menu-card" onclick="openMod(${m.id})"><div class="menu-img" style="background-image:url('${m.image}')"></div><div class="menu-content"><div style="font-weight:900;">${m.name}</div><div style="color:var(--primary);">$${m.price.toFixed(2)}</div></div></div>`).join(''); }
+        function customAlert(t, m) { document.getElementById('alert-title').innerText=t; document.getElementById('alert-body').innerText=m; document.getElementById('overlay-alert').style.display='flex'; setTimeout(()=>document.getElementById('overlay-alert').style.display='none', 4000); }
+        function renderP() { document.getElementById('pos-grid').innerHTML = menu.map(m => `<div class="menu-card" onclick="openMod(${m.id})"><div class="menu-img" style="background-image:url('${m.image}')"></div><div class="menu-content"><b>${m.name}</b><br><span style="color:var(--primary)">$${m.price.toFixed(2)}</span></div></div>`).join(''); }
         function openMod(id) { let tI = menu.find(i=>i.id===id); cart.push({ cid: Date.now(), ...tI }); renderCart(); }
-        function renderCart() { let c = document.getElementById('op-items'); c.innerHTML = cart.map(i => `<div class="cart-row"><span>${i.name}</span> <button onclick="remC(${i.cid})" style="background:none; color:red;">×</button></div>`).join(''); document.getElementById('pos-total').innerText = cart.reduce((a,b)=>a+b.price,0).toFixed(2); }
+        function renderCart() { document.getElementById('op-items').innerHTML = cart.map(i => `<div class="cart-row"><span>${i.name}</span><button onclick="remC(${i.cid})" style="color:red; background:none;">×</button></div>`).join(''); document.getElementById('pos-total').innerText = cart.reduce((a,b)=>a+b.price,0).toFixed(2); }
         function remC(id) { cart = cart.filter(i=>i.cid!==id); renderCart(); }
-        function renderK() { document.getElementById('kds-grid').innerHTML = activeOrders.map(o => `<div style="padding:20px; background:white; border-radius:15px; border-top:8px solid ${o.status==='ready'?'var(--success)':'var(--primary)'};"><div style="font-weight:900;">#${o.id} - ${o.table}</div><hr style="margin:12px 0;">${o.items.map(i=>`<div>• ${i.name}</div>`).join('')}<div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-top:15px;"><button class="pay-btn" style="margin:0; font-size:0.8rem; background:var(--accent);" onclick="cyc(${o.id}, 'preparing')">Cook</button><button class="pay-btn" style="margin:0; font-size:0.8rem; background:var(--success);" onclick="cyc(${o.id}, 'ready')">Ready</button></div><button class="pay-btn" style="width:100%; margin-top:10px; background:var(--dark); font-size:0.8rem;" onclick="cyc(${o.id}, 'Complete', true)">Clear (Silent)</button></div>`).join(''); }
-        function bindC(t) { cID=t; document.getElementById('cds-setup').style.display='none'; document.getElementById('cds-active').style.display='block'; renderC(); }
-        function resetC() { cID=null; document.getElementById('cds-setup').style.display='block'; document.getElementById('cds-active').style.display='none'; }
-        function renderC() { if(!cID) return; let o = activeOrders.find(x => x.table === cID); document.getElementById('cds-status').innerText = o ? o.status.toUpperCase() : "WELCOME"; document.getElementById('cds-items').innerText = o ? o.items.map(i=>i.name).join(', ') : "Ready for order..."; }
-        function printRec(o) { let h = ''; rSchema.forEach(item => { switch(item.type) { case 'logo': h += `<img src="${item.val}" class="r-logo">`; break; case 'text': h += `<h1>${item.val}</h1>`; break; case 'orderid': h += `<h2>ORDER #${o.id}</h2>`; break; case 'table': h += `<h2>ZONE: ${o.table}</h2>`; break; case 'items': o.items.forEach(i => h += `<div class="item"><span>${i.name}</span><span>$${i.price.toFixed(2)}</span></div>`); break; case 'total': h += `<div class="sep"></div><h2 style="display:flex; justify-content:space-between;"><span>TOTAL</span><span>$${o.total.toFixed(2)}</span></h2>`; break; case 'date': h += `<p>${o.time}</p>`; break; case 'sep': h += `<div class="sep"></div>`; break; } }); document.getElementById('receipt-area').innerHTML = h; window.print(); }
-        socket.on('initial-data', d => { activeOrders = d.orders; renderK(); renderC(); });
-        socket.on('order-update', o => { activeOrders = o; renderK(); renderC(); });
-        function bC(m) { socket.emit('station-call', { type: m, timestamp: Date.now() }); }
-        socket.on('announcement', d => { if(d.status==='alert') say(`Attention: ${d.message}`); document.getElementById('call-msg').innerText = d.message; document.getElementById('station-call-alert').style.display='block'; });
-        function switchM(id, b) { document.querySelectorAll('.master-tab').forEach(x=>x.classList.remove('active')); document.querySelectorAll('.master-content').forEach(x=>x.classList.remove('active')); b.classList.add('active'); document.getElementById(id).classList.add('active'); if(id==='s-staff') renderStaffList(); if(id==='s-config') renderArchitect(); }
-        function renderStaffList() { document.getElementById('m-staff-list').innerHTML = localStaff.map(a => `<div style="padding:15px; border-bottom:1px solid #eee;">${a.name} [${a.role}]</div>`).join(''); }
-        function addSt() { let n = document.getElementById('n-emp-n').value; let p = document.getElementById('n-emp-p').value; let r = document.getElementById('n-emp-r').value; if(n&&p) { let s = { name: n, pin: String(p), role: r, status: 'out' }; localStaff.push(s); localStorage.setItem('b44_staff', JSON.stringify(localStaff)); customAlert("Staff", "Saved."); } }
+        function renderK() { document.getElementById('kds-grid').innerHTML = activeOrders.map(o => `<div style="padding:20px; background:white; border-radius:15px; border-top:8px solid ${o.status==='ready'?'var(--success)':'var(--primary)'};"><div style="font-weight:900;">#${o.id} - ${o.table}</div><hr style="margin:12px 0;">${o.items.map(i=>`<div>• ${i.name}</div>`).join('')}<div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-top:15px;"><button class="pay-btn" style="margin:0; font-size:0.8rem;" onclick="cyc(${o.id}, 'preparing', true)">Cook</button><button class="pay-btn" style="margin:0; font-size:0.8rem; background:var(--success);" onclick="cyc(${o.id}, 'ready')">Ready</button></div><button class="pay-btn" style="width:100%; margin-top:10px; background:var(--dark); font-size:0.8rem;" onclick="cyc(${o.id}, 'Complete', true)">Clear</button></div>`).join(''); }
+        function bindC() { document.getElementById('cds-setup').style.display='none'; document.getElementById('cds-active').style.display='block'; }
+        function resetC() { document.getElementById('cds-setup').style.display='block'; document.getElementById('cds-active').style.display='none'; }
+        function switchM(id, b) { document.querySelectorAll('.master-tab').forEach(x=>x.classList.remove('active')); document.querySelectorAll('.master-content').forEach(x=>x.classList.remove('active')); b.classList.add('active'); document.getElementById(id).classList.add('active'); }
+        socket.on('initial-data', d => { activeOrders = d.orders; renderK(); });
+        socket.on('order-update', o => { activeOrders = o; renderK(); });
         navTo('pos-view');
     </script>
 </body>
