@@ -81,9 +81,10 @@
         .ctrl-btn { width: 24px; height: 24px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; background: #fff; border: 1px solid #eee; }
         .ctrl-btn.rem { background: #ef4444; color: white; border: none; }
         
-        .master-tab { border-radius: 10px; cursor: pointer; padding: 12px; font-weight: 800; border: none; background: transparent; color: var(--text-gray); }
+        .master-tab { border-radius: 10px; cursor: pointer; padding: 12px; font-weight: 800; border: none; background: transparent; color: var(--text-gray); transition: 0.2s; position: relative; z-index: 100; }
+        .master-tab:hover { background: rgba(0,0,0,0.05); }
         .master-tab.active { background: #f1f5f9; color: var(--primary); }
-        .master-content { display: none; }
+        .master-content { display: none; padding-top: 20px; }
         .master-content.active { display: block; }
 
         .jukebox-card { background: white; border-radius: 15px; padding: 25px; box-shadow: var(--shadow-md); border: 2px solid #e2e8f0; }
@@ -220,8 +221,20 @@
                 </div>
             </div>
             <div id="s-config" class="master-content">
-                <button class="pay-btn" onclick="saveArchitect()">Save Layout</button>
-                <div class="architect-container"><div class="workspace"><div class="receipt-canvas" id="canvas" ondrop="drop(event)" ondragover="allowDrop(event)"></div></div></div>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;"><p style="font-weight:700;">Design your receipt below.</p><button class="pay-btn" style="margin:0; width:auto; padding:10px 30px;" onclick="saveArchitect()">Save Layout</button></div>
+                <div class="architect-container" style="height: calc(100vh - 280px);">
+                    <div class="toolbox">
+                        <div class="toolbox-item" draggable="true" ondragstart="drag(event, 'logo')"><i data-lucide="image"></i> Logo</div>
+                        <div class="toolbox-item" draggable="true" ondragstart="drag(event, 'text')"><i data-lucide="type"></i> Header</div>
+                        <div class="toolbox-item" draggable="true" ondragstart="drag(event, 'orderid')"><i data-lucide="hash"></i> Order #</div>
+                        <div class="toolbox-item" draggable="true" ondragstart="drag(event, 'table')"><i data-lucide="map-pin"></i> Table/Zone</div>
+                        <div class="toolbox-item" draggable="true" ondragstart="drag(event, 'items')"><i data-lucide="list"></i> Item List</div>
+                        <div class="toolbox-item" draggable="true" ondragstart="drag(event, 'total')"><i data-lucide="dollar-sign"></i> Total</div>
+                        <div class="toolbox-item" draggable="true" ondragstart="drag(event, 'date')"><i data-lucide="calendar"></i> Date/Time</div>
+                        <div class="toolbox-item" draggable="true" ondragstart="drag(event, 'sep')"><i data-lucide="minus"></i> Separator</div>
+                    </div>
+                    <div class="workspace"><div class="receipt-canvas" id="canvas" ondrop="drop(event)" ondragover="allowDrop(event)"></div></div>
+                </div>
             </div>
             <div id="s-kpi" class="master-content active">Rev: <span id="m-rev">$0.00</span> | Orders: <span id="m-ord">0</span></div>
             <div id="s-staff" class="master-content"><div id="m-staff-list"></div></div>
@@ -323,10 +336,11 @@
                     document.getElementById('upload-status').innerText = "Uploading to Cloud Storage...";
                     try {
                         let ref = storage.ref(`jukebox/${Date.now()}_${file.name}`);
-                        let snap = await ref.put(file); let url = await ref.getDownloadURL();
+                        await ref.put(file); let url = await ref.getDownloadURL();
                         jAction('add', { url, title: tag.tags.title || file.name, artist: tag.tags.artist || 'Unknown', image: art, from: 'Manager' });
                         document.getElementById('upload-status').innerText = "Successfully uploaded!";
-                    } catch(e) { document.getElementById('upload-status').innerText = "Upload failed: " + e.message; }
+                        console.log("Music synced: " + file.name);
+                    } catch(e) { document.getElementById('upload-status').innerText = "Upload failed: " + e.message; console.error(e); }
                 },
                 onError: (e) => { alert("Reader Error: " + e.message); }
             });
@@ -350,6 +364,29 @@
             if(mList) mList.innerHTML = d.playlist.map((t,i)=>`<div style="padding:10px; border-bottom:1px solid #eee; display:flex; justify-content:space-between;"><span>${t.title}</span><button onclick="jAction('skip',{index:${i}})"><i data-lucide="play"></i></button></div>`).join('');
             lucide.createIcons();
         });
+
+        // --- [ ARCHITECT ENGINE ] ---
+        function renderArchitect() {
+            let c = document.getElementById('canvas'); if(!c) return;
+            c.innerHTML = rSchema.map((item, idx) => `<div class="canvas-row">${renderComponent(item.type, item.val, idx)}<div class="row-ctrls"><button class="ctrl-btn" onclick="move(${idx},-1)">↑</button><button class="ctrl-btn" onclick="move(${idx},1)">↓</button><button class="ctrl-btn rem" onclick="removeRow(${idx})">×</button></div></div>`).join('');
+            lucide.createIcons();
+        }
+        function move(idx, dir) { let to = idx+dir; if(to>=0 && to<rSchema.length) { [rSchema[idx], rSchema[to]] = [rSchema[to], rSchema[idx]]; renderArchitect(); } }
+        function renderComponent(type, val, idx) { switch(type) {
+            case 'logo': return `<img src="${val || 'https://via.placeholder.com/150x50'}" style="max-width:100%;">`;
+            case 'text': return `<input class="row-text" value="${val}" onchange="updateVal(${idx},this.value)" style="border:none; text-align:center; width:100%; font-weight:800;">`;
+            case 'orderid': return `<p>ORDER #8888</p>`;
+            case 'table': return `<p>ZONE: FRONT COUNTER</p>`;
+            case 'items': return `<div style="width:100%"><div class="item"><span>Item Name</span><span>$0.00</span></div></div>`;
+            case 'total': return `<h2 style="display:flex; justify-content:space-between; width:100%;"><span>TOTAL</span><span>$0.00</span></h2>`;
+            case 'date': return `<p>${new Date().toLocaleString()}</p>`;
+            case 'sep': return `<div class="sep" style="border-bottom:1px dashed #000; width:100%; margin:5px 0;"></div>`;
+            default: return '';
+        }}
+        function drag(ev, t) { ev.dataTransfer.setData("type", t); } function allowDrop(ev) { ev.preventDefault(); }
+        function drop(ev) { ev.preventDefault(); let t = ev.dataTransfer.getData("type"); rSchema.push({ type: t, val: t === 'text' ? 'New Header' : '' }); renderArchitect(); }
+        function removeRow(idx) { rSchema.splice(idx, 1); renderArchitect(); } function updateVal(idx, v) { rSchema[idx].val = v; }
+        function saveArchitect() { localStorage.setItem('b44_rSchema', JSON.stringify(rSchema)); customAlert("Saved", "Layout Updated."); }
 
         // --- [ CDS MODES ] ---
         function setCDSMode(m) { cdsMode = m; document.getElementById('cds-setup').style.display = 'none'; document.getElementById(m === 'table' ? 'cds-table' : 'cds-pickup').style.display = 'block'; if(m === 'pickup') renderC(); }
@@ -382,7 +419,10 @@
             socket.emit('new-order', o); printRec(o);
         }
 
-        function cyc(id, s, silent = false) { socket.emit('update-order-status', { id: Number(id), status: s }); }
+        function cyc(id, s, silent = false) { 
+            socket.emit('update-order-status', { id: Number(id), status: s }); 
+            if(s === 'preparing') say(`Cooking order #${id}`);
+        }
         
         socket.on('announcement', d => { 
             if(d.status==='alert') say(`Attention: ${d.message}`); 
@@ -435,13 +475,21 @@
                     case 'logo': h += `<img src="${item.val}" class="r-logo">`; break;
                     case 'text': h += `<h1>${item.val}</h1>`; break;
                     case 'orderid': h += `<h2>ORDER #${o.id}</h2>`; break;
+                    case 'table': h += `<h2>ZONE: ${o.table}</h2>`; break;
                     case 'items': o.items.forEach(i => h += `<div class="item"><span>${i.name}</span><span>$${i.price.toFixed(2)}</span></div>`); break;
                     case 'total': h += `<div class="sep"></div><h2 style="display:flex; justify-content:space-between;"><span>TOTAL</span><span>$${o.total.toFixed(2)}</span></h2>`; break;
+                    case 'date': h += `<p>${o.time}</p>`; break;
                     case 'sep': h += `<div class="sep"></div>`; break;
                 }
             });
             document.getElementById('receipt-area').innerHTML = h;
             setTimeout(() => { window.print(); }, 500);
+        }
+        function switchM(id, b) { 
+            document.querySelectorAll('.master-tab').forEach(x=>x.classList.remove('active')); 
+            document.querySelectorAll('.master-content').forEach(x=>x.classList.remove('active')); 
+            b.classList.add('active'); 
+            document.getElementById(id).classList.add('active'); 
         }
 
         function customAlert(t, m) { document.getElementById('alert-title').innerText=t; document.getElementById('alert-body').innerText=m; document.getElementById('overlay-alert').style.display='flex'; setTimeout(()=>document.getElementById('overlay-alert').style.display='none', 3000); }
