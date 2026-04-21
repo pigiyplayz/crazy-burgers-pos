@@ -42,7 +42,6 @@ io.on('connection', (socket) => {
             io.emit('order-update', orders);
             
             let announceMsg = '';
-            if (status === 'preparing') announceMsg = `Order ${id} is being prepared.`;
             if (status === 'ready') announceMsg = `Order ${id} is ready!`;
             if (announceMsg) io.emit('announcement', { id, status, message: announceMsg });
         }

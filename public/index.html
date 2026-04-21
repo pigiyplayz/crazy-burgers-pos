@@ -277,9 +277,9 @@
         function pinC() { sPIN = ""; document.getElementById('pin-dot-view').innerText = ""; }
         function closePin() { document.getElementById('pin-overlay').style.display = 'none'; }
         function pinV() { 
-            if(authTarget === 'manager-view' && sPIN === "2018") { closePin(); navTo(authTarget, authBtn); } 
+            if(authTarget === 'manager-view' && String(sPIN) === "2018") { closePin(); navTo(authTarget, authBtn); } 
             else { 
-                let m = localStaff.find(e => e.pin === String(sPIN)); 
+                let m = localStaff.find(e => String(e.pin) === String(sPIN)); 
                 if(m) { sData = m; closePin(); navTo(authTarget, authBtn); updatePortal(); } 
                 else { customAlert("Security", "Invalid PIN"); pinC(); } 
             } 
@@ -320,7 +320,15 @@
             lucide.createIcons();
         });
 
-        socket.on('kds-ding', () => { if(navID === 'kds-view') document.getElementById('kds-ding-audio').play().catch(()=>{}); });
+        socket.on('announcement', d => { 
+            if(d.status==='alert') say(`Attention: ${d.message}`); 
+            else if(d.status==='ready') { 
+                let o = activeOrders.find(x => x.id === d.id); 
+                if(o) { if(o.table === 'Takeout') say(`Order ready for pickup ${o.customer?'for '+o.customer:''}.`); else say(`Order for ${o.table} is now ready.`); } 
+            }
+            document.getElementById('call-msg').innerText = d.message; 
+            document.getElementById('station-call-alert').style.display='block'; 
+        });
         function enableVoice() { voiceActive = true; localStorage.setItem('b44_voice', true); document.getElementById('voice-lock').style.display='none'; }
         function say(msg) { if(voiceActive) { let u = new SpeechSynthesisUtterance(msg); window.speechSynthesis.speak(u); } }
 
@@ -386,7 +394,6 @@
         }
         function cyc(id, s, silent = false) { 
             socket.emit('update-order-status', { id: Number(id), status: s }); 
-            if(!silent && s === 'ready') { let o = activeOrders.find(x => x.id === id); if(o) { if(o.table === 'Takeout') say(`Order ready for pickup ${o.customer?'for '+o.customer:''}.`); else say(`Order for ${o.table} is now ready.`); } }
         }
         function customAlert(t, m) { document.getElementById('alert-title').innerText=t; document.getElementById('alert-body').innerText=m; document.getElementById('overlay-alert').style.display='flex'; setTimeout(()=>document.getElementById('overlay-alert').style.display='none', 4000); }
         function renderP() { document.getElementById('pos-grid').innerHTML = menu.map(m => `<div class="menu-card" onclick="openMod(${m.id})"><div class="menu-img" style="background-image:url('${m.image}')"></div><div class="menu-content"><b>${m.name}</b><br><span style="color:var(--primary)">$${m.price.toFixed(2)}</span></div></div>`).join(''); }
@@ -397,8 +404,9 @@
         function bindC() { document.getElementById('cds-setup').style.display='none'; document.getElementById('cds-active').style.display='block'; }
         function resetC() { document.getElementById('cds-setup').style.display='block'; document.getElementById('cds-active').style.display='none'; }
         function switchM(id, b) { document.querySelectorAll('.master-tab').forEach(x=>x.classList.remove('active')); document.querySelectorAll('.master-content').forEach(x=>x.classList.remove('active')); b.classList.add('active'); document.getElementById(id).classList.add('active'); }
-        socket.on('initial-data', d => { activeOrders = d.orders; renderK(); renderC(); renderKPI(); });
-        socket.on('order-update', o => { activeOrders = o; renderK(); renderC(); renderKPI(); });
+        socket.on('kds-ding', () => { if(navID === 'kds-view') document.getElementById('kds-ding-audio').play().catch(()=>{}); });
+        socket.on('initial-data', d => { activeOrders = Array.isArray(d.orders)?d.orders:[]; renderK(); renderC(); renderKPI(); });
+        socket.on('order-update', o => { activeOrders = Array.isArray(o)?o:[]; renderK(); renderC(); renderKPI(); });
 
         function updatePortal() { if(!sData) return; document.getElementById('s-role-tag').innerText = sData.role; document.getElementById('s-v-name').innerText = sData.name; }
         function logOffStaff() { sData=null; navTo('pos-view', document.querySelector('.nav-button')); }
