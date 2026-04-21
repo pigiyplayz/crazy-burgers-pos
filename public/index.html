@@ -285,22 +285,29 @@
                 <button class="pay-btn glass-card" style="height:250px; flex-direction:column;" onclick="setCDSMode('pickup')"><i data-lucide="shopping-bag" style="width:80px; height:80px;"></i><br>TAKEOUT TRACKER</button>
             </div>
         </div>
-        <div id="cds-table" style="display:none; padding:40px; text-align:center; height:100%;">
-             <div style="margin-top:10vh;">
-                <h1 class="hero-title" style="margin-bottom:50px;">Welcome to Table 1</h1>
-                <div class="jukebox-card glass-card" style="max-width:800px; margin:auto; padding:40px;">
+        <div id="cds-table" style="display:none; padding:40px; text-align:center; height:100%; overflow-y:auto;">
+             <div style="margin-top:5vh; max-width:900px; margin-left:auto; margin-right:auto;">
+                <div id="table-order-view" style="margin-bottom:40px;">
+                    <h1 class="hero-title" id="t1-status">Enjoy Base44 Music</h1>
+                    <div id="t1-receipt" class="glass-card" style="display:none; text-align:left; padding:30px; margin-top:20px; border-left:10px solid var(--primary);">
+                        <div style="font-size:1.5rem; font-weight:900; margin-bottom:15px; display:flex; justify-content:space-between;"><span>YOUR ORDER</span><span id="t1-id">#0000</span></div>
+                        <div id="t1-items" style="font-size:1.2rem; margin-bottom:20px;"></div>
+                        <div style="display:flex; justify-content:space-between; font-weight:900; font-size:2rem; border-top:1px solid rgba(255,255,255,0.1); padding-top:15px;"><span>TOTAL</span><span id="t1-tot">$0.00</span></div>
+                    </div>
+                </div>
+                <div class="jukebox-card glass-card" style="padding:40px;">
                     <div class="now-playing-box">
-                        <div class="album-art" id="c-art" style="width:250px; height:250px;"></div>
+                        <div class="album-art" id="c-art" style="width:200px; height:200px;"></div>
                         <div class="song-info">
-                            <div class="song-title" id="c-title" style="font-size:2.5rem;">No Track Playing</div>
-                            <div class="song-artist" id="c-artist" style="font-size:1.5rem;">Base44 Radio</div>
-                            <div class="prog-wrap" style="height:12px; margin-top:30px;"><div class="prog-bar" id="c-prog"></div></div>
-                            <div class="audio-ctrls" style="margin-top:40px; gap:30px;">
-                                <div class="ctrl-icon" style="width:70px; height:70px;" onclick="jAction('skip', { type: 'prev' })"><i data-lucide="skip-back" style="width:35px; height:35px;"></i></div>
-                                <div class="ctrl-icon play-main" style="width:100px; height:100px;" onclick="jAction('toggle', { play: !jState.playing })" id="c-toggle-btn"><i data-lucide="play" style="width:50px; height:50px;"></i></div>
-                                <div class="ctrl-icon" style="width:70px; height:70px;" onclick="jAction('skip', { type: 'next' })"><i data-lucide="skip-forward" style="width:35px; height:35px;"></i></div>
+                            <div class="song-title" id="c-title" style="font-size:2rem;">No Track Playing</div>
+                            <div class="song-artist" id="c-artist" style="font-size:1.2rem;">Base44 Radio</div>
+                            <div class="prog-wrap" style="height:12px; margin-top:20px;"><div class="prog-bar" id="c-prog"></div></div>
+                            <div class="audio-ctrls" style="margin-top:30px; gap:20px;">
+                                <div class="ctrl-icon" onclick="jAction('skip', { type: 'prev' })"><i data-lucide="skip-back"></i></div>
+                                <div class="ctrl-icon play-main" onclick="jAction('toggle', { play: !jState.playing })" id="c-toggle-btn"><i data-lucide="play"></i></div>
+                                <div class="ctrl-icon" onclick="jAction('skip', { type: 'next' })"><i data-lucide="skip-forward"></i></div>
                             </div>
-                            <div class="vol-wrap" style="margin-top:40px;"><i data-lucide="volume-2"></i><input type="range" id="c-vol" oninput="jAction('volume', { val: this.value })"></div>
+                            <div class="vol-wrap" style="margin-top:30px;"><i data-lucide="volume-2"></i><input type="range" id="c-vol" oninput="jAction('volume', { val: this.value })"></div>
                         </div>
                     </div>
                 </div>
@@ -449,13 +456,29 @@
         function setCDSMode(m) { cdsMode = m; document.getElementById('cds-setup').style.display = 'none'; document.getElementById(m === 'table' ? 'cds-table' : 'cds-pickup').style.display = 'block'; if(m === 'pickup') renderC(); }
         function resetC() { cdsMode = null; document.querySelectorAll('#cust-view > div').forEach(d => d.style.display = 'none'); document.getElementById('cds-setup').style.display = 'block'; }
         function renderC() {
-             if(cdsMode !== 'pickup') return;
-             document.getElementById('pickup-list').innerHTML = activeOrders.map(o => `
-                <div class="pickup-item ${o.status==='ready'?'ready':''}">
-                    <div><b style="font-size:3rem;">#${o.id}</b><br><span style="font-size:1.5rem; opacity:0.7;">${o.table} - ${o.status.toUpperCase()}</span></div>
-                    ${o.status==='ready' ? `<button class="pay-btn" style="margin:0; width:auto; padding:15px 40px;" onclick="cyc(${o.id}, 'Complete', true)">I RECEIVED MY ORDER</button>` : '<i data-lucide="clock" style="width:50px; height:50px; opacity:0.2;"></i>'}
-                </div>
-            `).join('');
+             if(cdsMode === 'pickup') {
+                 document.getElementById('pickup-list').innerHTML = activeOrders.map(o => `
+                    <div class="pickup-item ${o.status==='ready'?'ready':''}">
+                        <div><b style="font-size:3rem;">#${o.id}</b><br><span style="font-size:1.5rem; opacity:0.7;">${o.table} - ${o.status.toUpperCase()}</span></div>
+                        ${o.status==='ready' ? `<button class="pay-btn" style="margin:0; width:auto; padding:15px 40px;" onclick="cyc(${o.id}, 'Complete', true)">I RECEIVED MY ORDER</button>` : '<i data-lucide="clock" style="width:50px; height:50px; opacity:0.2;"></i>'}
+                    </div>
+                `).join('');
+             } else if(cdsMode === 'table') {
+                 let o = activeOrders.find(x => x.table === 'Table 1');
+                 let v = document.getElementById('table-order-view');
+                 let r = document.getElementById('t1-receipt');
+                 if(o) {
+                     document.getElementById('t1-status').innerText = o.status === 'ready' ? "YOUR BURGER IS READY! 🍔" : "NOW COOKING YOUR ORDER...";
+                     document.getElementById('t1-id').innerText = "#" + o.id;
+                     document.getElementById('t1-tot').innerText = "$" + o.total.toFixed(2);
+                     document.getElementById('t1-items').innerHTML = o.items.map(i => `<div style="display:flex; justify-content:space-between; margin-bottom:5px;"><span>${i.name}</span><span>$${i.price.toFixed(2)}</span></div>`).join('');
+                     r.style.display = 'block';
+                     r.style.borderLeftColor = o.status === 'ready' ? 'var(--success)' : 'var(--primary)';
+                 } else {
+                     document.getElementById('t1-status').innerText = "Enjoy Base44 Music";
+                     r.style.display = 'none';
+                 }
+             }
             lucide.createIcons();
         }
 
