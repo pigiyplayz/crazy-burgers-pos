@@ -86,13 +86,13 @@
         .architect-container { display: flex; height: 600px; gap: 20px; background: #f1f5f9; border-radius: 20px; padding: 20px; border: 2px solid #e2e8f0; }
         .toolbox { width: 200px; background: white; border-radius: 12px; padding: 15px; overflow-y: auto; }
         .toolbox-item { padding: 12px; background: #f8fafc; border: 2px dashed #cbd5e1; border-radius: 10px; margin-bottom: 10px; font-size: 0.85rem; font-weight: 700; cursor: grab; display: flex; align-items: center; gap: 8px; }
-        .workspace { flex: 1; background: white; border-radius: 12px; display: flex; justify-content: center; padding: 20px; overflow-y: auto; }
-        .receipt-canvas { width: 72mm; min-height: 100%; border: 2px solid var(--dark); background: white; box-shadow: 0 10px 25px rgba(0,0,0,0.1); padding: 10px; }
-        .canvas-row { position: relative; padding: 8px; border: 1px solid transparent; min-height: 20px; }
+        .workspace { flex: 1; background: white; border-radius: 12px; display: flex; flex-direction: column; align-items: center; padding: 20px; overflow-y: auto; overflow-x: hidden; }
+        .receipt-canvas { width: 72mm; min-height: fit-content; border: 2px solid var(--dark); background: white; box-shadow: 0 10px 25px rgba(0,0,0,0.1); padding: 10px; margin-bottom: 50px; }
+        .canvas-row { position: relative; padding: 8px; border: 1px solid transparent; min-height: 20px; width: 100%; }
         .canvas-row:hover { border: 1px dashed var(--accent); background: #f0f7ff; }
         .btn-rem-row { position: absolute; right: -30px; top: 5px; color: red; cursor: pointer; visibility: hidden; width: 24px; height: 24px; background: #fff; border: 1px solid #eee; border-radius: 4px; display: flex; align-items: center; justify-content: center; }
         .canvas-row:hover .btn-rem-row { visibility: visible; }
-        .row-text { border: none; width: 100%; text-align: center; background: transparent; font-family: 'Courier New'; outline: none; }
+        .row-text { border: none; width: 100%; text-align: center; background: transparent; font-family: 'Courier New'; outline: none; font-size: 1rem; }
 
         .master-tab { border-radius: 10px; cursor: pointer; padding: 12px; font-weight: 800; border: none; background: transparent; color: var(--text-gray); }
         .master-tab.active { background: #f1f5f9; color: var(--primary); }
@@ -227,15 +227,15 @@
             <div id="s-config" class="master-content">
                 <div class="architect-container">
                     <div class="toolbox">
-                        <div class="toolbox-item" draggable="true" ondragstart="drag(item, 'logo')"><i data-lucide="image"></i> Logo</div>
-                        <div class="toolbox-item" draggable="true" ondragstart="drag(item, 'text')"><i data-lucide="type"></i> Header</div>
-                        <div class="toolbox-item" draggable="true" ondragstart="drag(item, 'orderid')"><i data-lucide="hash"></i> Order #</div>
-                        <div class="toolbox-item" draggable="true" ondragstart="drag(item, 'table')"><i data-lucide="map-pin"></i> Zone</div>
-                        <div class="toolbox-item" draggable="true" ondragstart="drag(item, 'items')"><i data-lucide="shopping-basket"></i> Items</div>
-                        <div class="toolbox-item" draggable="true" ondragstart="drag(item, 'total')"><i data-lucide="dollar-sign"></i> Total</div>
-                        <div class="toolbox-item" draggable="true" ondragstart="drag(item, 'points')"><i data-lucide="star"></i> Rewards</div>
-                        <div class="toolbox-item" draggable="true" ondragstart="drag(item, 'date')"><i data-lucide="calendar"></i> Date</div>
-                        <div class="toolbox-item" draggable="true" ondragstart="drag(item, 'sep')"><i data-lucide="minus"></i> Separator</div>
+                        <div class="toolbox-item" draggable="true" ondragstart="drag(event, 'logo')"><i data-lucide="image"></i> Logo</div>
+                        <div class="toolbox-item" draggable="true" ondragstart="drag(event, 'text')"><i data-lucide="type"></i> Header</div>
+                        <div class="toolbox-item" draggable="true" ondragstart="drag(event, 'orderid')"><i data-lucide="hash"></i> Order #</div>
+                        <div class="toolbox-item" draggable="true" ondragstart="drag(event, 'table')"><i data-lucide="map-pin"></i> Zone</div>
+                        <div class="toolbox-item" draggable="true" ondragstart="drag(event, 'items')"><i data-lucide="shopping-basket"></i> Items</div>
+                        <div class="toolbox-item" draggable="true" ondragstart="drag(event, 'total')"><i data-lucide="dollar-sign"></i> Total</div>
+                        <div class="toolbox-item" draggable="true" ondragstart="drag(event, 'points')"><i data-lucide="star"></i> Rewards</div>
+                        <div class="toolbox-item" draggable="true" ondragstart="drag(event, 'date')"><i data-lucide="calendar"></i> Date</div>
+                        <div class="toolbox-item" draggable="true" ondragstart="drag(event, 'sep')"><i data-lucide="minus"></i> Separator</div>
                     </div>
                     <div class="workspace"><div class="receipt-canvas" id="canvas" ondrop="drop(event)" ondragover="allowDrop(event)"></div></div>
                 </div>
@@ -346,6 +346,11 @@
 
         // --- [ POS FLOW ] ---
         function startCheckout() { if(cart.length) { loyS('init'); document.getElementById('overlay-loyalty').style.display='flex'; } }
+        function loyS(s) { 
+            document.getElementById('loyalty-init').style.display = s==='init'?'grid':'none'; 
+            document.getElementById('loyalty-find').style.display = s==='search'?'block':'none'; 
+            document.getElementById('loyalty-create').style.display = s==='create'?'block':'none'; 
+        }
         function findMember() {
             let n = document.getElementById('loy-q').value; let m = localCusts.find(c => c.name === n);
             if(m) { preRedeem(m); return; }
