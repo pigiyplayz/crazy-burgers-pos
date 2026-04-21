@@ -306,13 +306,13 @@
 
         let menu = [{ id: 1, name: "Crazy Burger", price: 8.99, image: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format" }];
         let localStaff = JSON.parse(localStorage.getItem('b44_staff')) || [];
-        let rSchema = JSON.parse(localStorage.getItem('b44_rSchema')) || [{ type: 'logo', val: '' }, { type: 'text', val: 'CRAZY BURGERS' }, { type: 'orderid' }, { type: 'sep' }, { type: 'items' }, { type: 'total' }];
+        let rSchema = [{ type: 'logo', val: '' }, { type: 'text', val: 'CRAZY BURGERS' }, { type: 'orderid' }, { type: 'sep' }, { type: 'items' }, { type: 'total' }];
         let cart = []; let activeOrders = []; let curM = null; let discAmt = 0; let ptsToRedeem = 0; let sData = null; let sPIN = ""; let authTarget = null; let authBtn = null; let cdsMode = null;
         let voiceActive = JSON.parse(localStorage.getItem('b44_voice')) || false;
         let jState = { playlist: [], currentIndex: -1, locked: false, playing: false, volume: 50, position: 0 };
         let navID = 'pos-view';
 
-        function navTo(id, btn) { navID=id; document.querySelectorAll('.view-container').forEach(c => c.classList.remove('active')); document.getElementById(id).classList.add('active'); if(btn) { document.querySelectorAll('.nav-button').forEach(b => b.classList.remove('active-nav')); btn.classList.add('active-nav'); } if(id === 'pos-view') renderP(); if(id === 'manager-view') renderArchitect(); }
+        function navTo(id, btn) { navID=id; document.querySelectorAll('.view-container').forEach(c => c.classList.remove('active')); document.getElementById(id).classList.add('active'); if(btn) { document.querySelectorAll('.nav-button').forEach(b => b.classList.remove('active-nav')); btn.classList.add('active-nav'); } if(id === 'pos-view') renderP(); if(id === 'manager-view') { fetchR(); renderArchitect(); } }
         function reqAuth(t, b) { authTarget = t; authBtn = b; sPIN = ""; document.getElementById('pin-overlay').style.display = 'flex'; }
         function pinP(n) { if(sPIN.length < 4) { sPIN += n; document.getElementById('pin-dot-view').innerText = "•".repeat(sPIN.length); } }
         function pinC() { sPIN = ""; document.getElementById('pin-dot-view').innerText = ""; }
@@ -329,20 +329,30 @@
 
         // --- [ JUKEBOX ] ---
         async function uploadTrack(file) {
-            if(!file) return; document.getElementById('upload-status').innerText = "Analyzing file...";
+            if(!file) return; document.getElementById('upload-status').innerText = "Reading file metadata...";
+            const startUpload = async (u_title, u_artist, u_art) => {
+                document.getElementById('upload-status').innerText = `Uploading: ${u_title}...`;
+                try {
+                    let ref = storage.ref(`jukebox/${Date.now()}_${file.name}`);
+                    await ref.put(file); let url = await ref.getDownloadURL();
+                    jAction('add', { url, title: u_title, artist: u_artist, image: u_art, from: 'Manager' });
+                    document.getElementById('upload-status').innerText = "Successfully uploaded to Jukebox!";
+                } catch(e) { 
+                    document.getElementById('upload-status').innerText = "Firebase Error: " + e.code; 
+                    console.error(e); 
+                    customAlert("Upload Failed", e.message);
+                }
+            };
+
             jsmediatags.read(file, {
                 onSuccess: async (tag) => {
                     let art = ''; if(tag.tags.picture) { let { data, format } = tag.tags.picture; let base64 = data.map(b => String.fromCharCode(b)).join(''); art = `data:${format};base64,${btoa(base64)}`; }
-                    document.getElementById('upload-status').innerText = "Uploading to Cloud Storage...";
-                    try {
-                        let ref = storage.ref(`jukebox/${Date.now()}_${file.name}`);
-                        await ref.put(file); let url = await ref.getDownloadURL();
-                        jAction('add', { url, title: tag.tags.title || file.name, artist: tag.tags.artist || 'Unknown', image: art, from: 'Manager' });
-                        document.getElementById('upload-status').innerText = "Successfully uploaded!";
-                        console.log("Music synced: " + file.name);
-                    } catch(e) { document.getElementById('upload-status').innerText = "Upload failed: " + e.message; console.error(e); }
+                    startUpload(tag.tags.title || file.name, tag.tags.artist || 'Unknown', art);
                 },
-                onError: (e) => { alert("Reader Error: " + e.message); }
+                onError: (e) => { 
+                    console.log("No tags found, using defaults.");
+                    startUpload(file.name, 'Unknown', 'https://via.placeholder.com/150');
+                }
             });
         }
         function jAction(type, data = {}) { socket.emit('jukebox-action', { type, ...data }); }
@@ -385,8 +395,9 @@
         }}
         function drag(ev, t) { ev.dataTransfer.setData("type", t); } function allowDrop(ev) { ev.preventDefault(); }
         function drop(ev) { ev.preventDefault(); let t = ev.dataTransfer.getData("type"); rSchema.push({ type: t, val: t === 'text' ? 'New Header' : '' }); renderArchitect(); }
-        function removeRow(idx) { rSchema.splice(idx, 1); renderArchitect(); } function updateVal(idx, v) { rSchema[idx].val = v; }
-        function saveArchitect() { localStorage.setItem('b44_rSchema', JSON.stringify(rSchema)); customAlert("Saved", "Layout Updated."); }
+        function fetchR() { db.collection('config').doc('receipt').get().then(s => { if(s.exists) { rSchema = s.data().layout; if(navID === 'manager-view') renderArchitect(); } }); }
+        function saveArchitect() { db.collection('config').doc('receipt').set({ layout: rSchema }).then(() => { customAlert("Syncing", "Cloud Receipt Updated."); socket.emit('r-sync'); }); }
+        socket.on('r-sync', () => { fetchR(); });
 
         // --- [ CDS MODES ] ---
         function setCDSMode(m) { cdsMode = m; document.getElementById('cds-setup').style.display = 'none'; document.getElementById(m === 'table' ? 'cds-table' : 'cds-pickup').style.display = 'block'; if(m === 'pickup') renderC(); }
@@ -497,6 +508,7 @@
         function say(msg) { if(voiceActive) { let u = new SpeechSynthesisUtterance(msg); window.speechSynthesis.speak(u); } }
 
         navTo('pos-view');
+        fetchR(); // Load cloud design on start
     </script>
 </body>
 </html>
