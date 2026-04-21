@@ -133,6 +133,31 @@
         <button class="nav-button" onclick="navTo('calls-view', this)"><i data-lucide="bell"></i> Alerts</button>
     </nav>
 
+    <div id="overlay-redeem" class="overlay">
+        <div class="modal" style="text-align:center;">
+            <h2 style="font-weight:900; margin-bottom:15px;">Redeem Points?</h2>
+            <p style="font-size:1.2rem;">Balance: <span id="r-bal" style="font-weight:900; color:var(--success);">0</span> Points</p>
+            <p style="color:var(--text-gray); margin-bottom:25px;">Enough for a $<span id="r-disc">0.00</span> discount!</p>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px;"><button class="pay-btn" style="margin:0; background:gray;" onclick="redeemPoints(false)">No (Skip)</button><button class="pay-btn" style="margin:0;" onclick="redeemPoints(true)">Redeem</button></div>
+        </div>
+    </div>
+
+    <div id="overlay-table" class="overlay">
+        <div class="modal">
+            <h2 style="text-align:center; margin-bottom:25px;">Zone Assignment</h2>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+                <button class="pay-btn" onclick="finishOrder('Takeout')">Takeout</button>
+                <button class="pay-btn" onclick="finishOrder('Table 1')">Table 1</button>
+                <button class="pay-btn" onclick="finishOrder('Table 2')">Table 2</button>
+                <button class="pay-btn" onclick="finishOrder('Table 3')">Table 3</button>
+                <button class="pay-btn" onclick="finishOrder('Table 4')">Table 4</button>
+                <button class="pay-btn" onclick="finishOrder('Table 5')">Table 5</button>
+                <button class="pay-btn" style="background:var(--accent);" onclick="finishOrder('Bar Area')">Bar Area</button>
+            </div>
+            <button class="pay-btn" style="background:none; color:gray; width:100%; border:1px solid #eee;" onclick="document.getElementById('overlay-table').style.display='none'">Cancel</button>
+        </div>
+    </div>
+
     <!-- VIEWS -->
     <main id="pos-view" class="view-container active">
         <div class="pos-main"><h1 style="font-weight:900; margin-bottom:20px;">POS Terminal</h1><div class="menu-grid" id="pos-grid"></div></div>
@@ -191,6 +216,18 @@
         </div>
     </main>
 
+    <main id="calls-view" class="view-container">
+        <div style="padding:40px; max-width:800px; margin:auto; width:100%;">
+            <h1 style="font-weight:900; margin-bottom:30px;">Alerts</h1>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
+                <button class="pay-btn" style="height:150px; background:var(--warning); color:var(--dark);" onclick="bC('Manager Request')">🛎️ MANAGER</button>
+                <button class="pay-btn" style="height:150px; background:var(--accent);" onclick="bC('Restock Needed')">📦 RESTOCK</button>
+                <button class="pay-btn" style="height:150px; background:var(--success);" onclick="bC('Cleaning Request')">🧹 CLEANING</button>
+                <button class="pay-btn" style="height:150px; background:var(--primary);" onclick="bC('Security Help')">🚨 SECURITY</button>
+            </div>
+        </div>
+    </main>
+
     <main id="cust-view" class="view-container" style="background:var(--dark); color:white;">
         <div id="cds-setup" style="text-align:center; margin-top:20vh;"><button class="pay-btn" onclick="bindC('Front Counter')">Activate Display</button></div>
         <div id="cds-active" style="display:none; padding:40px; text-align:center;">
@@ -239,7 +276,14 @@
         function pinP(n) { if(sPIN.length < 4) { sPIN += n; document.getElementById('pin-dot-view').innerText = "•".repeat(sPIN.length); } }
         function pinC() { sPIN = ""; document.getElementById('pin-dot-view').innerText = ""; }
         function closePin() { document.getElementById('pin-overlay').style.display = 'none'; }
-        function pinV() { if(authTarget === 'manager-view' && sPIN === "2018") { closePin(); navTo(authTarget, authBtn); } else { let m = localStaff.find(e => e.pin === String(sPIN)); if(m) { sData = m; closePin(); navTo(authTarget, authBtn); } else { customAlert("Security", "Invalid PIN"); pinC(); } } }
+        function pinV() { 
+            if(authTarget === 'manager-view' && sPIN === "2018") { closePin(); navTo(authTarget, authBtn); } 
+            else { 
+                let m = localStaff.find(e => e.pin === String(sPIN)); 
+                if(m) { sData = m; closePin(); navTo(authTarget, authBtn); updatePortal(); } 
+                else { customAlert("Security", "Invalid PIN"); pinC(); } 
+            } 
+        }
 
         // --- [ JUKEBOX ENGINE ] ---
         async function uploadMusic(file) {
@@ -303,9 +347,42 @@
         function loyS(s) { document.getElementById('loyalty-init').style.display=s==='init'?'grid':'none'; document.getElementById('loyalty-find').style.display=s==='search'?'block':'none'; document.getElementById('loyalty-create').style.display=s==='create'?'block':'none'; }
         function skipLoyalty() { curM=null; document.getElementById('overlay-loyalty').style.display='none'; openTableSelect(); }
         function openTableSelect() { document.getElementById('overlay-table').style.display='flex'; if(curM) document.getElementById('member-tag').innerText = curM.name; }
+        function findMember() {
+            let n = document.getElementById('loy-q').value; let m = localCusts.find(c => c.name === n);
+            if(m) { preRedeem(m); return; }
+            db.collection('customers').where('name','==',n).get().then(s => {
+                if(s.empty) customAlert("Error", "Not found");
+                else { let dm = { docId: s.docs[0].id, ...s.docs[0].data() }; preRedeem(dm); }
+            });
+        }
+        function createMember() {
+            let n = document.getElementById('loy-n').value; if(!n) return;
+            let m = { name: n, joined: new Date().toISOString(), points: 0, lid: Date.now() };
+            localCusts.push(m); localStorage.setItem('b44_custs', JSON.stringify(localCusts)); syncCloud('customers', m); preRedeem(m);
+        }
+        function preRedeem(m) {
+            curM = m; document.getElementById('overlay-loyalty').style.display='none';
+            if(m.points >= 10) { 
+                ptsToRedeem = Math.floor(m.points/10)*10; discAmt = ptsToRedeem/10; 
+                document.getElementById('r-bal').innerText = m.points; 
+                document.getElementById('r-disc').innerText = discAmt.toFixed(2);
+                document.getElementById('overlay-redeem').style.display='flex';
+            } else { skipRedeem(); }
+        }
+        function redeemPoints(yes) { if(!yes) { ptsToRedeem=0; discAmt=0; } document.getElementById('overlay-redeem').style.display='none'; openTableSelect(); }
+        function skipRedeem() { ptsToRedeem=0; discAmt=0; document.getElementById('overlay-redeem').style.display='none'; openTableSelect(); }
+        function skipLoyalty() { curM=null; document.getElementById('overlay-loyalty').style.display='none'; openTableSelect(); }
+        function openTableSelect() { 
+            if(curM) { document.getElementById('member-tag').innerText = curM.name; document.getElementById('cart-loyalty-info').style.display='block'; renderCart(); }
+            document.getElementById('overlay-table').style.display='flex'; 
+        }
+
         function finishOrder(tbl) {
-            let o = { id: Math.floor(Math.random()*9000), table: tbl, items: [...cart], total: cart.reduce((a,b)=>a+b.price,0), status: 'preparing', time: new Date().toLocaleTimeString(), customer: curM ? curM.name : '' };
-            socket.emit('new-order', o); cart=[]; curM=null; renderCart(); document.getElementById('overlay-table').style.display='none';
+            let tot = parseFloat(document.getElementById('pos-total').innerText);
+            let o = { id: Math.floor(Math.random()*9000), table: tbl, items: [...cart], total: tot, status: 'preparing', time: new Date().toLocaleTimeString(), customer: curM ? curM.name : '' };
+            if(curM) { curM.points = (curM.points || 0) + Math.floor(tot) - ptsToRedeem; if(curM.docId) db.collection('customers').doc(curM.docId).update({ points: curM.points }); }
+            socket.emit('new-order', o); printRec(o);
+            cart=[]; curM=null; discAmt=0; ptsToRedeem=0; document.getElementById('cart-loyalty-info').style.display='none'; renderCart(); document.getElementById('overlay-table').style.display='none';
         }
         function cyc(id, s, silent = false) { 
             socket.emit('update-order-status', { id: Number(id), status: s }); 
@@ -320,8 +397,38 @@
         function bindC() { document.getElementById('cds-setup').style.display='none'; document.getElementById('cds-active').style.display='block'; }
         function resetC() { document.getElementById('cds-setup').style.display='block'; document.getElementById('cds-active').style.display='none'; }
         function switchM(id, b) { document.querySelectorAll('.master-tab').forEach(x=>x.classList.remove('active')); document.querySelectorAll('.master-content').forEach(x=>x.classList.remove('active')); b.classList.add('active'); document.getElementById(id).classList.add('active'); }
-        socket.on('initial-data', d => { activeOrders = d.orders; renderK(); });
-        socket.on('order-update', o => { activeOrders = o; renderK(); });
+        socket.on('initial-data', d => { activeOrders = d.orders; renderK(); renderC(); renderKPI(); });
+        socket.on('order-update', o => { activeOrders = o; renderK(); renderC(); renderKPI(); });
+
+        function updatePortal() { if(!sData) return; document.getElementById('s-role-tag').innerText = sData.role; document.getElementById('s-v-name').innerText = sData.name; }
+        function logOffStaff() { sData=null; navTo('pos-view', document.querySelector('.nav-button')); }
+        function renderKPI() {
+            let sum = activeOrders.reduce((a, b) => a + (b.total || 0), 0);
+            document.getElementById('m-rev').innerText = `$${sum.toFixed(2)}`;
+            document.getElementById('m-ord').innerText = activeOrders.length;
+        }
+        function bC(m) { socket.emit('station-call', { type: m, timestamp: Date.now() }); }
+        function syncCloud(col, data) { db.collection(col).add(data).catch(e => console.error(e.code)); }
+        function renderC() { if(!cID) return; let o = activeOrders.find(x => x.table === cID); document.getElementById('cds-status').innerText = o ? o.status.toUpperCase() : "WELCOME"; document.getElementById('cds-items').innerText = o ? o.items.map(i=>i.name).join(', ') : "Ready for order..."; }
+        function renderStaffList() { document.getElementById('m-staff-list').innerHTML = localStaff.map(a => `<div style="padding:15px; border-bottom:1px solid #eee; display:flex; justify-content:space-between;"><span>${a.name} [${a.role}]</span> <button onclick="delSt(${a.lid})" style="color:red; background:none;">Delete</button></div>`).join(''); }
+        function addSt() { let n = document.getElementById('n-emp-n').value; let p = document.getElementById('n-emp-p').value; let r = document.getElementById('n-emp-r').value; if(n&&p) { let s = { name: n, pin: String(p), role: r, status: 'out', lid: Date.now() }; localStaff.push(s); localStorage.setItem('b44_staff', JSON.stringify(localStaff)); customAlert("Staff", "Saved."); db.collection('employees').add(s); renderStaffList(); } }
+        function delSt(id) { localStaff = localStaff.filter(s => s.lid !== id); localStorage.setItem('b44_staff', JSON.stringify(localStaff)); renderStaffList(); }
+        function printRec(o) {
+            let h = '';
+            rSchema.forEach(item => {
+                switch(item.type) {
+                    case 'logo': h += `<img src="${item.val}" class="r-logo">`; break;
+                    case 'text': h += `<h1>${item.val}</h1>`; break;
+                    case 'orderid': h += `<h2>ORDER #${o.id}</h2>`; break;
+                    case 'table': h += `<h2>ZONE: ${o.table}</h2>`; break;
+                    case 'items': o.items.forEach(i => h += `<div class="item"><span>${i.name}</span><span>$${i.price.toFixed(2)}</span></div>`); break;
+                    case 'total': h += `<div class="sep"></div><h2 style="display:flex; justify-content:space-between;"><span>TOTAL</span><span>$${o.total.toFixed(2)}</span></h2>`; break;
+                    case 'date': h += `<p>${o.time}</p>`; break;
+                    case 'sep': h += `<div class="sep"></div>`; break;
+                }
+            });
+            document.getElementById('receipt-area').innerHTML = h; window.print();
+        }
         navTo('pos-view');
     </script>
 </body>
