@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Base44 | Crazy Burgers Audio</title>
+    <title>Base44 | Crazy Burgers Enterprise</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -63,6 +63,7 @@
             #receipt-area { position: fixed; left: 0; top: 0; display: block; width: 72mm; padding: 2mm; font-family: 'Courier New', Courier, monospace; text-align: center; }
             .sep { border-bottom: 1px dashed #000; margin: 3mm 0; }
             .item { display: flex; justify-content: space-between; margin: 2mm 0; font-size: 10pt; }
+            img.r-logo { max-width: 40mm; margin-bottom: 2mm; }
         }
 
         .pin-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
@@ -100,6 +101,9 @@
         .ctrl-icon.play-main { width: 65px; height: 65px; background: var(--dark); color: white; }
         .vol-wrap { display: flex; align-items: center; gap: 10px; margin-top: 25px; }
         input[type=range] { flex: 1; accent-color: var(--accent); }
+        
+        .pickup-item { background: rgba(255,255,255,0.05); padding: 25px; border-radius: 20px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-left: 10px solid var(--primary); }
+        .pickup-item.ready { border-left-color: var(--success); }
     </style>
 </head>
 <body>
@@ -121,18 +125,6 @@
         </div>
     </div>
 
-    <!-- SIDEBAR -->
-    <nav class="sidebar">
-        <div class="sidebar-logo">CB</div>
-        <button class="nav-button active-nav" onclick="navTo('pos-view', this)"><i data-lucide="layout-grid"></i> POS</button>
-        <button class="nav-button" onclick="navTo('kiosk-view', this)"><i data-lucide="smartphone"></i> Kiosk</button>
-        <button class="nav-button" onclick="navTo('cust-view', this)"><i data-lucide="monitor"></i> CDS</button>
-        <button class="nav-button" onclick="navTo('kds-view', this)"><i data-lucide="chef-hat"></i> KDS</button>
-        <button class="nav-button" onclick="reqAuth('manager-view', this)"><i data-lucide="bar-chart-3"></i> Master</button>
-        <button class="nav-button" onclick="reqAuth('staff-view', this)"><i data-lucide="user-check"></i> Staff</button>
-        <button class="nav-button" onclick="navTo('calls-view', this)"><i data-lucide="bell"></i> Alerts</button>
-    </nav>
-
     <div id="overlay-redeem" class="overlay">
         <div class="modal" style="text-align:center;">
             <h2 style="font-weight:900; margin-bottom:15px;">Redeem Points?</h2>
@@ -148,11 +140,6 @@
             <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
                 <button class="pay-btn" onclick="finishOrder('Takeout')">Takeout</button>
                 <button class="pay-btn" onclick="finishOrder('Table 1')">Table 1</button>
-                <button class="pay-btn" onclick="finishOrder('Table 2')">Table 2</button>
-                <button class="pay-btn" onclick="finishOrder('Table 3')">Table 3</button>
-                <button class="pay-btn" onclick="finishOrder('Table 4')">Table 4</button>
-                <button class="pay-btn" onclick="finishOrder('Table 5')">Table 5</button>
-                <button class="pay-btn" style="background:var(--accent);" onclick="finishOrder('Bar Area')">Bar Area</button>
             </div>
             <button class="pay-btn" style="background:none; color:gray; width:100%; border:1px solid #eee;" onclick="document.getElementById('overlay-table').style.display='none'">Cancel</button>
         </div>
@@ -178,6 +165,18 @@
             <button class="pay-btn" style="background:none; color:red; width:100%; font-size:0.8rem; margin-top:15px;" onclick="pinC()">Clear Entry</button>
         </div>
     </div>
+
+    <!-- SIDEBAR -->
+    <nav class="sidebar">
+        <div class="sidebar-logo">CB</div>
+        <button class="nav-button active-nav" onclick="navTo('pos-view', this)"><i data-lucide="layout-grid"></i> POS</button>
+        <button class="nav-button" onclick="navTo('kiosk-view', this)"><i data-lucide="smartphone"></i> Kiosk</button>
+        <button class="nav-button" onclick="navTo('cust-view', this)"><i data-lucide="monitor"></i> CDS</button>
+        <button class="nav-button" onclick="navTo('kds-view', this)"><i data-lucide="chef-hat"></i> KDS</button>
+        <button class="nav-button" onclick="reqAuth('manager-view', this)"><i data-lucide="bar-chart-3"></i> Master</button>
+        <button class="nav-button" onclick="reqAuth('staff-view', this)"><i data-lucide="user-check"></i> Staff</button>
+        <button class="nav-button" onclick="navTo('calls-view', this)"><i data-lucide="bell"></i> Alerts</button>
+    </nav>
 
     <!-- VIEWS -->
     <main id="pos-view" class="view-container active">
@@ -210,30 +209,30 @@
             </div>
             <div id="s-jukebox" class="master-content">
                 <div class="jukebox-card">
-                    <h2 style="font-weight:900; margin-bottom:20px;">Master Cloud Jukebox</h2>
+                    <h2>Master Cloud Music</h2>
                     <div style="background:#f8fafc; padding:20px; border-radius:15px; border:2px dashed #cbd5e1; text-align:center; margin-bottom:25px;">
-                        <input type="file" id="j-file" accept="audio/*" style="display:none;" onchange="uploadMusic(this.files[0])">
+                        <input type="file" id="j-file" accept="audio/*" style="display:none;" onchange="uploadTrack(this.files[0])">
                         <button class="pay-btn" style="margin:0; width:auto; padding:12px 40px;" onclick="document.getElementById('j-file').click()"><i data-lucide="upload-cloud"></i> Upload MP3</button>
                         <p id="upload-status" style="margin-top:10px; font-size:0.85rem; color:var(--text-gray);"></p>
                     </div>
                     <div id="m-jukebox-list"></div>
-                    <div style="display:flex; gap:10px; margin-top:25px;"><button class="pay-btn" style="margin:0;" onclick="jAction('toggle', { play: !jState.playing })">${jState.playing?'Pause':'Play All'}</button><button class="pay-btn" style="background:gray; margin:0;" onclick="jAction('clear')">Clear All</button></div>
+                    <div style="display:flex; gap:10px; margin-top:25px;"><button class="pay-btn" style="margin:0;" onclick="jAction('toggle', { play: !jState.playing })">Sync Jukebox</button></div>
                 </div>
             </div>
             <div id="s-config" class="master-content">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;"><p style="font-weight:700;">Design your receipt below.</p><button class="pay-btn" style="margin:0; width:auto; padding:10px 30px;" onclick="saveArchitect()">Save Layout</button></div>
-                <div class="architect-container" style="height: calc(100vh - 280px);">
-                    <div class="toolbox">
-                        <div class="toolbox-item" draggable="true" ondragstart="drag(event, 'logo')"><i data-lucide="image"></i> Logo</div>
-                        <div class="toolbox-item" draggable="true" ondragstart="drag(event, 'text')"><i data-lucide="type"></i> Header</div>
-                        <div class="toolbox-item" draggable="true" ondragstart="drag(event, 'orderid')"><i data-lucide="hash"></i> Order #</div>
-                        <div class="toolbox-item" draggable="true" ondragstart="drag(event, 'sep')"><i data-lucide="minus"></i> Separator</div>
-                    </div>
-                    <div class="workspace"><div class="receipt-canvas" id="canvas" ondrop="drop(event)" ondragover="allowDrop(event)"></div></div>
-                </div>
+                <button class="pay-btn" onclick="saveArchitect()">Save Layout</button>
+                <div class="architect-container"><div class="workspace"><div class="receipt-canvas" id="canvas" ondrop="drop(event)" ondragover="allowDrop(event)"></div></div></div>
             </div>
             <div id="s-kpi" class="master-content active">Rev: <span id="m-rev">$0.00</span> | Orders: <span id="m-ord">0</span></div>
             <div id="s-staff" class="master-content"><div id="m-staff-list"></div></div>
+        </div>
+    </main>
+
+    <main id="staff-view" class="view-container" style="background:var(--dark); align-items:center; justify-content:center;">
+        <div class="modal" id="s-portal" style="text-align:center; max-width:400px;">
+            <p id="s-role-tag" style="background:var(--primary); color:white; padding:5px 15px; border-radius:99px; display:inline-block; font-size:0.8rem; font-weight:800; margin-bottom:15px;">ROLE</p>
+            <h1 id="s-v-name" style="font-weight:900; margin-bottom:20px; font-size:2rem;">Staff Name</h1>
+            <button class="pay-btn" style="width:100%; background:none; color:gray; margin-top:20px;" onclick="logOffStaff()">Sign Out</button>
         </div>
     </main>
 
@@ -250,13 +249,15 @@
     </main>
 
     <main id="cust-view" class="view-container" style="background:var(--dark); color:white;">
-        <div id="cds-setup" style="text-align:center; margin-top:20vh;"><button class="pay-btn" onclick="bindC('Front Counter')">Activate Display</button></div>
-        <div id="cds-active" style="display:none; padding:40px; text-align:center;">
-            <div id="cds-order-view" style="margin-bottom:60px;">
-                <h1 id="cds-status" style="font-size:5rem; font-weight:900;">WELCOME</h1>
-                <div id="cds-items" style="font-size:2rem; opacity:0.7;">Ready to serve.</div>
+        <div id="cds-setup" style="text-align:center; margin-top:20vh; padding:40px;">
+            <h1 style="font-size:3rem; margin-bottom:30px;">Initialize Display</h1>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; max-width:800px; margin:auto;">
+                <button class="pay-btn" style="height:200px; background:var(--accent);" onclick="setCDSMode('table')"><i data-lucide="music" style="width:60px; height:60px;"></i><br>Table 1 Console</button>
+                <button class="pay-btn" style="height:200px; background:var(--primary);" onclick="setCDSMode('pickup')"><i data-lucide="shopping-bag" style="width:60px; height:60px;"></i><br>Takeout Tracker</button>
             </div>
-            <div class="jukebox-card" style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:white; max-width:650px; margin:auto;">
+        </div>
+        <div id="cds-table" style="display:none; padding:40px; text-align:center;">
+             <div class="jukebox-card" style="background:rgba(255,255,255,0.05); color:white; max-width:650px; margin:auto;">
                 <div class="now-playing-box">
                     <div class="album-art" id="c-art"></div>
                     <div class="song-info">
@@ -272,12 +273,18 @@
                     </div>
                 </div>
             </div>
-            <audio id="global-player" onended="onTrackEnd()" ontimeupdate="onSeekChange()"></audio>
-            <button onclick="resetC()" style="margin-top:50px; background:none; color:gray;">Unbind Device</button>
+            <button onclick="resetC()" style="margin-top:50px; opacity:0.3;">Reset Display</button>
         </div>
+        <div id="cds-pickup" style="display:none; padding:40px; max-width:1000px; margin:auto;">
+            <h1 style="font-size:3.5rem; font-weight:900; margin-bottom:40px; text-align:center;">Orders & Status</h1>
+            <div id="pickup-list"></div>
+            <button onclick="resetC()" style="margin-top:50px; opacity:0.3;">Reset Display</button>
+        </div>
+        <audio id="global-player" onended="onTrackEnd()" ontimeupdate="onSeekChange()"></audio>
     </main>
 
     <audio id="kds-ding-audio" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3"></audio>
+    <div id="receipt-area" style="display:none;"></div>
 
     <script>
         lucide.createIcons();
@@ -286,8 +293,8 @@
 
         let menu = [{ id: 1, name: "Crazy Burger", price: 8.99, image: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format" }];
         let localStaff = JSON.parse(localStorage.getItem('b44_staff')) || [];
-        let rSchema = JSON.parse(localStorage.getItem('b44_rSchema')) || [{ type: 'logo', val: '' }, { type: 'text', val: 'CRAZY BURGERS' }];
-        let cart = []; let activeOrders = []; let curM = null; let discAmt = 0; let ptsToRedeem = 0; let sData = null; let sPIN = ""; let authTarget = null; let authBtn = null; let cID = null;
+        let rSchema = JSON.parse(localStorage.getItem('b44_rSchema')) || [{ type: 'logo', val: '' }, { type: 'text', val: 'CRAZY BURGERS' }, { type: 'orderid' }, { type: 'sep' }, { type: 'items' }, { type: 'total' }];
+        let cart = []; let activeOrders = []; let curM = null; let discAmt = 0; let ptsToRedeem = 0; let sData = null; let sPIN = ""; let authTarget = null; let authBtn = null; let cdsMode = null;
         let voiceActive = JSON.parse(localStorage.getItem('b44_voice')) || false;
         let jState = { playlist: [], currentIndex: -1, locked: false, playing: false, volume: 50, position: 0 };
         let navID = 'pos-view';
@@ -298,27 +305,30 @@
         function pinC() { sPIN = ""; document.getElementById('pin-dot-view').innerText = ""; }
         function closePin() { document.getElementById('pin-overlay').style.display = 'none'; }
         function pinV() { 
-            if(authTarget === 'manager-view' && String(sPIN) === "2018") { closePin(); navTo(authTarget, authBtn); } 
+            let p = String(sPIN);
+            if(authTarget === 'manager-view' && p === "2018") { closePin(); navTo(authTarget, authBtn); } 
             else { 
-                let m = localStaff.find(e => String(e.pin) === String(sPIN)); 
+                let m = localStaff.find(e => String(e.pin) === p); 
                 if(m) { sData = m; closePin(); navTo(authTarget, authBtn); updatePortal(); } 
                 else { customAlert("Security", "Invalid PIN"); pinC(); } 
             } 
         }
 
-        // --- [ JUKEBOX ENGINE ] ---
-        async function uploadMusic(file) {
-            if(!file) return; document.getElementById('upload-status').innerText = "Reading tags...";
+        // --- [ JUKEBOX ] ---
+        async function uploadTrack(file) {
+            if(!file) return; document.getElementById('upload-status').innerText = "Analyzing file...";
             jsmediatags.read(file, {
                 onSuccess: async (tag) => {
                     let art = ''; if(tag.tags.picture) { let { data, format } = tag.tags.picture; let base64 = data.map(b => String.fromCharCode(b)).join(''); art = `data:${format};base64,${btoa(base64)}`; }
-                    document.getElementById('upload-status').innerText = "Uploading to cloud...";
-                    let ref = storage.ref(`music/${Date.now()}_${file.name}`);
-                    await ref.put(file); let url = await ref.getDownloadURL();
-                    jAction('add', { url, title: tag.tags.title || file.name, artist: tag.tags.artist || 'Unknown', image: art, from: 'Manager' });
-                    document.getElementById('upload-status').innerText = "Upload Complete!";
+                    document.getElementById('upload-status').innerText = "Uploading to Cloud Storage...";
+                    try {
+                        let ref = storage.ref(`jukebox/${Date.now()}_${file.name}`);
+                        let snap = await ref.put(file); let url = await ref.getDownloadURL();
+                        jAction('add', { url, title: tag.tags.title || file.name, artist: tag.tags.artist || 'Unknown', image: art, from: 'Manager' });
+                        document.getElementById('upload-status').innerText = "Successfully uploaded!";
+                    } catch(e) { document.getElementById('upload-status').innerText = "Upload failed: " + e.message; }
                 },
-                onError: (e) => { alert("Tag Error: " + e.message); }
+                onError: (e) => { alert("Reader Error: " + e.message); }
             });
         }
         function jAction(type, data = {}) { socket.emit('jukebox-action', { type, ...data }); }
@@ -327,7 +337,7 @@
 
         socket.on('jukebox-update', d => {
             jState = d; let track = d.playlist[d.currentIndex];
-            if(track) {
+            if(navID === 'cust-view' && cdsMode === 'table' && track) {
                 document.getElementById('c-title').innerText = track.title; document.getElementById('c-artist').innerText = track.artist;
                 document.getElementById('c-art').style.backgroundImage = `url('${track.image || 'https://via.placeholder.com/150'}')`;
                 let p = document.getElementById('global-player');
@@ -337,10 +347,43 @@
                 document.getElementById('c-vol').value = d.volume; lucide.createIcons();
             }
             let mList = document.getElementById('m-jukebox-list');
-            if(mList) mList.innerHTML = d.playlist.map((t,i)=>`<div class="track-item ${i===d.currentIndex?'now':''}"><span>${t.title}</span><button onclick="jAction('skip',{index:${i}})" style="background:none;"><i data-lucide="play"></i></button></div>`).join('');
+            if(mList) mList.innerHTML = d.playlist.map((t,i)=>`<div style="padding:10px; border-bottom:1px solid #eee; display:flex; justify-content:space-between;"><span>${t.title}</span><button onclick="jAction('skip',{index:${i}})"><i data-lucide="play"></i></button></div>`).join('');
             lucide.createIcons();
         });
 
+        // --- [ CDS MODES ] ---
+        function setCDSMode(m) { cdsMode = m; document.getElementById('cds-setup').style.display = 'none'; document.getElementById(m === 'table' ? 'cds-table' : 'cds-pickup').style.display = 'block'; if(m === 'pickup') renderC(); }
+        function resetC() { cdsMode = null; document.querySelectorAll('#cust-view > div').forEach(d => d.style.display = 'none'); document.getElementById('cds-setup').style.display = 'block'; }
+        function renderC() {
+             if(cdsMode !== 'pickup') return;
+             document.getElementById('pickup-list').innerHTML = activeOrders.map(o => `
+                <div class="pickup-item ${o.status==='ready'?'ready':''}">
+                    <div><b style="font-size:3rem;">#${o.id}</b><br><span style="font-size:1.5rem; opacity:0.7;">${o.table} - ${o.status.toUpperCase()}</span></div>
+                    ${o.status==='ready' ? `<button class="pay-btn" style="margin:0; width:auto; padding:15px 40px;" onclick="cyc(${o.id}, 'Complete', true)">I RECEIVED MY ORDER</button>` : '<i data-lucide="clock" style="width:50px; height:50px; opacity:0.2;"></i>'}
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        // --- [ SYSTEM LOGIC ] ---
+        function startCheckout() { if(cart.length) { loyS('init'); document.getElementById('overlay-loyalty').style.display='flex'; } }
+        function loyS(s) { document.getElementById('loyalty-init').style.display=s==='init'?'grid':'none'; document.getElementById('loyalty-find').style.display=s==='search'?'block':'none'; document.getElementById('loyalty-create').style.display=s==='create'?'block':'none'; }
+        function skipLoyalty() { curM=null; document.getElementById('overlay-loyalty').style.display='none'; openTableSelect(); }
+        function openTableSelect() { document.getElementById('overlay-table').style.display='flex'; if(curM) document.getElementById('member-tag').innerText = curM.name; }
+        
+        function finishOrder(tbl) {
+            let tot = parseFloat(document.getElementById('pos-total').innerText);
+            let o = { id: Math.floor(Math.random()*9000), table: tbl, items: [...cart], total: tot, status: 'pending', time: new Date().toLocaleTimeString(), customer: curM ? curM.name : '' };
+            if(curM) { curM.points = (curM.points || 0) + Math.floor(tot) - ptsToRedeem; if(curM.docId) db.collection('customers').doc(curM.docId).update({ points: curM.points }); }
+            
+            // RESET TERMINAL INSTANTLY
+            cart=[]; curM=null; discAmt=0; ptsToRedeem=0; document.getElementById('cart-loyalty-info').style.display='none'; renderCart(); document.getElementById('overlay-table').style.display='none';
+            
+            socket.emit('new-order', o); printRec(o);
+        }
+
+        function cyc(id, s, silent = false) { socket.emit('update-order-status', { id: Number(id), status: s }); }
+        
         socket.on('announcement', d => { 
             if(d.status==='alert') say(`Attention: ${d.message}`); 
             else if(d.status==='ready') { 
@@ -351,88 +394,20 @@
             document.getElementById('station-call-alert').style.display='block'; 
             setTimeout(() => { document.getElementById('station-call-alert').style.display='none'; }, 3000);
         });
-        function clearCall() { document.getElementById('station-call-alert').style.display='none'; }
-        function enableVoice() { voiceActive = true; localStorage.setItem('b44_voice', true); document.getElementById('voice-lock').style.display='none'; }
-        function say(msg) { if(voiceActive) { let u = new SpeechSynthesisUtterance(msg); window.speechSynthesis.speak(u); } }
 
-        // --- [ ARCHITECT ] ---
-        function renderArchitect() {
-            let c = document.getElementById('canvas'); if(!c) return;
-            c.innerHTML = rSchema.map((item, idx) => `<div class="canvas-row">${renderComponent(item.type, item.val, idx)}<div class="row-ctrls"><button class="ctrl-btn" onclick="move(${idx},-1)">↑</button><button class="ctrl-btn" onclick="move(${idx},1)">↓</button><button class="ctrl-btn rem" onclick="removeRow(${idx})">×</button></div></div>`).join('');
-        }
-        function move(idx, dir) { let to = idx+dir; if(to>=0 && to<rSchema.length) { [rSchema[idx], rSchema[to]] = [rSchema[to], rSchema[idx]]; renderArchitect(); } }
-        function renderComponent(type, val, idx) { switch(type) {
-            case 'logo': return `<img src="${val || 'https://via.placeholder.com/150x50'}" style="max-width:100%;" onclick="editVal(this,'logo',${idx})">`;
-            case 'text': return `<input class="row-text" value="${val}" onchange="updateVal(${idx},this.value)">`;
-            case 'orderid': return `<p>ORDER #8888</p>`;
-            case 'sep': return `<div class="sep" style="border-bottom:1px dashed #000; width:100%; margin:5px 0;"></div>`;
-            default: return '';
-        }}
-        function drag(ev, t) { ev.dataTransfer.setData("type", t); } function allowDrop(ev) { ev.preventDefault(); }
-        function drop(ev) { ev.preventDefault(); let t = ev.dataTransfer.getData("type"); rSchema.push({ type: t, val: t === 'text' ? 'New Header' : '' }); renderArchitect(); }
-        function removeRow(idx) { rSchema.splice(idx, 1); renderArchitect(); } function updateVal(idx, v) { rSchema[idx].val = v; }
-        function saveArchitect() { localStorage.setItem('b44_rSchema', JSON.stringify(rSchema)); customAlert("Saved", "Layout Updated."); }
+        socket.on('initial-data', d => { activeOrders = Array.isArray(d.orders)?d.orders:[]; renderK(); renderC(); renderKPI(); });
+        socket.on('order-update', o => { activeOrders = Array.isArray(o)?o:[]; renderK(); renderC(); renderKPI(); });
+        socket.on('kds-ding', () => { if(navID === 'kds-view') document.getElementById('kds-ding-audio').play().catch(()=>{}); });
 
-        // --- [ SYSTEM ] ---
-        function startCheckout() { if(cart.length) { loyS('init'); document.getElementById('overlay-loyalty').style.display='flex'; } }
-        function loyS(s) { document.getElementById('loyalty-init').style.display=s==='init'?'grid':'none'; document.getElementById('loyalty-find').style.display=s==='search'?'block':'none'; document.getElementById('loyalty-create').style.display=s==='create'?'block':'none'; }
-        function skipLoyalty() { curM=null; document.getElementById('overlay-loyalty').style.display='none'; openTableSelect(); }
-        function openTableSelect() { document.getElementById('overlay-table').style.display='flex'; if(curM) document.getElementById('member-tag').innerText = curM.name; }
-        function findMember() {
-            let n = document.getElementById('loy-q').value; let m = localCusts.find(c => c.name === n);
-            if(m) { preRedeem(m); return; }
-            db.collection('customers').where('name','==',n).get().then(s => {
-                if(s.empty) customAlert("Error", "Not found");
-                else { let dm = { docId: s.docs[0].id, ...s.docs[0].data() }; preRedeem(dm); }
-            });
-        }
-        function createMember() {
-            let n = document.getElementById('loy-n').value; if(!n) return;
-            let m = { name: n, joined: new Date().toISOString(), points: 0, lid: Date.now() };
-            localCusts.push(m); localStorage.setItem('b44_custs', JSON.stringify(localCusts)); syncCloud('customers', m); preRedeem(m);
-        }
-        function preRedeem(m) {
-            curM = m; document.getElementById('overlay-loyalty').style.display='none';
-            if(m.points >= 10) { 
-                ptsToRedeem = Math.floor(m.points/10)*10; discAmt = ptsToRedeem/10; 
-                document.getElementById('r-bal').innerText = m.points; 
-                document.getElementById('r-disc').innerText = discAmt.toFixed(2);
-                document.getElementById('overlay-redeem').style.display='flex';
-            } else { skipRedeem(); }
-        }
-        function redeemPoints(yes) { if(!yes) { ptsToRedeem=0; discAmt=0; } document.getElementById('overlay-redeem').style.display='none'; openTableSelect(); }
-        function skipRedeem() { ptsToRedeem=0; discAmt=0; document.getElementById('overlay-redeem').style.display='none'; openTableSelect(); }
-        function skipLoyalty() { curM=null; document.getElementById('overlay-loyalty').style.display='none'; openTableSelect(); }
-        function openTableSelect() { 
-            if(curM) { document.getElementById('member-tag').innerText = curM.name; document.getElementById('cart-loyalty-info').style.display='block'; renderCart(); }
-            document.getElementById('overlay-table').style.display='flex'; 
-        }
-
-        function finishOrder(tbl) {
-            let tot = parseFloat(document.getElementById('pos-total').innerText);
-            let o = { id: Math.floor(Math.random()*9000), table: tbl, items: [...cart], total: tot, status: 'pending', time: new Date().toLocaleTimeString(), customer: curM ? curM.name : '' };
-            if(curM) { curM.points = (curM.points || 0) + Math.floor(tot) - ptsToRedeem; if(curM.docId) db.collection('customers').doc(curM.docId).update({ points: curM.points }); }
-            
-            // Clear UI FIRST so it doesn't "stay there"
-            cart=[]; curM=null; discAmt=0; ptsToRedeem=0; 
-            document.getElementById('cart-loyalty-info').style.display='none'; 
-            renderCart(); 
-            document.getElementById('overlay-table').style.display='none';
-            
-            socket.emit('new-order', o); 
-            printRec(o);
-        }
-        function cyc(id, s, silent = false) { 
-            socket.emit('update-order-status', { id: Number(id), status: s }); 
-        }
-        function customAlert(t, m) { document.getElementById('alert-title').innerText=t; document.getElementById('alert-body').innerText=m; document.getElementById('overlay-alert').style.display='flex'; setTimeout(()=>document.getElementById('overlay-alert').style.display='none', 3000); }
-        function renderP() { document.getElementById('pos-grid').innerHTML = menu.map(m => `<div class="menu-card" onclick="openMod(${m.id})"><div class="menu-img" style="background-image:url('${m.image}')"></div><div class="menu-content"><b>${m.name}</b><br><span style="color:var(--primary)">$${m.price.toFixed(2)}</span></div></div>`).join(''); }
+        // --- [ UI RENDERS ] ---
+        function renderP() { document.getElementById('pos-grid').innerHTML = menu.map(m => `<div class="menu-card" onclick="openMod(${m.id})"><div class="menu-img" style="background-image:url('${m.image}')"></div><div class="menu-content"><b>${m.name}</b><br><span>$${m.price.toFixed(2)}</span></div></div>`).join(''); }
         function openMod(id) { let tI = menu.find(i=>i.id===id); cart.push({ cid: Date.now(), ...tI }); renderCart(); }
         function renderCart() { document.getElementById('op-items').innerHTML = cart.map(i => `<div class="cart-row"><span>${i.name}</span><button onclick="remC(${i.cid})" style="color:red; background:none;">×</button></div>`).join(''); document.getElementById('pos-total').innerText = cart.reduce((a,b)=>a+b.price,0).toFixed(2); }
         function remC(id) { cart = cart.filter(i=>i.cid!==id); renderCart(); }
+        
         function renderK() { 
             document.getElementById('kds-grid').innerHTML = activeOrders.map(o => {
-                let color = 'var(--primary)'; // red
+                let color = 'var(--primary)'; // red (pending)
                 if(o.status === 'preparing') color = 'var(--warning)'; // orange
                 if(o.status === 'ready') color = 'var(--success)'; // green
                 
@@ -441,33 +416,18 @@
                     <hr style="margin:12px 0;">
                     ${o.items.map(i=>`<div>• ${i.name}</div>`).join('')}
                     <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-top:15px;">
-                        <button class="pay-btn" style="margin:0; font-size:0.8rem; background:var(--warning);" onclick="cyc(${o.id}, 'preparing', true)">Cook</button>
+                        <button class="pay-btn" style="margin:0; font-size:0.8rem; background:var(--warning);" onclick="cyc(${o.id}, 'preparing')">Cook</button>
                         <button class="pay-btn" style="margin:0; font-size:0.8rem; background:var(--success);" onclick="cyc(${o.id}, 'ready')">Ready</button>
                     </div>
-                    <button class="pay-btn" style="width:100%; margin-top:10px; background:var(--dark); font-size:0.8rem;" onclick="cyc(${o.id}, 'Complete', true)">Clear</button>
                 </div>`;
             }).join(''); 
+            lucide.createIcons();
         }
-        function bindC() { document.getElementById('cds-setup').style.display='none'; document.getElementById('cds-active').style.display='block'; }
-        function resetC() { document.getElementById('cds-setup').style.display='block'; document.getElementById('cds-active').style.display='none'; }
-        function switchM(id, b) { document.querySelectorAll('.master-tab').forEach(x=>x.classList.remove('active')); document.querySelectorAll('.master-content').forEach(x=>x.classList.remove('active')); b.classList.add('active'); document.getElementById(id).classList.add('active'); }
-        socket.on('kds-ding', () => { if(navID === 'kds-view') document.getElementById('kds-ding-audio').play().catch(()=>{}); });
-        socket.on('initial-data', d => { activeOrders = Array.isArray(d.orders)?d.orders:[]; renderK(); renderC(); renderKPI(); });
-        socket.on('order-update', o => { activeOrders = Array.isArray(o)?o:[]; renderK(); renderC(); renderKPI(); });
 
         function updatePortal() { if(!sData) return; document.getElementById('s-role-tag').innerText = sData.role; document.getElementById('s-v-name').innerText = sData.name; }
         function logOffStaff() { sData=null; navTo('pos-view', document.querySelector('.nav-button')); }
-        function renderKPI() {
-            let sum = activeOrders.reduce((a, b) => a + (b.total || 0), 0);
-            document.getElementById('m-rev').innerText = `$${sum.toFixed(2)}`;
-            document.getElementById('m-ord').innerText = activeOrders.length;
-        }
-        function bC(m) { socket.emit('station-call', { type: m, timestamp: Date.now() }); }
-        function syncCloud(col, data) { db.collection(col).add(data).catch(e => console.error(e.code)); }
-        function renderC() { if(!cID) return; let o = activeOrders.find(x => x.table === cID); document.getElementById('cds-status').innerText = o ? o.status.toUpperCase() : "WELCOME"; document.getElementById('cds-items').innerText = o ? o.items.map(i=>i.name).join(', ') : "Ready for order..."; }
-        function renderStaffList() { document.getElementById('m-staff-list').innerHTML = localStaff.map(a => `<div style="padding:15px; border-bottom:1px solid #eee; display:flex; justify-content:space-between;"><span>${a.name} [${a.role}]</span> <button onclick="delSt(${a.lid})" style="color:red; background:none;">Delete</button></div>`).join(''); }
-        function addSt() { let n = document.getElementById('n-emp-n').value; let p = document.getElementById('n-emp-p').value; let r = document.getElementById('n-emp-r').value; if(n&&p) { let s = { name: n, pin: String(p), role: r, status: 'out', lid: Date.now() }; localStaff.push(s); localStorage.setItem('b44_staff', JSON.stringify(localStaff)); customAlert("Staff", "Saved."); db.collection('employees').add(s); renderStaffList(); } }
-        function delSt(id) { localStaff = localStaff.filter(s => s.lid !== id); localStorage.setItem('b44_staff', JSON.stringify(localStaff)); renderStaffList(); }
+        function renderKPI() { document.getElementById('m-rev').innerText = `$${activeOrders.reduce((a,b)=>a+(b.total||0),0).toFixed(2)}`; document.getElementById('m-ord').innerText = activeOrders.length; }
+
         function printRec(o) {
             let h = '';
             rSchema.forEach(item => {
@@ -475,15 +435,19 @@
                     case 'logo': h += `<img src="${item.val}" class="r-logo">`; break;
                     case 'text': h += `<h1>${item.val}</h1>`; break;
                     case 'orderid': h += `<h2>ORDER #${o.id}</h2>`; break;
-                    case 'table': h += `<h2>ZONE: ${o.table}</h2>`; break;
                     case 'items': o.items.forEach(i => h += `<div class="item"><span>${i.name}</span><span>$${i.price.toFixed(2)}</span></div>`); break;
                     case 'total': h += `<div class="sep"></div><h2 style="display:flex; justify-content:space-between;"><span>TOTAL</span><span>$${o.total.toFixed(2)}</span></h2>`; break;
-                    case 'date': h += `<p>${o.time}</p>`; break;
                     case 'sep': h += `<div class="sep"></div>`; break;
                 }
             });
-            document.getElementById('receipt-area').innerHTML = h; window.print();
+            document.getElementById('receipt-area').innerHTML = h;
+            setTimeout(() => { window.print(); }, 500);
         }
+
+        function customAlert(t, m) { document.getElementById('alert-title').innerText=t; document.getElementById('alert-body').innerText=m; document.getElementById('overlay-alert').style.display='flex'; setTimeout(()=>document.getElementById('overlay-alert').style.display='none', 3000); }
+        function enableVoice() { voiceActive = true; localStorage.setItem('b44_voice', true); document.getElementById('voice-lock').style.display='none'; }
+        function say(msg) { if(voiceActive) { let u = new SpeechSynthesisUtterance(msg); window.speechSynthesis.speak(u); } }
+
         navTo('pos-view');
     </script>
 </body>
