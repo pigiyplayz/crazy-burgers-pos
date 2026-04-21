@@ -387,10 +387,17 @@
 
         function finishOrder(tbl) {
             let tot = parseFloat(document.getElementById('pos-total').innerText);
-            let o = { id: Math.floor(Math.random()*9000), table: tbl, items: [...cart], total: tot, status: 'preparing', time: new Date().toLocaleTimeString(), customer: curM ? curM.name : '' };
+            let o = { id: Math.floor(Math.random()*9000), table: tbl, items: [...cart], total: tot, status: 'pending', time: new Date().toLocaleTimeString(), customer: curM ? curM.name : '' };
             if(curM) { curM.points = (curM.points || 0) + Math.floor(tot) - ptsToRedeem; if(curM.docId) db.collection('customers').doc(curM.docId).update({ points: curM.points }); }
-            socket.emit('new-order', o); printRec(o);
-            cart=[]; curM=null; discAmt=0; ptsToRedeem=0; document.getElementById('cart-loyalty-info').style.display='none'; renderCart(); document.getElementById('overlay-table').style.display='none';
+            
+            // Clear UI FIRST so it doesn't "stay there"
+            cart=[]; curM=null; discAmt=0; ptsToRedeem=0; 
+            document.getElementById('cart-loyalty-info').style.display='none'; 
+            renderCart(); 
+            document.getElementById('overlay-table').style.display='none';
+            
+            socket.emit('new-order', o); 
+            printRec(o);
         }
         function cyc(id, s, silent = false) { 
             socket.emit('update-order-status', { id: Number(id), status: s }); 
@@ -400,7 +407,24 @@
         function openMod(id) { let tI = menu.find(i=>i.id===id); cart.push({ cid: Date.now(), ...tI }); renderCart(); }
         function renderCart() { document.getElementById('op-items').innerHTML = cart.map(i => `<div class="cart-row"><span>${i.name}</span><button onclick="remC(${i.cid})" style="color:red; background:none;">×</button></div>`).join(''); document.getElementById('pos-total').innerText = cart.reduce((a,b)=>a+b.price,0).toFixed(2); }
         function remC(id) { cart = cart.filter(i=>i.cid!==id); renderCart(); }
-        function renderK() { document.getElementById('kds-grid').innerHTML = activeOrders.map(o => `<div style="padding:20px; background:white; border-radius:15px; border-top:8px solid ${o.status==='ready'?'var(--success)':'var(--primary)'};"><div style="font-weight:900;">#${o.id} - ${o.table}</div><hr style="margin:12px 0;">${o.items.map(i=>`<div>• ${i.name}</div>`).join('')}<div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-top:15px;"><button class="pay-btn" style="margin:0; font-size:0.8rem;" onclick="cyc(${o.id}, 'preparing', true)">Cook</button><button class="pay-btn" style="margin:0; font-size:0.8rem; background:var(--success);" onclick="cyc(${o.id}, 'ready')">Ready</button></div><button class="pay-btn" style="width:100%; margin-top:10px; background:var(--dark); font-size:0.8rem;" onclick="cyc(${o.id}, 'Complete', true)">Clear</button></div>`).join(''); }
+        function renderK() { 
+            document.getElementById('kds-grid').innerHTML = activeOrders.map(o => {
+                let color = 'var(--primary)'; // red
+                if(o.status === 'preparing') color = 'var(--warning)'; // orange
+                if(o.status === 'ready') color = 'var(--success)'; // green
+                
+                return `<div style="padding:20px; background:white; border-radius:15px; border-top:8px solid ${color};">
+                    <div style="font-weight:900;">#${o.id} - ${o.table}</div>
+                    <hr style="margin:12px 0;">
+                    ${o.items.map(i=>`<div>• ${i.name}</div>`).join('')}
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-top:15px;">
+                        <button class="pay-btn" style="margin:0; font-size:0.8rem; background:var(--warning);" onclick="cyc(${o.id}, 'preparing', true)">Cook</button>
+                        <button class="pay-btn" style="margin:0; font-size:0.8rem; background:var(--success);" onclick="cyc(${o.id}, 'ready')">Ready</button>
+                    </div>
+                    <button class="pay-btn" style="width:100%; margin-top:10px; background:var(--dark); font-size:0.8rem;" onclick="cyc(${o.id}, 'Complete', true)">Clear</button>
+                </div>`;
+            }).join(''); 
+        }
         function bindC() { document.getElementById('cds-setup').style.display='none'; document.getElementById('cds-active').style.display='block'; }
         function resetC() { document.getElementById('cds-setup').style.display='block'; document.getElementById('cds-active').style.display='none'; }
         function switchM(id, b) { document.querySelectorAll('.master-tab').forEach(x=>x.classList.remove('active')); document.querySelectorAll('.master-content').forEach(x=>x.classList.remove('active')); b.classList.add('active'); document.getElementById(id).classList.add('active'); }
