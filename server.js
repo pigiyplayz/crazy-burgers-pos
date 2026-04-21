@@ -40,7 +40,11 @@ io.on('connection', (socket) => {
     socket.on('update-order-status', ({ id, status }) => {
         const idx = orders.findIndex(o => o.id === id);
         if (idx !== -1) {
-            orders[idx].status = status;
+            if (status === 'Complete') {
+                orders.splice(idx, 1);
+            } else {
+                orders[idx].status = status;
+            }
             io.emit('order-update', orders);
             
             // Trigger specific announcements via socket
